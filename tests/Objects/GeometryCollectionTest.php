@@ -23,14 +23,14 @@ class GeometryCollectionTest extends TestCase
             'geometry_collection' => new GeometryCollection([
                 new Polygon([
                     new LineString([
-                        new Point(180, 0),
-                        new Point(179, 1),
-                        new Point(178, 2),
-                        new Point(177, 3),
-                        new Point(180, 0),
+                        new Point(0, 180),
+                        new Point(1, 179),
+                        new Point(2, 178),
+                        new Point(3, 177),
+                        new Point(0, 180),
                     ]),
                 ]),
-                new Point(180, 0),
+                new Point(0, 180),
             ]),
         ]);
 
@@ -134,14 +134,14 @@ class GeometryCollectionTest extends TestCase
         $geometryCollection = new GeometryCollection([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
-            new Point(180, 0),
+            new Point(0, 180),
         ]);
 
         $this->assertEquals(
@@ -156,14 +156,14 @@ class GeometryCollectionTest extends TestCase
         $geometryCollection = new GeometryCollection([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
-            new Point(180, 0),
+            new Point(0, 180),
         ]);
 
         $this->assertEquals(
@@ -197,14 +197,14 @@ class GeometryCollectionTest extends TestCase
         $geometryCollection = new GeometryCollection([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
-            new Point(180, 0),
+            new Point(0, 180),
         ]);
 
         unset($geometryCollection[0]);
@@ -220,11 +220,11 @@ class GeometryCollectionTest extends TestCase
 
         $polygon = new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
+                new Point(0, 180),
+                new Point(1, 179),
+                new Point(2, 178),
+                new Point(3, 177),
+                new Point(0, 180),
             ]),
         ]);
 
@@ -237,14 +237,14 @@ class GeometryCollectionTest extends TestCase
         $geometryCollection = new GeometryCollection([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
-            new Point(180, 0),
+            new Point(0, 180),
         ]);
 
         $this->assertTrue(isset($geometryCollection[0]));
@@ -259,21 +259,21 @@ class GeometryCollectionTest extends TestCase
         $testPlace = TestPlace::factory()->create([
             'polygon' => new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
         ]);
 
         $testPlace->polygon[1] = new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
+            new Point(0, 180),
+            new Point(1, 179),
+            new Point(2, 178),
+            new Point(3, 177),
+            new Point(0, 180),
         ]);
 
         $testPlace->save();
@@ -290,14 +290,14 @@ class GeometryCollectionTest extends TestCase
 
         $polygon = new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
+                new Point(0, 180),
+                new Point(1, 179),
+                new Point(2, 178),
+                new Point(3, 177),
+                new Point(0, 180),
             ]),
         ]);
 
-        $polygon[1] = new Point(180, 0);
+        $polygon[1] = new Point(0, 180);
     }
 }

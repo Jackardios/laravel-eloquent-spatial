@@ -16,7 +16,7 @@ class GeometryCastTest extends TestCase
     /** @test */
     public function it_serializes_and_deserializes_geometry_object(): void
     {
-        $point = new Point(180, 0);
+        $point = new Point(0, 180);
 
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
@@ -33,8 +33,8 @@ class GeometryCastTest extends TestCase
 
         TestPlace::factory()->make([
             'point' => new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
+                new Point(0, 180),
+                new Point(1, 179),
             ]),
         ]);
     }

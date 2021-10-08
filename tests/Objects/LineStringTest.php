@@ -20,8 +20,8 @@ class LineStringTest extends TestCase
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
             'line_string' => new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
+                new Point(0, 180),
+                new Point(1, 179),
             ]),
         ]);
 
@@ -57,8 +57,8 @@ class LineStringTest extends TestCase
     public function it_generates_line_string_geo_json(): void
     {
         $lineString = new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
+            new Point(0, 180),
+            new Point(1, 179),
         ]);
 
         $this->assertEquals('{"type":"LineString","coordinates":[[0,180],[1,179]]}', $lineString->toJson());
@@ -68,8 +68,8 @@ class LineStringTest extends TestCase
     public function it_generates_line_string_feature_collection_json(): void
     {
         $lineString = new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
+            new Point(0, 180),
+            new Point(1, 179),
         ]);
 
         $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"LineString","coordinates":[[0,180],[1,179]]}}]}', $lineString->toFeatureCollectionJson());
@@ -81,7 +81,7 @@ class LineStringTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         new LineString([
-            new Point(180, 0),
+            new Point(0, 180),
         ]);
     }
 

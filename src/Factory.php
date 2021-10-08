@@ -53,7 +53,7 @@ class Factory
                 }
             }
 
-            return new Point($geometry->coords[1], $geometry->coords[0]);
+            return new Point($geometry->coords[0], $geometry->coords[1]);
         }
 
         /** @var geoPHPGeometryCollection $geometry */

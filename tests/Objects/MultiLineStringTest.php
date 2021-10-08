@@ -21,8 +21,8 @@ class MultiLineStringTest extends TestCase
         $testPlace = TestPlace::factory()->create([
             'multi_line_string' => new MultiLineString([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
+                    new Point(0, 180),
+                    new Point(1, 179),
                 ]),
             ]),
         ]);
@@ -64,8 +64,8 @@ class MultiLineStringTest extends TestCase
     {
         $multiLineString = new MultiLineString([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
+                new Point(0, 180),
+                new Point(1, 179),
             ]),
         ]);
 
@@ -77,8 +77,8 @@ class MultiLineStringTest extends TestCase
     {
         $multiLineString = new MultiLineString([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
+                new Point(0, 180),
+                new Point(1, 179),
             ]),
         ]);
 

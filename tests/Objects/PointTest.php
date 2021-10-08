@@ -17,10 +17,10 @@ class PointTest extends TestCase
     {
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
-            'point' => new Point(180, 0),
+            'point' => new Point(0, 180),
         ]);
 
-        $this->assertTrue($testPlace->point instanceof Point);
+        $this->assertInstanceOf(Point::class, $testPlace->point);
         $this->assertEquals(180, $testPlace->point->latitude);
         $this->assertEquals(0, $testPlace->point->longitude);
 
@@ -35,7 +35,7 @@ class PointTest extends TestCase
             'point' => Point::fromJson('{"type":"Point","coordinates":[0,180]}'),
         ]);
 
-        $this->assertTrue($testPlace->point instanceof Point);
+        $this->assertInstanceOf(Point::class, $testPlace->point);
         $this->assertEquals(180, $testPlace->point->latitude);
         $this->assertEquals(0, $testPlace->point->longitude);
 
@@ -45,7 +45,7 @@ class PointTest extends TestCase
     /** @test */
     public function it_generates_point_geo_json(): void
     {
-        $point = new Point(180, 0);
+        $point = new Point(0, 180);
 
         $this->assertEquals('{"type":"Point","coordinates":[0,180]}', $point->toJson());
     }

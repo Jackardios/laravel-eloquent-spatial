@@ -23,11 +23,11 @@ class MultiPolygonTest extends TestCase
             'multi_polygon' => new MultiPolygon([
                 new Polygon([
                     new LineString([
-                        new Point(180, 0),
-                        new Point(179, 1),
-                        new Point(178, 2),
-                        new Point(177, 3),
-                        new Point(180, 0),
+                        new Point(0, 180),
+                        new Point(1, 179),
+                        new Point(2, 178),
+                        new Point(3, 177),
+                        new Point(0, 180),
                     ]),
                 ]),
             ]),
@@ -83,11 +83,11 @@ class MultiPolygonTest extends TestCase
         $multiPolygon = new MultiPolygon([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
         ]);
@@ -101,11 +101,11 @@ class MultiPolygonTest extends TestCase
         $multiPolygon = new MultiPolygon([
             new Polygon([
                 new LineString([
-                    new Point(180, 0),
-                    new Point(179, 1),
-                    new Point(178, 2),
-                    new Point(177, 3),
-                    new Point(180, 0),
+                    new Point(0, 180),
+                    new Point(1, 179),
+                    new Point(2, 178),
+                    new Point(3, 177),
+                    new Point(0, 180),
                 ]),
             ]),
         ]);
