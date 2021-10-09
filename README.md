@@ -1,11 +1,6 @@
 # Laravel Eloquent Spatial
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
-![Tests](https://img.shields.io/github/workflow/status/jackardios/laravel-eloquent-spatial/Tests?label=tests)
-![Static code analysis](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Static%20code%20analysis/badge.svg)
-![Code quality analysis](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Code%20quality%20analysis/badge.svg)
-![Lint](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Lint/badge.svg)
-[![Total Downloads](https://img.shields.io/packagist/dt/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
+This package is forked version of [laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial)
 
 Laravel package to work with spatial data types and functions.
 
