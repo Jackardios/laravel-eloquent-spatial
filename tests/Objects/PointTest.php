@@ -4,6 +4,8 @@ namespace MatanYadaev\EloquentSpatial\Tests\Objects;
 
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Exceptions\InvalidLatitude;
+use MatanYadaev\EloquentSpatial\Exceptions\InvalidLongitude;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Tests\TestCase;
 use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
@@ -56,5 +58,21 @@ class PointTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         Point::fromJson('{"type":"Point","coordinates":[]}');
+    }
+
+    /** @test */
+    public function it_throws_exception_when_creating_point_with_invalid_latitude(): void
+    {
+        $this->expectException(InvalidLatitude::class);
+
+        new Point(1, 181);
+    }
+
+    /** @test */
+    public function it_throws_exception_when_creating_point_with_invalid_longitude(): void
+    {
+        $this->expectException(InvalidLongitude::class);
+
+        new Point(-91, 180);
     }
 }
