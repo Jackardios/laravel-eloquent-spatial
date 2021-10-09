@@ -148,6 +148,6 @@ class BoundingBoxTest extends TestCase
             [1.421546, -12.575421],
             [-36.546231, -12.575421],
             [-36.546231, 54.547658],
-        ]], $bbox->convertToPolygon()->getCoordinates());
+        ]], $bbox->toPolygon()->getCoordinates());
     }
 }

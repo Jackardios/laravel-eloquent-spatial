@@ -74,7 +74,7 @@ class BoundingBox
         return new self(new Point($left, $bottom), new Point($right, $top));
     }
 
-    public function convertToPolygon(): Polygon
+    public function toPolygon(): Polygon
     {
         ['left' => $left, 'bottom' => $bottom, 'right' => $right, 'top' => $top] = $this->toArray();
         return new Polygon([
