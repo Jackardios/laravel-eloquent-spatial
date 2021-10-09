@@ -26,7 +26,7 @@ class GeometryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         TestPlace::insert(array_merge(TestPlace::factory()->definition(), [
-            'point_with_line_string_cast' => DB::raw('POINT(0, 180)'),
+            'point_with_line_string_cast' => DB::raw('POINT(0, 90)'),
         ]));
 
         TestPlace::firstOrFail()->getAttribute('point_with_line_string_cast');
@@ -45,6 +45,6 @@ class GeometryTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        Point::fromJson('{"type":"LineString","coordinates":[[0,180],[1,179]]}');
+        Point::fromJson('{"type":"LineString","coordinates":[[0,90],[1,89]]}');
     }
 }

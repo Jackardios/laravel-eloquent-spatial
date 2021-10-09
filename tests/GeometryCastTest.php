@@ -16,7 +16,7 @@ class GeometryCastTest extends TestCase
     /** @test */
     public function it_serializes_and_deserializes_geometry_object(): void
     {
-        $point = new Point(0, 180);
+        $point = new Point(0, 90);
 
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
@@ -33,8 +33,8 @@ class GeometryCastTest extends TestCase
 
         TestPlace::factory()->make([
             'point' => new LineString([
-                new Point(0, 180),
-                new Point(1, 179),
+                new Point(0, 90),
+                new Point(1, 89),
             ]),
         ]);
     }
@@ -55,7 +55,7 @@ class GeometryCastTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         TestPlace::factory()->create([
-            'point_with_line_string_cast' => DB::raw('POINT(0, 180)'),
+            'point_with_line_string_cast' => DB::raw('POINT(0, 90)'),
         ]);
 
         /** @var TestPlace $testPlace */

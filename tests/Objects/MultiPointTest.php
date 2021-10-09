@@ -21,13 +21,13 @@ class MultiPointTest extends TestCase
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
             'multi_point' => new MultiPoint([
-                new Point(0, 180),
+                new Point(0, 90),
             ]),
         ]);
 
         $this->assertTrue($testPlace->multi_point instanceof MultiPoint);
 
-        $this->assertEquals(180, $testPlace->multi_point[0]->latitude);
+        $this->assertEquals(90, $testPlace->multi_point[0]->latitude);
         $this->assertEquals(0, $testPlace->multi_point[0]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -38,12 +38,12 @@ class MultiPointTest extends TestCase
     {
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
-            'multi_point' => MultiPoint::fromJson('{"type":"MultiPoint","coordinates":[[0,180]]}'),
+            'multi_point' => MultiPoint::fromJson('{"type":"MultiPoint","coordinates":[[0,90]]}'),
         ]);
 
         $this->assertTrue($testPlace->multi_point instanceof MultiPoint);
 
-        $this->assertEquals(180, $testPlace->multi_point[0]->latitude);
+        $this->assertEquals(90, $testPlace->multi_point[0]->latitude);
         $this->assertEquals(0, $testPlace->multi_point[0]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -53,20 +53,20 @@ class MultiPointTest extends TestCase
     public function it_generates_multi_point_geo_json(): void
     {
         $multiPoint = new MultiPoint([
-            new Point(0, 180),
+            new Point(0, 90),
         ]);
 
-        $this->assertEquals('{"type":"MultiPoint","coordinates":[[0,180]]}', $multiPoint->toJson());
+        $this->assertEquals('{"type":"MultiPoint","coordinates":[[0,90]]}', $multiPoint->toJson());
     }
 
     /** @test */
     public function it_generates_multi_point_feature_collection_json(): void
     {
         $multiPoint = new MultiPoint([
-            new Point(0, 180),
+            new Point(0, 90),
         ]);
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiPoint","coordinates":[[0,180]]}}]}', $multiPoint->toFeatureCollectionJson());
+        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiPoint","coordinates":[[0,90]]}}]}', $multiPoint->toFeatureCollectionJson());
     }
 
     /** @test */
@@ -84,7 +84,7 @@ class MultiPointTest extends TestCase
 
         // @phpstan-ignore-next-line
         new MultiLineString([
-            Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,180],[1,179],[2,178],[3,177],[0,180]]]}'),
+            Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}'),
         ]);
     }
 }

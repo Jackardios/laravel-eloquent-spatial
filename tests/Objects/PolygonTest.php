@@ -21,11 +21,11 @@ class PolygonTest extends TestCase
         $testPlace = TestPlace::factory()->create([
             'polygon' => new Polygon([
                 new LineString([
-                    new Point(0, 180),
-                    new Point(1, 179),
-                    new Point(2, 178),
-                    new Point(3, 177),
-                    new Point(0, 180),
+                    new Point(0, 90),
+                    new Point(1, 89),
+                    new Point(2, 88),
+                    new Point(3, 87),
+                    new Point(0, 90),
                 ]),
             ]),
         ]);
@@ -34,15 +34,15 @@ class PolygonTest extends TestCase
 
         $lineString = $testPlace->polygon[0];
 
-        $this->assertEquals(180, $lineString[0]->latitude);
+        $this->assertEquals(90, $lineString[0]->latitude);
         $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(179, $lineString[1]->latitude);
+        $this->assertEquals(89, $lineString[1]->latitude);
         $this->assertEquals(1, $lineString[1]->longitude);
-        $this->assertEquals(178, $lineString[2]->latitude);
+        $this->assertEquals(88, $lineString[2]->latitude);
         $this->assertEquals(2, $lineString[2]->longitude);
-        $this->assertEquals(177, $lineString[3]->latitude);
+        $this->assertEquals(87, $lineString[3]->latitude);
         $this->assertEquals(3, $lineString[3]->longitude);
-        $this->assertEquals(180, $lineString[4]->latitude);
+        $this->assertEquals(90, $lineString[4]->latitude);
         $this->assertEquals(0, $lineString[4]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -53,22 +53,22 @@ class PolygonTest extends TestCase
     {
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
-            'polygon' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,180],[1,179],[2,178],[3,177],[0,180]]]}'),
+            'polygon' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}'),
         ]);
 
         $this->assertTrue($testPlace->polygon instanceof Polygon);
 
         $lineString = $testPlace->polygon[0];
 
-        $this->assertEquals(180, $lineString[0]->latitude);
+        $this->assertEquals(90, $lineString[0]->latitude);
         $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(179, $lineString[1]->latitude);
+        $this->assertEquals(89, $lineString[1]->latitude);
         $this->assertEquals(1, $lineString[1]->longitude);
-        $this->assertEquals(178, $lineString[2]->latitude);
+        $this->assertEquals(88, $lineString[2]->latitude);
         $this->assertEquals(2, $lineString[2]->longitude);
-        $this->assertEquals(177, $lineString[3]->latitude);
+        $this->assertEquals(87, $lineString[3]->latitude);
         $this->assertEquals(3, $lineString[3]->longitude);
-        $this->assertEquals(180, $lineString[4]->latitude);
+        $this->assertEquals(90, $lineString[4]->latitude);
         $this->assertEquals(0, $lineString[4]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -79,15 +79,15 @@ class PolygonTest extends TestCase
     {
         $polygon = new Polygon([
             new LineString([
-                new Point(0, 180),
-                new Point(1, 179),
-                new Point(2, 178),
-                new Point(3, 177),
-                new Point(0, 180),
+                new Point(0, 90),
+                new Point(1, 89),
+                new Point(2, 88),
+                new Point(3, 87),
+                new Point(0, 90),
             ]),
         ]);
 
-        $this->assertEquals('{"type":"Polygon","coordinates":[[[0,180],[1,179],[2,178],[3,177],[0,180]]]}', $polygon->toJson());
+        $this->assertEquals('{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}', $polygon->toJson());
     }
 
     /** @test */
@@ -95,15 +95,15 @@ class PolygonTest extends TestCase
     {
         $polygon = new Polygon([
             new LineString([
-                new Point(0, 180),
-                new Point(1, 179),
-                new Point(2, 178),
-                new Point(3, 177),
-                new Point(0, 180),
+                new Point(0, 90),
+                new Point(1, 89),
+                new Point(2, 88),
+                new Point(3, 87),
+                new Point(0, 90),
             ]),
         ]);
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[0,180],[1,179],[2,178],[3,177],[0,180]]]}}]}', $polygon->toFeatureCollectionJson());
+        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}}]}', $polygon->toFeatureCollectionJson());
     }
 
     /** @test */

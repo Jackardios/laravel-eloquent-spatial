@@ -24,11 +24,11 @@ class Point extends Geometry
 
     protected function validateCoordinates(float $longitude, float $latitude): void
     {
-        if ($longitude < -90 || $longitude > 90) {
+        if ($longitude < -180 || $longitude > 180) {
             throw InvalidLongitude::make($longitude);
         }
 
-        if ($latitude < -180 || $latitude > 180) {
+        if ($latitude < -90 || $latitude > 90) {
             throw InvalidLatitude::make($latitude);
         }
     }

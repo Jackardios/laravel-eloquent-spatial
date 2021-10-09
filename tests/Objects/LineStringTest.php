@@ -20,16 +20,16 @@ class LineStringTest extends TestCase
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
             'line_string' => new LineString([
-                new Point(0, 180),
-                new Point(1, 179),
+                new Point(0, 90),
+                new Point(1, 89),
             ]),
         ]);
 
         $this->assertTrue($testPlace->line_string instanceof LineString);
 
-        $this->assertEquals(180, $testPlace->line_string[0]->latitude);
+        $this->assertEquals(90, $testPlace->line_string[0]->latitude);
         $this->assertEquals(0, $testPlace->line_string[0]->longitude);
-        $this->assertEquals(179, $testPlace->line_string[1]->latitude);
+        $this->assertEquals(89, $testPlace->line_string[1]->latitude);
         $this->assertEquals(1, $testPlace->line_string[1]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -40,14 +40,14 @@ class LineStringTest extends TestCase
     {
         /** @var TestPlace $testPlace */
         $testPlace = TestPlace::factory()->create([
-            'line_string' => LineString::fromJson('{"type":"LineString","coordinates":[[0,180],[1,179]]}'),
+            'line_string' => LineString::fromJson('{"type":"LineString","coordinates":[[0,90],[1,89]]}'),
         ]);
 
         $this->assertTrue($testPlace->line_string instanceof LineString);
 
-        $this->assertEquals(180, $testPlace->line_string[0]->latitude);
+        $this->assertEquals(90, $testPlace->line_string[0]->latitude);
         $this->assertEquals(0, $testPlace->line_string[0]->longitude);
-        $this->assertEquals(179, $testPlace->line_string[1]->latitude);
+        $this->assertEquals(89, $testPlace->line_string[1]->latitude);
         $this->assertEquals(1, $testPlace->line_string[1]->longitude);
 
         $this->assertDatabaseCount($testPlace->getTable(), 1);
@@ -57,22 +57,22 @@ class LineStringTest extends TestCase
     public function it_generates_line_string_geo_json(): void
     {
         $lineString = new LineString([
-            new Point(0, 180),
-            new Point(1, 179),
+            new Point(0, 90),
+            new Point(1, 89),
         ]);
 
-        $this->assertEquals('{"type":"LineString","coordinates":[[0,180],[1,179]]}', $lineString->toJson());
+        $this->assertEquals('{"type":"LineString","coordinates":[[0,90],[1,89]]}', $lineString->toJson());
     }
 
     /** @test */
     public function it_generates_line_string_feature_collection_json(): void
     {
         $lineString = new LineString([
-            new Point(0, 180),
-            new Point(1, 179),
+            new Point(0, 90),
+            new Point(1, 89),
         ]);
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"LineString","coordinates":[[0,180],[1,179]]}}]}', $lineString->toFeatureCollectionJson());
+        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"LineString","coordinates":[[0,90],[1,89]]}}]}', $lineString->toFeatureCollectionJson());
     }
 
     /** @test */
@@ -81,7 +81,7 @@ class LineStringTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         new LineString([
-            new Point(0, 180),
+            new Point(0, 90),
         ]);
     }
 
@@ -92,7 +92,7 @@ class LineStringTest extends TestCase
 
         // @phpstan-ignore-next-line
         new LineString([
-            Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,180],[1,179],[2,178],[3,177],[0,180]]]}'),
+            Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}'),
         ]);
     }
 }
