@@ -1,11 +1,11 @@
 # Laravel Eloquent Spatial
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
-![Tests](https://img.shields.io/github/workflow/status/matanyadaev/laravel-eloquent-spatial/Tests?label=tests)
-![Static code analysis](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Static%20code%20analysis/badge.svg)
-![Code quality analysis](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Code%20quality%20analysis/badge.svg)
-![Lint](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Lint/badge.svg)
-[![Total Downloads](https://img.shields.io/packagist/dt/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
+![Tests](https://img.shields.io/github/workflow/status/jackardios/laravel-eloquent-spatial/Tests?label=tests)
+![Static code analysis](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Static%20code%20analysis/badge.svg)
+![Code quality analysis](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Code%20quality%20analysis/badge.svg)
+![Lint](https://github.com/jackardios/laravel-eloquent-spatial/workflows/Lint/badge.svg)
+[![Total Downloads](https://img.shields.io/packagist/dt/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
 
 Laravel package to work with spatial data types and functions.
 
@@ -16,7 +16,7 @@ This package supports MySQL 5.7 & 8.0 and works on PHP 8 & Laravel 8.
 You can install the package via composer:
 
 ```bash
-composer require matanyadaev/laravel-eloquent-spatial
+composer require jackardios/laravel-eloquent-spatial
 ```
 
 ## Quickstart
@@ -102,7 +102,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 $londonEye = Place::create([
     'name' => 'London Eye',
-    'location' => new Point(51.5032973, -0.1195537)
+    'location' => new Point(-0.1195537, 51.5032973)
 ]);
 
 $vaticanCity = Place::create([
@@ -127,8 +127,8 @@ $vaticanCity = Place::create([
 Retrieve a record with spatial data:
 
 ```php
-echo $londonEye->location->latitude; // 51.5032973
 echo $londonEye->location->longitude; // -0.1195537
+echo $londonEye->location->latitude; // 51.5032973
 
 echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[41.90746728266806,12.455363273620605],[41.906636872349075,12.450309991836548],[41.90197359839437,12.445632219314575],[41.90027269624499,12.447413206100464],[41.90000118654431,12.457906007766724],[41.90281205461268,12.458517551422117],[41.903107507989986,12.457584142684937],[41.905918239316286,12.457734346389769],[41.90637337450963,12.45572805404663],[41.90746728266806,12.455363273620605]]]}
 ```
