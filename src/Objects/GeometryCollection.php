@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\BoundingBox;
 
 class GeometryCollection extends Geometry implements ArrayAccess
 {
@@ -77,6 +78,30 @@ class GeometryCollection extends Geometry implements ArrayAccess
     public function getGeometries(): Collection
     {
         return $this->geometries->collect();
+    }
+
+    /**
+     * @return Collection<Point>
+     */
+    public function getPoints(): Collection
+    {
+        $points = collect([]);
+
+        foreach($this->getGeometries() as $geometry) {
+            if ($geometry instanceof Point) {
+                $points->push($geometry);
+            }
+            if ($geometry instanceof self) {
+                $points->push($geometry->getPoints());
+            }
+        }
+
+        return $points->flatten();
+    }
+
+    public function toBoundingBox(): BoundingBox
+    {
+        return BoundingBox::fromGeometryCollection($this);
     }
 
     /**
