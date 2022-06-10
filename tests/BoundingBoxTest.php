@@ -2,6 +2,7 @@
 
 namespace MatanYadaev\EloquentSpatial\Tests;
 
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use MatanYadaev\EloquentSpatial\BoundingBox;
@@ -15,6 +16,8 @@ use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
 class BoundingBoxTest extends TestCase
 {
+    use DatabaseMigrations;
+
     /** @test */
     public function it_can_create_bounding_box(): void
     {
