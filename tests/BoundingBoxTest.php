@@ -2,6 +2,8 @@
 
 namespace MatanYadaev\EloquentSpatial\Tests;
 
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use MatanYadaev\EloquentSpatial\BoundingBox;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
 use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
@@ -9,6 +11,7 @@ use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
 class BoundingBoxTest extends TestCase
 {
@@ -149,5 +152,67 @@ class BoundingBoxTest extends TestCase
             [-36.546231, -12.575421],
             [-36.546231, 54.547658],
         ]], $bbox->toPolygon()->getCoordinates());
+    }
+
+    /** @test */
+    public function it_serializes_and_deserializes_bounding_box_object(): void
+    {
+        $boundingBox = new BoundingBox(
+            new Point(-30.618423, -12.751244),
+            new Point(91.618423, 40.751244)
+        );
+
+        /** @var TestPlace $testPlace */
+        $testPlace = TestPlace::factory()->create([
+            'bounding_box' => $boundingBox,
+        ])->fresh();
+
+        $this->assertEquals($boundingBox, $testPlace->bounding_box);
+    }
+
+    /** @test */
+    public function it_throws_exception_when_serializing_invalid_bounding_box_object(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        TestPlace::factory()->make([
+            'bounding_box' => new Point(0, 90),
+        ]);
+    }
+
+    /** @test */
+    public function it_throws_exception_when_serializing_invalid_type(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        TestPlace::factory()->make([
+            'bounding_box' => 'not-a-bounding-box-object',
+        ]);
+    }
+
+    /** @test */
+    public function it_throws_exception_when_deserializing_invalid_bounding_box_object(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        TestPlace::factory()->create([
+            'bounding_box' => DB::raw('POINT(0, 90)'),
+        ]);
+
+        /** @var TestPlace $testPlace */
+        $testPlace = TestPlace::firstOrFail();
+
+        $testPlace->getAttribute('bounding_box');
+    }
+
+    /** @test */
+    public function it_serializes_and_deserializes_null(): void
+    {
+        /** @var TestPlace $testPlace */
+        $testPlace = TestPlace::factory()->create([
+            'bounding_box' => null,
+        ])->fresh();
+
+        $this->assertEquals(null, $testPlace->bounding_box);
     }
 }
