@@ -16,6 +16,7 @@ use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
+use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -44,14 +45,17 @@ class BoundingBox implements Arrayable, Jsonable, JsonSerializable, Castable
         }
     }
 
-    /**
-     * @param GeometryCollection $geometryCollection
-     *
-     * @return BoundingBox
-     */
-    public static function fromGeometryCollection(GeometryCollection $geometryCollection): self
+    public static function fromGeometry(Geometry $geometry, float $minPadding = 0): ?self
     {
-        return self::fromPoints($geometryCollection->getPoints());
+        if ($geometry instanceof GeometryCollection) {
+            return self::fromPoints($geometry->getPoints(), $minPadding);
+        }
+
+        if ($geometry instanceof Point) {
+            return self::fromPoints([$geometry], $minPadding);
+        }
+
+        return null;
     }
 
     /**
@@ -59,7 +63,7 @@ class BoundingBox implements Arrayable, Jsonable, JsonSerializable, Castable
      *
      * @return BoundingBox
      */
-    public static function fromPoints(array|Collection $points): self
+    public static function fromPoints(array|Collection $points, float $minPadding = 0): self
     {
         $left = $bottom = $right = $top = null;
         foreach ($points as $point) {
@@ -77,6 +81,20 @@ class BoundingBox implements Arrayable, Jsonable, JsonSerializable, Castable
             if (!isset($top) || $latitude > $top) {
                 $top = $latitude;
             }
+        }
+
+        $lonPadding = $right - $left;
+        if ($lonPadding < $minPadding) {
+            $halfPadding = ($minPadding - $lonPadding) / 2;
+            $left -= $halfPadding;
+            $right += $halfPadding;
+        }
+
+        $latPadding = $top - $bottom;
+        if ($latPadding < $minPadding) {
+            $halfPadding = ($minPadding - $latPadding) / 2;
+            $bottom -= $halfPadding;
+            $top += $halfPadding;
         }
 
         return new self(new Point($left, $bottom), new Point($right, $top));

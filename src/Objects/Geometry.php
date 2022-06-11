@@ -10,7 +10,9 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Query\Expression;
 use InvalidArgumentException;
+use JetBrains\PhpStorm\ArrayShape;
 use JsonSerializable;
+use MatanYadaev\EloquentSpatial\BoundingBox;
 use MatanYadaev\EloquentSpatial\Factory;
 use MatanYadaev\EloquentSpatial\GeometryCast;
 
@@ -63,6 +65,11 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
         return $geometry;
     }
 
+    public function toBoundingBox(): ?BoundingBox
+    {
+        return BoundingBox::fromGeometry($this);
+    }
+
     /**
      * @return array<mixed>
      */
@@ -74,6 +81,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
     /**
      * @return array{type: string, coordinates: array<mixed>}
      */
+    #[ArrayShape(['type' => "string", 'coordinates' => "mixed"])]
     public function toArray(): array
     {
         return [

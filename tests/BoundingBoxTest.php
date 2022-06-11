@@ -95,9 +95,42 @@ class BoundingBoxTest extends TestCase
     }
 
     /** @test */
+    public function it_can_create_bounding_box_with_min_padding(): void
+    {
+        $bbox = BoundingBox::fromPoints([
+            new Point(-30.458423, 40.751244),
+            new Point(-30.453251, 52.435631),
+            new Point(-30.453251, 32.235461),
+            new Point(-30.453204, 30.12345),
+        ], 0.01);
+
+        $this->assertEquals([
+            'left' => -30.4608135,
+            'bottom' => 30.12345,
+            'right' => -30.4508135,
+            'top' => 52.435631,
+        ], $bbox->toArray());
+
+        $bbox = BoundingBox::fromPoints([
+            new Point(-30.458423, 40.751244),
+            new Point(-30.458423, 40.751244),
+            new Point(-30.458423, 40.751244),
+            new Point(-30.458423, 40.751244),
+            new Point(-30.458423, 40.751244),
+        ], 0.01);
+
+        $this->assertEquals([
+            'left' => -30.463423,
+            'bottom' => 40.746244,
+            'right' => -30.453423,
+            'top' => 40.756244
+        ], $bbox->toArray());
+    }
+
+    /** @test */
     public function it_can_create_bounding_box_from_geometry_collection(): void
     {
-        $bbox = BoundingBox::fromGeometryCollection(new GeometryCollection([
+        $bbox = BoundingBox::fromGeometry(new GeometryCollection([
             new Polygon([
                 new LineString([
                     new Point(-30.618423, 40.751244),
@@ -128,7 +161,7 @@ class BoundingBoxTest extends TestCase
     /** @test */
     public function it_can_convert_bounding_box_to_polygon(): void
     {
-        $bbox = BoundingBox::fromGeometryCollection(new GeometryCollection([
+        $bbox = BoundingBox::fromGeometry(new GeometryCollection([
             new Polygon([
                 new LineString([
                     new Point(-30.618423, 40.751244),

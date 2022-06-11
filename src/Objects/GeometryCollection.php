@@ -99,11 +99,6 @@ class GeometryCollection extends Geometry implements ArrayAccess
         return $points->flatten();
     }
 
-    public function toBoundingBox(): BoundingBox
-    {
-        return BoundingBox::fromGeometryCollection($this);
-    }
-
     /**
      * @param mixed $offset
      *
