@@ -65,9 +65,9 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
         return $geometry;
     }
 
-    public function toBoundingBox(): ?BoundingBox
+    public function toBoundingBox(float $minPadding = 0): ?BoundingBox
     {
-        return BoundingBox::fromGeometry($this);
+        return BoundingBox::fromGeometry($this, $minPadding);
     }
 
     /**
