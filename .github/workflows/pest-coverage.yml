@@ -12,10 +12,12 @@ jobs:
       db:
         image: mysql:8.0
         env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: laravel_eloquent_spatial_test
+		      MYSQL_RANDOM_ROOT_PASSWORD: yes
+		      MYSQL_DATABASE: test
+		      MYSQL_USER: test
+		      MYSQL_PASSWORD: test
         ports:
-          - 3306
+          - 23306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
@@ -33,5 +35,5 @@ jobs:
 
       - name: Execute tests
         env:
-          DB_PORT: ${{ job.services.db.ports['3306'] }}
+          DB_PORT: ${{ job.services.db.ports['23306'] }}
         run: XDEBUG_MODE=coverage ./vendor/bin/pest --coverage --min=100
