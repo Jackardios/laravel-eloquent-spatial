@@ -107,7 +107,10 @@ class GeometryCollection extends Geometry implements ArrayAccess
       }
     }
 
-    return $points->flatten();
+    /** @var Collection<int, Point> $flattenedPoints */
+    $flattenedPoints = $points->flatten();
+
+    return $flattenedPoints;
   }
 
   /**

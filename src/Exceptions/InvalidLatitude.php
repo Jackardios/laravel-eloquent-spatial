@@ -4,7 +4,7 @@ namespace MatanYadaev\EloquentSpatial\Exceptions;
 
 use InvalidArgumentException;
 
-class InvalidLatitude extends InvalidArgumentException
+final class InvalidLatitude extends InvalidArgumentException
 {
   public static function make(float $latitude): InvalidLatitude
   {

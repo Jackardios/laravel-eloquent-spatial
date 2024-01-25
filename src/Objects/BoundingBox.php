@@ -12,8 +12,10 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use JsonException;
 use JsonSerializable;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
+use MatanYadaev\EloquentSpatial\Exceptions\InvalidGeometry;
 use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
@@ -49,7 +51,7 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
     }
   }
 
-  public static function fromGeometry(Geometry $geometry, float $minPadding = 0): ?self
+  public static function fromGeometry(Geometry $geometry, float $minPadding = 0): self
   {
     if ($geometry instanceof GeometryCollection) {
       return self::fromPoints($geometry->getPoints(), $minPadding);
@@ -59,11 +61,13 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
       return self::fromPoints([$geometry], $minPadding);
     }
 
-    return null;
+    $geometryClass = $geometry::class;
+
+    throw new InvalidGeometry("cannot create bounding box from $geometryClass");
   }
 
   /**
-   * @param Point[]|Collection<Point> $points
+   * @param array<int, Point>|Collection<int, Point> $points
    *
    * @return BoundingBox
    */
@@ -85,6 +89,10 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
       if (!isset($top) || $latitude > $top) {
         $top = $latitude;
       }
+    }
+
+    if (!isset($left) || !isset($right) || !isset($bottom) || !isset($top)) {
+      throw new InvalidArgumentException('cannot create bounding box from empty points');
     }
 
     $lonPadding = $right - $left;
@@ -118,6 +126,9 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
     ]);
   }
 
+  /**
+   * @return array{left: float,bottom: float,right: float,top: float}
+   */
   public function toArray(): array
   {
     return [
@@ -128,16 +139,30 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
     ];
   }
 
+
+  /**
+   * @param  int  $options
+   * @return string
+   *
+   * @throws JsonException
+   */
   public function toJson($options = 0): string
   {
-    return json_encode($this, $options);
+    return json_encode($this, $options | JSON_THROW_ON_ERROR);
   }
 
+  /**
+   * @return array<mixed>
+   */
   public function jsonSerialize(): array
   {
     return $this->toArray();
   }
 
+  /**
+   * @param  array<string>  $arguments
+   * @return CastsAttributes
+   */
   public static function castUsing(array $arguments): CastsAttributes
   {
     return new class implements CastsAttributes
