@@ -20,7 +20,7 @@ it('calculates distance', function (): void {
     ->firstOrFail();
 
   expect($testPlaceWithDistance->distance)->toBe(156897.79947260793);
-})->skip(fn () => !(new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
 
 it('calculates distance - without axis-order', function (): void {
   TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -42,7 +42,7 @@ it('calculates distance with alias', function (): void {
     ->firstOrFail();
 
   expect($testPlaceWithDistance->distance_in_meters)->toBe(156897.79947260793);
-})->skip(fn () => !(new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
 
 it('calculates distance with alias - without axis-order', function (): void {
   TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -68,7 +68,7 @@ it('filters by distance', function (): void {
 
   expect($testPlacesWithinDistance)->toHaveCount(1);
   expect($testPlacesWithinDistance[0]->point)->toEqual($pointWithinDistance);
-})->skip(fn () => !(new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
 
 it('filters by distance - without axis-order', function (): void {
   $pointWithinDistance = new Point(0, 0, Srid::WGS84->value);
@@ -120,7 +120,7 @@ it('calculates distance sphere', function (): void {
     ->firstOrFail();
 
   expect($testPlaceWithDistance->distance)->toBe(157249.59776850493);
-})->skip(fn () => !(new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
 
 it('calculates distance sphere - without axis-order', function (): void {
   TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -142,7 +142,7 @@ it('calculates distance sphere with alias', function (): void {
     ->firstOrFail();
 
   expect($testPlaceWithDistance->distance_in_meters)->toBe(157249.59776850493);
-})->skip(fn () => !(new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
 
 it('calculates distance sphere with alias - without axis-order', function (): void {
   TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);

@@ -16,11 +16,6 @@ use JsonException;
 use JsonSerializable;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidGeometry;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use Stringable;
 
 class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, Stringable
@@ -67,8 +62,7 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
   }
 
   /**
-   * @param array<int, Point>|Collection<int, Point> $points
-   *
+   * @param  array<int, Point>|Collection<int, Point>  $points
    * @return BoundingBox
    */
   public static function fromPoints(array|Collection $points, float $minPadding = 0): self
@@ -77,21 +71,21 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
     foreach ($points as $point) {
       [$longitude, $latitude] = $point->getCoordinates();
 
-      if (!isset($left) || $longitude < $left) {
+      if (! isset($left) || $longitude < $left) {
         $left = $longitude;
       }
-      if (!isset($right) || $longitude > $right) {
+      if (! isset($right) || $longitude > $right) {
         $right = $longitude;
       }
-      if (!isset($bottom) || $latitude < $bottom) {
+      if (! isset($bottom) || $latitude < $bottom) {
         $bottom = $latitude;
       }
-      if (!isset($top) || $latitude > $top) {
+      if (! isset($top) || $latitude > $top) {
         $top = $latitude;
       }
     }
 
-    if (!isset($left) || !isset($right) || !isset($bottom) || !isset($top)) {
+    if (! isset($left) || ! isset($right) || ! isset($bottom) || ! isset($top)) {
       throw new InvalidArgumentException('cannot create bounding box from empty points');
     }
 
@@ -115,6 +109,7 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
   public function toPolygon(): Polygon
   {
     ['left' => $left, 'bottom' => $bottom, 'right' => $right, 'top' => $top] = $this->toArray();
+
     return new Polygon([
       new LineString([
         new Point($left, $top),
@@ -122,7 +117,7 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
         new Point($right, $bottom),
         new Point($left, $bottom),
         new Point($left, $top),
-      ])
+      ]),
     ]);
   }
 
@@ -138,7 +133,6 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
       'top' => $this->rightTop->getLatitude(),
     ];
   }
-
 
   /**
    * @param  int  $options
@@ -165,19 +159,17 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
    */
   public static function castUsing(array $arguments): CastsAttributes
   {
-    return new class implements CastsAttributes
-    {
+    return new class implements CastsAttributes {
       /**
-       * @param Model $model
-       * @param string $key
-       * @param string|null $wkb
-       * @param array<string, mixed> $attributes
-       *
+       * @param  Model  $model
+       * @param  string  $key
+       * @param  string|null  $wkb
+       * @param  array<string, mixed>  $attributes
        * @return BoundingBox|null
        */
       public function get($model, string $key, $wkb, $attributes): ?BoundingBox
       {
-        if (!$wkb) {
+        if (! $wkb) {
           return null;
         }
 
@@ -185,22 +177,21 @@ class BoundingBox implements Castable, Arrayable, Jsonable, JsonSerializable, St
       }
 
       /**
-       * @param Model $model
-       * @param string $key
-       * @param BoundingBox|mixed|null $bbox
-       * @param array<string, mixed> $attributes
-       *
+       * @param  Model  $model
+       * @param  string  $key
+       * @param  BoundingBox|mixed|null  $bbox
+       * @param  array<string, mixed>  $attributes
        * @return ExpressionContract|null
        *
        * @throws InvalidArgumentException
        */
       public function set($model, string $key, $bbox, $attributes): ?ExpressionContract
       {
-        if (!$bbox) {
+        if (! $bbox) {
           return null;
         }
 
-        if (!($bbox instanceof BoundingBox)) {
+        if (! ($bbox instanceof BoundingBox)) {
           $bboxType = is_object($bbox) ? $bbox::class : gettype($bbox);
           throw new InvalidArgumentException(
             sprintf('Expected %s, %s given.', static::class, $bboxType)

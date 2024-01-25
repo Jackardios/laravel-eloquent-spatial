@@ -31,7 +31,7 @@ class Factory
       /** @var geoPHPGeometry|false $geoPHPGeometry */
       $geoPHPGeometry = geoPHP::load($value);
     } finally {
-      if (!isset($geoPHPGeometry) || !$geoPHPGeometry) {
+      if (! isset($geoPHPGeometry) || ! $geoPHPGeometry) {
         throw new InvalidArgumentException('Invalid spatial value');
       }
     }

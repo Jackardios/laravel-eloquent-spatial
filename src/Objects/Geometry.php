@@ -61,7 +61,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
     // @phpstan-ignore-next-line
     $wkbWithoutSrid = (new geoPHPWkb)->write($geoPHPGeometry);
 
-    return $sridInBinary . $wkbWithoutSrid;
+    return $sridInBinary.$wkbWithoutSrid;
   }
 
   /**
@@ -81,7 +81,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
     $geometry = Factory::parse($wkb);
     $geometry->srid = $srid;
 
-    if (!($geometry instanceof static)) {
+    if (! ($geometry instanceof static)) {
       throw new InvalidArgumentException(
         sprintf('Expected %s, %s given.', static::class, $geometry::class)
       );
@@ -102,7 +102,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
     $geometry = Factory::parse($wkt);
     $geometry->srid = $srid instanceof Srid ? $srid->value : $srid;
 
-    if (!($geometry instanceof static)) {
+    if (! ($geometry instanceof static)) {
       throw new InvalidArgumentException(
         sprintf('Expected %s, %s given.', static::class, $geometry::class)
       );
@@ -123,7 +123,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
     $geometry = Factory::parse($geoJson);
     $geometry->srid = $srid instanceof Srid ? $srid->value : $srid;
 
-    if (!($geometry instanceof static)) {
+    if (! ($geometry instanceof static)) {
       throw new InvalidArgumentException(
         sprintf('Expected %s, %s given.', static::class, $geometry::class)
       );
@@ -217,7 +217,7 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
   {
     $wkt = $this->toWkt();
 
-    if (!(new AxisOrder)->supported($connection)) {
+    if (! (new AxisOrder)->supported($connection)) {
       // @codeCoverageIgnoreStart
       return DB::raw("ST_GeomFromText('{$wkt}', {$this->srid})");
       // @codeCoverageIgnoreEnd

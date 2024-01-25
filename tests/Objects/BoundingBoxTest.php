@@ -106,7 +106,7 @@ it('can create bounding box with min padding', function () {
     'left' => -30.463423,
     'bottom' => 40.746244,
     'right' => -30.453423,
-    'top' => 40.756244
+    'top' => 40.756244,
   ]);
 });
 
@@ -128,7 +128,7 @@ it('can create bounding box from geometry collection', function () {
         new Point(-36.546231, 32.345323),
         new Point(-12.876852, 39.125543),
       ]),
-    ])
+    ]),
   ]));
 
   expect($bbox->toArray())->toBe([
@@ -157,7 +157,7 @@ it('can convert bounding box to polygon', function () {
         new Point(-36.546231, 32.345323),
         new Point(-12.876852, 39.125543),
       ]),
-    ])
+    ]),
   ]));
 
   expect($bbox->toPolygon()->getCoordinates())->toBe([
@@ -167,7 +167,7 @@ it('can convert bounding box to polygon', function () {
       [1.421546, -12.575421],
       [-36.546231, -12.575421],
       [-36.546231, 54.547658],
-    ]
+    ],
   ]);
 });
 
