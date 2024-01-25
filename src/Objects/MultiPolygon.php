@@ -4,36 +4,50 @@ declare(strict_types=1);
 
 namespace MatanYadaev\EloquentSpatial\Objects;
 
-use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
 
 /**
- * @method array<Polygon> getGeometries()
- * @method Polygon offsetGet(mixed $offset)
+ * @property Collection<int, Polygon> $geometries
+ *
+ * @method Collection<int, Polygon> getGeometries()
+ * @method Polygon offsetGet(int $offset)
+ * @method void offsetSet(int $offset, Polygon $value)
  */
 class MultiPolygon extends GeometryCollection
 {
-    /** @var Collection<Polygon> */
-    protected Collection $geometries;
+  protected string $collectionOf = Polygon::class;
 
-    protected string $collectionOf = Polygon::class;
+  protected int $minimumGeometries = 1;
 
-    protected int $minimumGeometries = 1;
+  /**
+   * @param  Collection<int, Polygon>|array<int, Polygon>  $geometries
+   * @param  int  $srid
+   *
+   * @throws InvalidArgumentException
+   */
+  public function __construct(Collection|array $geometries, int|Srid $srid = 0)
+  {
+    // @phpstan-ignore-next-line
+    parent::__construct($geometries, $this->srid = $srid instanceof Srid ? $srid->value : $srid);
+  }
 
-    /**
-     * @param Collection<Polygon>|array<Polygon> $geometries
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __construct(Collection | array $geometries)
-    {
-        parent::__construct($geometries);
-    }
+  public function toWkt(): string
+  {
+    $wktData = $this->getWktData();
 
-    public function toWkt(): Expression
-    {
-        return DB::raw("MULTIPOLYGON({$this->toCollectionWkt()})");
-    }
+    return "MULTIPOLYGON({$wktData})";
+  }
+
+  public function getWktData(): string
+  {
+    return $this->geometries
+      ->map(static function (Polygon $polygon): string {
+        $wktData = $polygon->getWktData();
+
+        return "({$wktData})";
+      })
+      ->join(', ');
+  }
 }

@@ -6,5 +6,5 @@ use InvalidArgumentException;
 
 class InvalidBoundingBoxPoints extends InvalidArgumentException
 {
-    //
+  //
 }

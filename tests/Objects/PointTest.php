@@ -1,78 +1,128 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\Objects;
-
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use InvalidArgumentException;
-use MatanYadaev\EloquentSpatial\Exceptions\InvalidLatitude;
-use MatanYadaev\EloquentSpatial\Exceptions\InvalidLongitude;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Tests\TestCase;
 use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
-class PointTest extends TestCase
-{
-    use DatabaseMigrations;
+uses(DatabaseMigrations::class);
 
-    /** @test */
-    public function it_stores_point(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'point' => new Point(0, 90),
-        ]);
+it('creates a model record with point', function (): void {
+  $point = new Point(180, 0);
 
-        $this->assertInstanceOf(Point::class, $testPlace->point);
-        $this->assertEquals(90, $testPlace->point->latitude);
-        $this->assertEquals(0, $testPlace->point->longitude);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['point' => $point]);
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+  expect($testPlace->point)->toBeInstanceOf(Point::class);
+  expect($testPlace->point)->toEqual($point);
+});
 
-    /** @test */
-    public function it_stores_point_from_json(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'point' => Point::fromJson('{"type":"Point","coordinates":[0,90]}'),
-        ]);
+it('creates a model record with point with SRID integer', function (): void {
+  $point = new Point(180, 0, Srid::WGS84->value);
 
-        $this->assertInstanceOf(Point::class, $testPlace->point);
-        $this->assertEquals(90, $testPlace->point->latitude);
-        $this->assertEquals(0, $testPlace->point->longitude);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['point' => $point]);
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+  expect($testPlace->point->srid)->toBe(Srid::WGS84->value);
+});
 
-    /** @test */
-    public function it_generates_point_geo_json(): void
-    {
-        $point = new Point(0, 90);
+it('creates a model record with point with SRID enum', function (): void {
+  $point = new Point(180, 0, Srid::WGS84);
 
-        $this->assertEquals('{"type":"Point","coordinates":[0,90]}', $point->toJson());
-    }
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['point' => $point]);
 
-    /** @test */
-    public function it_throws_exception_when_generating_point_from_geo_json_without_coordinates(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  expect($testPlace->point->srid)->toBe(Srid::WGS84->value);
+});
 
-        Point::fromJson('{"type":"Point","coordinates":[]}');
-    }
+it('creates point from JSON', function (): void {
+  $point = new Point(180, 0);
 
-    /** @test */
-    public function it_throws_exception_when_creating_point_with_invalid_latitude(): void
-    {
-        $this->expectException(InvalidLatitude::class);
+  $pointFromJson = Point::fromJson('{"type":"Point","coordinates":[180,0]}');
 
-        new Point(1, 91);
-    }
+  expect($pointFromJson)->toEqual($point);
+});
 
-    /** @test */
-    public function it_throws_exception_when_creating_point_with_invalid_longitude(): void
-    {
-        $this->expectException(InvalidLongitude::class);
+it('creates point with SRID from JSON', function (): void {
+  $point = new Point(180, 0, Srid::WGS84->value);
 
-        new Point(-181, 90);
-    }
-}
+  $pointFromJson = Point::fromJson('{"type":"Point","coordinates":[180,0]}', Srid::WGS84->value);
+
+  expect($pointFromJson)->toEqual($point);
+});
+
+it('generates point JSON', function (): void {
+  $point = new Point(180, 0);
+
+  $json = $point->toJson();
+
+  $expectedJson = '{"type":"Point","coordinates":[180,0]}';
+  expect($json)->toBe($expectedJson);
+});
+
+it('throws exception when creating point from invalid JSON', function (): void {
+  expect(function (): void {
+    Point::fromJson('{"type":"Point","coordinates":[]}');
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('creates point from WKT', function (): void {
+  $point = new Point(180, 0);
+
+  $pointFromWkt = Point::fromWkt('POINT(180 0)');
+
+  expect($pointFromWkt)->toEqual($point);
+});
+
+it('creates point with SRID from WKT', function (): void {
+  $point = new Point(180, 0, Srid::WGS84->value);
+
+  $pointFromWkt = Point::fromWkt('POINT(180 0)', Srid::WGS84->value);
+
+  expect($pointFromWkt)->toEqual($point);
+});
+
+it('generates point WKT', function (): void {
+  $point = new Point(180, 0);
+
+  $wkt = $point->toWkt();
+
+  $expectedWkt = 'POINT(180 0)';
+  expect($wkt)->toBe($expectedWkt);
+});
+
+it('creates point from WKB', function (): void {
+  $point = new Point(180, 0);
+
+  $pointFromWkb = Point::fromWkb($point->toWkb());
+
+  expect($pointFromWkb)->toEqual($point);
+});
+
+it('creates point with SRID from WKB', function (): void {
+  $point = new Point(180, 0, Srid::WGS84->value);
+
+  $pointFromWkb = Point::fromWkb($point->toWkb());
+
+  expect($pointFromWkb)->toEqual($point);
+});
+
+it('casts a Point to a string', function (): void {
+  $point = new Point(180, 0, Srid::WGS84->value);
+
+  expect($point->__toString())->toEqual('POINT(180 0)');
+});
+
+it('adds a macro toPoint', function (): void {
+  Geometry::macro('getName', function (): string {
+    /** @var Geometry $this */
+    // @phpstan-ignore-next-line
+    return class_basename($this);
+  });
+
+  $point = new Point(180, 0, Srid::WGS84->value);
+
+  // @phpstan-ignore-next-line
+  expect($point->getName())->toBe('Point');
+});

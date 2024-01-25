@@ -6,25 +6,28 @@ namespace MatanYadaev\EloquentSpatial\Objects;
 
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
 
 /**
- * @method array<Point> getGeometries()
- * @method Point offsetGet(mixed $offset)
+ * @property Collection<int, Point> $geometries
+ *
+ * @method Collection<int, Point> getGeometries()
+ * @method Point offsetGet(int $offset)
+ * @method void offsetSet(int $offset, Point $value)
  */
 abstract class PointCollection extends GeometryCollection
 {
-    /** @var Collection<Point> */
-    protected Collection $geometries;
+  protected string $collectionOf = Point::class;
 
-    protected string $collectionOf = Point::class;
-
-    /**
-     * @param Collection<Point>|array<Point> $geometries
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __construct(Collection | array $geometries)
-    {
-        parent::__construct($geometries);
-    }
+  /**
+   * @param  Collection<int, Point>|array<int, Point>  $geometries
+   * @param  int  $srid
+   *
+   * @throws InvalidArgumentException
+   */
+  public function __construct(Collection|array $geometries, int|Srid $srid = 0)
+  {
+    // @phpstan-ignore-next-line
+    parent::__construct($geometries, $this->srid = $srid instanceof Srid ? $srid->value : $srid);
+  }
 }

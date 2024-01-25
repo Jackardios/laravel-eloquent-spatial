@@ -1,182 +1,193 @@
 # Laravel Eloquent Spatial
 
-This package is forked version of [laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
+![Tests](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Tests/badge.svg)
+![Static code analysis](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Static%20code%20analysis/badge.svg)
+![Lint](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Lint/badge.svg)
+[![Total Downloads](https://img.shields.io/packagist/dt/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
 
-Laravel package to work with spatial data types and functions.
+**This Laravel package allows you to easily work with spatial data types and functions.**
 
-This package supports MySQL 5.7 & 8.0 and works on PHP 8 & Laravel 8.
+This package supports MySQL v8, MySQL v5.7, and MariaDB v10.
 
-## Installation
+## Getting Started
+
+### Installing the Package
 
 You can install the package via composer:
 
 ```bash
-composer require jackardios/laravel-eloquent-spatial
+composer require matanyadaev/laravel-eloquent-spatial
 ```
 
-## Quickstart
-Generate a new model with a migration file:
-```bash
-php artisan make:model --migration
-```
+### Setting Up Your First Model
 
-Add some spatial columns to the migration file:
+1. First, generate a new model along with a migration file by running:
 
-```php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+   ```bash
+   php artisan make:model {modelName} --migration
+   ```
 
-class CreatePlacesTable extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('places', static function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->point('location')->nullable();
-            $table->polygon('area')->nullable();
-            $table->timestamps();
-        });
-    }
+2. Next, add some spatial columns to the migration file. For instance, to create a "places" table:
 
-    public function down(): void
-    {
-        Schema::dropIfExists('places');
-    }
-}
-```
+   ```php
+   use Illuminate\Database\Migrations\Migration;
+   use Illuminate\Database\Schema\Blueprint;
 
-Run the migration:
+   class CreatePlacesTable extends Migration
+   {
+       public function up(): void
+       {
+           Schema::create('places', static function (Blueprint $table) {
+               $table->id();
+               $table->string('name')->unique();
+               $table->point('location')->nullable();
+               $table->polygon('area')->nullable();
+               $table->timestamps();
+           });
+       }
 
-```bash
-php artisan migrate
-```
+       public function down(): void
+       {
+           Schema::dropIfExists('places');
+       }
+   }
+   ```
 
-Fill the `$fillable` and `$casts` arrays and add custom eloquent builder to your new model:
+3. Run the migration:
 
-```php
-namespace App\Models;
+   ```bash
+   php artisan migrate
+   ```
 
-use Illuminate\Database\Eloquent\Model;
-use MatanYadaev\EloquentSpatial\SpatialBuilder;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
+4. In your new model, fill the `$fillable` and `$casts` arrays and use the `HasSpatial` trait:
 
-/**
- * @property Point $location
- * @property Polygon $area
- * @method static SpatialBuilder query()
- */
-class Place extends Model
-{
-    protected $fillable = [
-        'name'
-        'location',
-        'area',
-    ];
+   ```php
+   namespace App\Models;
 
-    protected $casts = [
-        'location' => Point::class,
-        'area' => Polygon::class,
-    ];
-    
-    public function newEloquentBuilder($query): SpatialBuilder
-    {
-        return new SpatialBuilder($query);
-    }
-}
-```
+   use Illuminate\Database\Eloquent\Model;
+   use MatanYadaev\EloquentSpatial\Objects\Point;
+   use MatanYadaev\EloquentSpatial\Objects\Polygon;
+   use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
-Access spatial data:
+   /**
+    * @property Point $location
+    * @property Polygon $area
+    */
+   class Place extends Model
+   {
+       use HasSpatial;
+
+       protected $fillable = [
+           'name',
+           'location',
+           'area',
+       ];
+
+       protected $casts = [
+           'location' => Point::class,
+           'area' => Polygon::class,
+       ];
+   }
+   ```
+
+### Interacting with Spatial Data
+
+After setting up your model, you can now create and access spatial data. Here's an example:
 
 ```php
 use App\Models\Place;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+
+// Create new records
 
 $londonEye = Place::create([
     'name' => 'London Eye',
-    'location' => new Point(-0.1195537, 51.5032973)
+    'location' => new Point(-0.1217424, 51.5032973),
+]);
+
+$whiteHouse = Place::create([
+    'name' => 'White House',
+    'location' => new Point(38.8976763, -77.0365298, Srid::WGS84->value), // with SRID
 ]);
 
 $vaticanCity = Place::create([
     'name' => 'Vatican City',
     'area' => new Polygon([
         new LineString([
-              new Point(12.455363273620605, 41.90746728266806),
-              new Point(12.450309991836548, 41.906636872349075),
-              new Point(12.445632219314575, 41.90197359839437),
-              new Point(12.447413206100464, 41.90027269624499),
-              new Point(12.457906007766724, 41.90000118654431),
-              new Point(12.458517551422117, 41.90281205461268),
-              new Point(12.457584142684937, 41.903107507989986),
-              new Point(12.457734346389769, 41.905918239316286),
-              new Point(12.45572805404663, 41.90637337450963),
-              new Point(12.455363273620605, 41.90746728266806),
-        ])
-    ])
+              new Point(41.90746728266806, 12.455363273620605),
+              new Point(41.906636872349075, 12.450309991836548),
+              new Point(41.90197359839437, 12.445632219314575),
+              new Point(41.90027269624499, 12.447413206100464),
+              new Point(41.90000118654431, 12.457906007766724),
+              new Point(41.90281205461268, 12.458517551422117),
+              new Point(41.903107507989986, 12.457584142684937),
+              new Point(41.905918239316286, 12.457734346389769),
+              new Point(41.90637337450963, 12.45572805404663),
+              new Point(41.90746728266806, 12.455363273620605),
+        ]),
+    ]),
 ])
-```
 
-Retrieve a record with spatial data:
+// Access the data
 
-```php
-echo $londonEye->location->longitude; // -0.1195537
 echo $londonEye->location->latitude; // 51.5032973
+echo $londonEye->location->longitude; // -0.1217424
 
-echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[41.90746728266806,12.455363273620605],[41.906636872349075,12.450309991836548],[41.90197359839437,12.445632219314575],[41.90027269624499,12.447413206100464],[41.90000118654431,12.457906007766724],[41.90281205461268,12.458517551422117],[41.903107507989986,12.457584142684937],[41.905918239316286,12.457734346389769],[41.90637337450963,12.45572805404663],[41.90746728266806,12.455363273620605]]]}
+echo $whiteHouse->location->srid; // 4326
+
+echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[12.455363273620605,41.90746728266806],[12.450309991836548,41.906636872349075],[12.445632219314575,41.90197359839437],[12.447413206100464,41.90027269624499],[12.457906007766724,41.90000118654431],[12.458517551422117,41.90281205461268],[12.457584142684937,41.903107507989986],[12.457734346389769,41.905918239316286],[12.45572805404663,41.90637337450963],[12.455363273620605,41.90746728266806]]]}
 ```
 
-## API
+## Further Reading
 
-Please see [API](API.md) for more informative API documentation.
+For more comprehensive documentation on the API, please refer to the [API](API.md) page.
 
-## Tip for better IDE support
+## Extension
 
-In order to get better IDE support, you should add a `query` method phpDoc annotation to your model:
+You can add new methods to the `Geometry` class through macros.
 
-```php
-/**
- * @method static SpatialBuilder query()
- */
-class Place extends Model
-{
-    // ...
-}
-```
-
-Or alternatively override the method:
+Here's an example of how to register a macro in your service provider's `boot` method:
 
 ```php
-class Place extends Model
+class AppServiceProvider extends ServiceProvider
 {
-    public static function query(): SpatialBuilder
+    public function boot(): void
     {
-        return parent::query();
+        Geometry::macro('getName', function (): string {
+            /** @var Geometry $this */
+            return class_basename($this);
+        });
     }
 }
 ```
 
-Create queries only with the `query()` static method:
+Use the method in your code:
 
 ```php
-Place::query()->whereDistance(...); // This is IDE-friendly
-Place::whereDistance(...); // This is not
+$londonEyePoint = new Point(-0.1217424, 51.5032973);
+
+echo $londonEyePoint->getName(); // Point
 ```
 
-## Tests
+## Development
 
-``` bash
-composer phpunit
-# or with coverage
-composer phpunit-coverage
-```
+Here are some useful commands for development:
 
-## Changelog
+- Run tests: `composer pest`
+- Run tests with coverage: `composer pest-coverage`
+- Perform type checking: `composer phpstan`
+- Format your code: `composer php-cs-fixer`
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+Before running tests, make sure to run `docker-compose up` to start the database container.
+
+## Updates and Changes
+
+For details on updates and changes, please refer to our [CHANGELOG](CHANGELOG.md).
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+Laravel Eloquent Spatial is released under The MIT License (MIT). For more information, please see our [License File](LICENSE.md).
