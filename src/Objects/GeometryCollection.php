@@ -92,6 +92,25 @@ class GeometryCollection extends Geometry implements ArrayAccess
   }
 
   /**
+   * @return Collection<int, Point>
+   */
+  public function getPoints(): Collection
+  {
+    $points = collect([]);
+
+    foreach ($this->getGeometries() as $geometry) {
+      if ($geometry instanceof Point) {
+        $points->push($geometry);
+      }
+      if ($geometry instanceof self) {
+        $points->push($geometry->getPoints());
+      }
+    }
+
+    return $points->flatten();
+  }
+
+  /**
    * @param  int  $offset
    * @return bool
    */
@@ -154,7 +173,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
   {
     $this->geometries->each(function (mixed $geometry): void {
       /** @var mixed $geometry */
-      if (! is_object($geometry) || ! ($geometry instanceof $this->collectionOf)) {
+      if (!is_object($geometry) || !($geometry instanceof $this->collectionOf)) {
         throw new InvalidArgumentException(
           sprintf('%s must be a collection of %s', static::class, $this->collectionOf)
         );

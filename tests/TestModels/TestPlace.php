@@ -4,6 +4,7 @@ namespace MatanYadaev\EloquentSpatial\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use MatanYadaev\EloquentSpatial\Objects\BoundingBox;
 use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
@@ -22,6 +23,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
  * @property Polygon $polygon
  * @property MultiPolygon $multi_polygon
  * @property GeometryCollection $geometry_collection
+ * @property BoundingBox|null $bounding_box
  * @property float|null $distance
  * @property float|null $distance_in_meters
  * @property Point|null $centroid
@@ -42,6 +44,7 @@ class TestPlace extends Model
     'multi_polygon',
     'geometry_collection',
     'point_with_line_string_cast',
+    'bounding_box',
   ];
 
   protected $casts = [
@@ -53,6 +56,7 @@ class TestPlace extends Model
     'multi_polygon' => MultiPolygon::class,
     'geometry_collection' => GeometryCollection::class,
     'point_with_line_string_cast' => LineString::class,
+    'bounding_box' => BoundingBox::class,
   ];
 
   protected static function newFactory(): TestPlaceFactory
