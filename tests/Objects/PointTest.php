@@ -9,7 +9,7 @@ use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 uses(DatabaseMigrations::class);
 
 it('creates a model record with point', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
@@ -19,7 +19,7 @@ it('creates a model record with point', function (): void {
 });
 
 it('creates a model record with point with SRID integer', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
@@ -28,7 +28,7 @@ it('creates a model record with point with SRID integer', function (): void {
 });
 
 it('creates a model record with point with SRID enum', function (): void {
-  $point = new Point(0, 180, Srid::WGS84);
+  $point = new Point(180, 0, Srid::WGS84);
 
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
@@ -37,7 +37,7 @@ it('creates a model record with point with SRID enum', function (): void {
 });
 
 it('creates point from JSON', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   $pointFromJson = Point::fromJson('{"type":"Point","coordinates":[180,0]}');
 
@@ -45,7 +45,7 @@ it('creates point from JSON', function (): void {
 });
 
 it('creates point with SRID from JSON', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   $pointFromJson = Point::fromJson('{"type":"Point","coordinates":[180,0]}', Srid::WGS84->value);
 
@@ -53,7 +53,7 @@ it('creates point with SRID from JSON', function (): void {
 });
 
 it('generates point JSON', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   $json = $point->toJson();
 
@@ -68,7 +68,7 @@ it('throws exception when creating point from invalid JSON', function (): void {
 });
 
 it('creates point from WKT', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   $pointFromWkt = Point::fromWkt('POINT(180 0)');
 
@@ -76,7 +76,7 @@ it('creates point from WKT', function (): void {
 });
 
 it('creates point with SRID from WKT', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   $pointFromWkt = Point::fromWkt('POINT(180 0)', Srid::WGS84->value);
 
@@ -84,7 +84,7 @@ it('creates point with SRID from WKT', function (): void {
 });
 
 it('generates point WKT', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   $wkt = $point->toWkt();
 
@@ -93,7 +93,7 @@ it('generates point WKT', function (): void {
 });
 
 it('creates point from WKB', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
 
   $pointFromWkb = Point::fromWkb($point->toWkb());
 
@@ -101,7 +101,7 @@ it('creates point from WKB', function (): void {
 });
 
 it('creates point with SRID from WKB', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   $pointFromWkb = Point::fromWkb($point->toWkb());
 
@@ -109,7 +109,7 @@ it('creates point with SRID from WKB', function (): void {
 });
 
 it('casts a Point to a string', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   expect($point->__toString())->toEqual('POINT(180 0)');
 });
@@ -121,7 +121,7 @@ it('adds a macro toPoint', function (): void {
     return class_basename($this);
   });
 
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
 
   // @phpstan-ignore-next-line
   expect($point->getName())->toBe('Point');

@@ -15,11 +15,11 @@ it('creates a model record with multi polygon', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -35,11 +35,11 @@ it('creates a model record with multi polygon with SRID integer', function (): v
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ], Srid::WGS84->value);
@@ -54,11 +54,11 @@ it('creates a model record with multi polygon with SRID enum', function (): void
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ], Srid::WGS84);
@@ -73,11 +73,11 @@ it('creates multi polygon from JSON', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -91,11 +91,11 @@ it('creates multi polygon with SRID from JSON', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ], Srid::WGS84->value);
@@ -109,11 +109,11 @@ it('generates multi polygon JSON', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -128,11 +128,11 @@ it('generates multi polygon feature collection JSON', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -147,11 +147,11 @@ it('creates multi polygon from WKT', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -165,11 +165,11 @@ it('creates multi polygon with SRID from WKT', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ], Srid::WGS84->value);
@@ -183,11 +183,11 @@ it('generates multi polygon WKT', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -202,11 +202,11 @@ it('creates multi polygon from WKB', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -220,11 +220,11 @@ it('creates multi polygon with SRID from WKB', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ], Srid::WGS84->value);
@@ -253,11 +253,11 @@ it('casts a MultiPolygon to a string', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);
@@ -275,11 +275,11 @@ it('adds a macro toMultiPolygon', function (): void {
   $multiPolygon = new MultiPolygon([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
   ]);

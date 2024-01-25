@@ -12,8 +12,8 @@ uses(DatabaseMigrations::class);
 
 it('creates a model record with line string', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   /** @var TestPlace $testPlace */
@@ -25,8 +25,8 @@ it('creates a model record with line string', function (): void {
 
 it('creates a model record with line string with SRID integer', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ], Srid::WGS84->value);
 
   /** @var TestPlace $testPlace */
@@ -37,8 +37,8 @@ it('creates a model record with line string with SRID integer', function (): voi
 
 it('creates a model record with line string with SRID enum', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ], Srid::WGS84);
 
   /** @var TestPlace $testPlace */
@@ -49,8 +49,8 @@ it('creates a model record with line string with SRID enum', function (): void {
 
 it('creates line string from JSON', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $lineStringFromJson = LineString::fromJson('{"type":"LineString","coordinates":[[180,0],[179,1]]}');
@@ -60,8 +60,8 @@ it('creates line string from JSON', function (): void {
 
 it('creates line string with SRID from JSON', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ], Srid::WGS84->value);
 
   $lineStringFromJson = LineString::fromJson('{"type":"LineString","coordinates":[[180,0],[179,1]]}', Srid::WGS84->value);
@@ -71,8 +71,8 @@ it('creates line string with SRID from JSON', function (): void {
 
 it('generates line string JSON', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $json = $lineString->toJson();
@@ -83,8 +83,8 @@ it('generates line string JSON', function (): void {
 
 it('generates line string feature collection JSON', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $featureCollectionJson = $lineString->toFeatureCollectionJson();
@@ -95,8 +95,8 @@ it('generates line string feature collection JSON', function (): void {
 
 it('creates line string from WKT', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $lineStringFromWkt = LineString::fromWkt('LINESTRING(180 0, 179 1)');
@@ -106,8 +106,8 @@ it('creates line string from WKT', function (): void {
 
 it('creates line string with SRID from WKT', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ], Srid::WGS84->value);
 
   $lineStringFromWkt = LineString::fromWkt('LINESTRING(180 0, 179 1)', Srid::WGS84->value);
@@ -117,8 +117,8 @@ it('creates line string with SRID from WKT', function (): void {
 
 it('generates line string WKT', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $wkt = $lineString->toWkt();
@@ -129,8 +129,8 @@ it('generates line string WKT', function (): void {
 
 it('creates line string from WKB', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $lineStringFromWkb = LineString::fromWkb($lineString->toWkb());
@@ -140,8 +140,8 @@ it('creates line string from WKB', function (): void {
 
 it('creates line string with SRID from WKB', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ], Srid::WGS84->value);
 
   $lineStringFromWkb = LineString::fromWkb($lineString->toWkb());
@@ -152,7 +152,7 @@ it('creates line string with SRID from WKB', function (): void {
 it('throws exception when line string has less than two points', function (): void {
   expect(function (): void {
     new LineString([
-      new Point(0, 180),
+      new Point(180, 0),
     ]);
   })->toThrow(InvalidArgumentException::class);
 });
@@ -168,8 +168,8 @@ it('throws exception when creating line string from incorrect geometry', functio
 
 it('casts a LineString to a string', function (): void {
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   expect($lineString->__toString())->toEqual('LINESTRING(180 0, 179 1)');
@@ -183,8 +183,8 @@ it('adds a macro toLineString', function (): void {
   });
 
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   // @phpstan-ignore-next-line

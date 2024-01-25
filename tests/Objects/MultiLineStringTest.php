@@ -13,8 +13,8 @@ uses(DatabaseMigrations::class);
 it('creates a model record with multi line string', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -28,8 +28,8 @@ it('creates a model record with multi line string', function (): void {
 it('creates a model record with multi line string with SRID integer', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ], Srid::WGS84->value);
 
@@ -42,8 +42,8 @@ it('creates a model record with multi line string with SRID integer', function (
 it('creates a model record with multi line string with SRID enum', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ], Srid::WGS84);
 
@@ -56,8 +56,8 @@ it('creates a model record with multi line string with SRID enum', function (): 
 it('creates multi line string from JSON', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -69,8 +69,8 @@ it('creates multi line string from JSON', function (): void {
 it('creates multi line string with SRID from JSON', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ], Srid::WGS84->value);
 
@@ -82,8 +82,8 @@ it('creates multi line string with SRID from JSON', function (): void {
 it('generates multi line string JSON', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -96,8 +96,8 @@ it('generates multi line string JSON', function (): void {
 it('generates multi line string feature collection JSON', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -110,8 +110,8 @@ it('generates multi line string feature collection JSON', function (): void {
 it('creates multi line string from WKT', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -123,8 +123,8 @@ it('creates multi line string from WKT', function (): void {
 it('creates multi line string with SRID from WKT', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ], Srid::WGS84->value);
 
@@ -136,8 +136,8 @@ it('creates multi line string with SRID from WKT', function (): void {
 it('generates multi line string WKT', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -150,8 +150,8 @@ it('generates multi line string WKT', function (): void {
 it('creates multi line string from WKB', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -163,8 +163,8 @@ it('creates multi line string from WKB', function (): void {
 it('creates multi line string with SRID from WKB', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ], Srid::WGS84->value);
 
@@ -191,8 +191,8 @@ it('throws exception when creating multi line string from incorrect geometry', f
 it('casts a MultiLineString to a string', function (): void {
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 
@@ -208,8 +208,8 @@ it('adds a macro toMultiLineString', function (): void {
 
   $multiLineString = new MultiLineString([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
+      new Point(180, 0),
+      new Point(179, 1),
     ]),
   ]);
 

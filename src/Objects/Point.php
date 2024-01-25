@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace MatanYadaev\EloquentSpatial\Objects;
 
 use MatanYadaev\EloquentSpatial\Enums\Srid;
+use MatanYadaev\EloquentSpatial\Exceptions\InvalidLatitude;
+use MatanYadaev\EloquentSpatial\Exceptions\InvalidLongitude;
 
 class Point extends Geometry
 {
-  public float $latitude;
-
   public float $longitude;
 
-  public function __construct(float $latitude, float $longitude, int|Srid $srid = 0)
+  public float $latitude;
+
+  public function __construct(float $longitude, float $latitude, int|Srid $srid = 0)
   {
-    $this->latitude = $latitude;
+    $this->validateCoordinates($longitude, $latitude);
     $this->longitude = $longitude;
+    $this->latitude = $latitude;
     $this->srid = $srid instanceof Srid ? $srid->value : $srid;
   }
 
@@ -40,5 +43,26 @@ class Point extends Geometry
       $this->longitude,
       $this->latitude,
     ];
+  }
+
+  public function getLongitude(): float
+  {
+    return $this->longitude;
+  }
+
+  public function getLatitude(): float
+  {
+    return $this->latitude;
+  }
+
+  protected function validateCoordinates(float $longitude, float $latitude): void
+  {
+    if ($longitude < -180 || $longitude > 180) {
+      throw InvalidLongitude::make($longitude);
+    }
+
+    if ($latitude < -90 || $latitude > 90) {
+      throw InvalidLatitude::make($latitude);
+    }
   }
 }

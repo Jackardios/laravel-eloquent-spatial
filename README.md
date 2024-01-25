@@ -30,66 +30,66 @@ composer require matanyadaev/laravel-eloquent-spatial
 
 2. Next, add some spatial columns to the migration file. For instance, to create a "places" table:
 
-    ```php
-    use Illuminate\Database\Migrations\Migration;
-    use Illuminate\Database\Schema\Blueprint;
+   ```php
+   use Illuminate\Database\Migrations\Migration;
+   use Illuminate\Database\Schema\Blueprint;
 
-    class CreatePlacesTable extends Migration
-    {
-        public function up(): void
-        {
-            Schema::create('places', static function (Blueprint $table) {
-                $table->id();
-                $table->string('name')->unique();
-                $table->point('location')->nullable();
-                $table->polygon('area')->nullable();
-                $table->timestamps();
-            });
-        }
+   class CreatePlacesTable extends Migration
+   {
+       public function up(): void
+       {
+           Schema::create('places', static function (Blueprint $table) {
+               $table->id();
+               $table->string('name')->unique();
+               $table->point('location')->nullable();
+               $table->polygon('area')->nullable();
+               $table->timestamps();
+           });
+       }
 
-        public function down(): void
-        {
-            Schema::dropIfExists('places');
-        }
-    }
-    ```
+       public function down(): void
+       {
+           Schema::dropIfExists('places');
+       }
+   }
+   ```
 
 3. Run the migration:
 
-    ```bash
-    php artisan migrate
-    ```
+   ```bash
+   php artisan migrate
+   ```
 
 4. In your new model, fill the `$fillable` and `$casts` arrays and use the `HasSpatial` trait:
 
-    ```php
-    namespace App\Models;
+   ```php
+   namespace App\Models;
 
-    use Illuminate\Database\Eloquent\Model;
-    use MatanYadaev\EloquentSpatial\Objects\Point;
-    use MatanYadaev\EloquentSpatial\Objects\Polygon;
-    use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+   use Illuminate\Database\Eloquent\Model;
+   use MatanYadaev\EloquentSpatial\Objects\Point;
+   use MatanYadaev\EloquentSpatial\Objects\Polygon;
+   use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
-    /**
-     * @property Point $location
-     * @property Polygon $area
-     */
-    class Place extends Model
-    {
-        use HasSpatial;
+   /**
+    * @property Point $location
+    * @property Polygon $area
+    */
+   class Place extends Model
+   {
+       use HasSpatial;
 
-        protected $fillable = [
-            'name',
-            'location',
-            'area',
-        ];
+       protected $fillable = [
+           'name',
+           'location',
+           'area',
+       ];
 
-        protected $casts = [
-            'location' => Point::class,
-            'area' => Polygon::class,
-        ];
-    }
-    ```
+       protected $casts = [
+           'location' => Point::class,
+           'area' => Polygon::class,
+       ];
+   }
+   ```
 
 ### Interacting with Spatial Data
 
@@ -106,7 +106,7 @@ use MatanYadaev\EloquentSpatial\Enums\Srid;
 
 $londonEye = Place::create([
     'name' => 'London Eye',
-    'location' => new Point(51.5032973, -0.1217424),
+    'location' => new Point(-0.1217424, 51.5032973),
 ]);
 
 $whiteHouse = Place::create([
@@ -118,16 +118,16 @@ $vaticanCity = Place::create([
     'name' => 'Vatican City',
     'area' => new Polygon([
         new LineString([
-              new Point(12.455363273620605, 41.90746728266806),
-              new Point(12.450309991836548, 41.906636872349075),
-              new Point(12.445632219314575, 41.90197359839437),
-              new Point(12.447413206100464, 41.90027269624499),
-              new Point(12.457906007766724, 41.90000118654431),
-              new Point(12.458517551422117, 41.90281205461268),
-              new Point(12.457584142684937, 41.903107507989986),
-              new Point(12.457734346389769, 41.905918239316286),
-              new Point(12.45572805404663, 41.90637337450963),
-              new Point(12.455363273620605, 41.90746728266806),
+              new Point(41.90746728266806, 12.455363273620605),
+              new Point(41.906636872349075, 12.450309991836548),
+              new Point(41.90197359839437, 12.445632219314575),
+              new Point(41.90027269624499, 12.447413206100464),
+              new Point(41.90000118654431, 12.457906007766724),
+              new Point(41.90281205461268, 12.458517551422117),
+              new Point(41.903107507989986, 12.457584142684937),
+              new Point(41.905918239316286, 12.457734346389769),
+              new Point(41.90637337450963, 12.45572805404663),
+              new Point(41.90746728266806, 12.455363273620605),
         ]),
     ]),
 ])
@@ -139,7 +139,7 @@ echo $londonEye->location->longitude; // -0.1217424
 
 echo $whiteHouse->location->srid; // 4326
 
-echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[41.90746728266806,12.455363273620605],[41.906636872349075,12.450309991836548],[41.90197359839437,12.445632219314575],[41.90027269624499,12.447413206100464],[41.90000118654431,12.457906007766724],[41.90281205461268,12.458517551422117],[41.903107507989986,12.457584142684937],[41.905918239316286,12.457734346389769],[41.90637337450963,12.45572805404663],[41.90746728266806,12.455363273620605]]]}
+echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[12.455363273620605,41.90746728266806],[12.450309991836548,41.906636872349075],[12.445632219314575,41.90197359839437],[12.447413206100464,41.90027269624499],[12.457906007766724,41.90000118654431],[12.458517551422117,41.90281205461268],[12.457584142684937,41.903107507989986],[12.457734346389769,41.905918239316286],[12.45572805404663,41.90637337450963],[12.455363273620605,41.90746728266806]]]}
 ```
 
 ## Further Reading
@@ -168,7 +168,7 @@ class AppServiceProvider extends ServiceProvider
 Use the method in your code:
 
 ```php
-$londonEyePoint = new Point(51.5032973, -0.1217424);
+$londonEyePoint = new Point(-0.1217424, 51.5032973);
 
 echo $londonEyePoint->getName(); // Point
 ```
@@ -177,10 +177,10 @@ echo $londonEyePoint->getName(); // Point
 
 Here are some useful commands for development:
 
-* Run tests: `composer pest`
-* Run tests with coverage: `composer pest-coverage`
-* Perform type checking: `composer phpstan`
-* Format your code: `composer php-cs-fixer`
+- Run tests: `composer pest`
+- Run tests with coverage: `composer pest-coverage`
+- Perform type checking: `composer phpstan`
+- Format your code: `composer php-cs-fixer`
 
 Before running tests, make sure to run `docker-compose up` to start the database container.
 

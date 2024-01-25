@@ -13,11 +13,11 @@ uses(DatabaseMigrations::class);
 it('creates a model record with polygon', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -31,11 +31,11 @@ it('creates a model record with polygon', function (): void {
 it('creates a model record with polygon with SRID integer', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ], Srid::WGS84->value);
 
@@ -48,11 +48,11 @@ it('creates a model record with polygon with SRID integer', function (): void {
 it('creates a model record with polygon with SRID enum', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ], Srid::WGS84);
 
@@ -65,11 +65,11 @@ it('creates a model record with polygon with SRID enum', function (): void {
 it('creates polygon from JSON', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -81,11 +81,11 @@ it('creates polygon from JSON', function (): void {
 it('creates polygon with SRID from JSON', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ], Srid::WGS84->value);
 
@@ -97,11 +97,11 @@ it('creates polygon with SRID from JSON', function (): void {
 it('generates polygon JSON', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -114,11 +114,11 @@ it('generates polygon JSON', function (): void {
 it('generates polygon feature collection JSON', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -131,11 +131,11 @@ it('generates polygon feature collection JSON', function (): void {
 it('creates polygon from WKT', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -147,11 +147,11 @@ it('creates polygon from WKT', function (): void {
 it('creates polygon with SRID from WKT', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ], Srid::WGS84->value);
 
@@ -163,11 +163,11 @@ it('creates polygon with SRID from WKT', function (): void {
 it('generates polygon WKT', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -180,11 +180,11 @@ it('generates polygon WKT', function (): void {
 it('creates polygon from WKB', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -196,11 +196,11 @@ it('creates polygon from WKB', function (): void {
 it('creates polygon with SRID from WKB', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ], Srid::WGS84->value);
 
@@ -227,11 +227,11 @@ it('throws exception when creating polygon from incorrect geometry', function ()
 it('casts a Polygon to a string', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -247,11 +247,11 @@ it('adds a macro toPolygon', function (): void {
 
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 

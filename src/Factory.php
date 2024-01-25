@@ -31,7 +31,7 @@ class Factory
       /** @var geoPHPGeometry|false $geoPHPGeometry */
       $geoPHPGeometry = geoPHP::load($value);
     } finally {
-      if (! isset($geoPHPGeometry) || ! $geoPHPGeometry) {
+      if (!isset($geoPHPGeometry) || !$geoPHPGeometry) {
         throw new InvalidArgumentException('Invalid spatial value');
       }
     }
@@ -48,7 +48,7 @@ class Factory
         throw new InvalidArgumentException('Invalid spatial value');
       }
 
-      return new Point($geometry->coords[1], $geometry->coords[0], $srid);
+      return new Point($geometry->coords[0], $geometry->coords[1], $srid);
     }
 
     /** @var geoPHPGeometryCollection $geometry */

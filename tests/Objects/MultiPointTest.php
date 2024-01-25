@@ -12,7 +12,7 @@ uses(DatabaseMigrations::class);
 
 it('creates a model record with multi point', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   /** @var TestPlace $testPlace */
@@ -24,7 +24,7 @@ it('creates a model record with multi point', function (): void {
 
 it('creates a model record with multi point with SRID integer', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   /** @var TestPlace $testPlace */
@@ -35,7 +35,7 @@ it('creates a model record with multi point with SRID integer', function (): voi
 
 it('creates a model record with multi point with SRID enum', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84);
 
   /** @var TestPlace $testPlace */
@@ -46,7 +46,7 @@ it('creates a model record with multi point with SRID enum', function (): void {
 
 it('creates multi point from JSON', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $multiPointFromJson = MultiPoint::fromJson('{"type":"MultiPoint","coordinates":[[180,0]]}');
@@ -56,7 +56,7 @@ it('creates multi point from JSON', function (): void {
 
 it('creates multi point with SRID from JSON', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $multiPointFromJson = MultiPoint::fromJson('{"type":"MultiPoint","coordinates":[[180,0]]}', Srid::WGS84->value);
@@ -66,7 +66,7 @@ it('creates multi point with SRID from JSON', function (): void {
 
 it('generates multi point JSON', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $json = $multiPoint->toJson();
@@ -77,7 +77,7 @@ it('generates multi point JSON', function (): void {
 
 it('generates multi point feature collection JSON', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $multiPointFeatureCollectionJson = $multiPoint->toFeatureCollectionJson();
@@ -88,7 +88,7 @@ it('generates multi point feature collection JSON', function (): void {
 
 it('creates multi point from WKT', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $multiPointFromWkt = MultiPoint::fromWkt('MULTIPOINT(180 0)');
@@ -98,7 +98,7 @@ it('creates multi point from WKT', function (): void {
 
 it('creates multi point with SRID from WKT', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $multiPointFromWkt = MultiPoint::fromWkt('MULTIPOINT(180 0)', Srid::WGS84->value);
@@ -108,7 +108,7 @@ it('creates multi point with SRID from WKT', function (): void {
 
 it('generates multi point WKT', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $wkt = $multiPoint->toWkt();
@@ -119,7 +119,7 @@ it('generates multi point WKT', function (): void {
 
 it('creates multi point from WKB', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $multiPointFromWkb = MultiPoint::fromWkb($multiPoint->toWkb());
@@ -129,7 +129,7 @@ it('creates multi point from WKB', function (): void {
 
 it('creates multi point with SRID from WKB', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $multiPointFromWkb = MultiPoint::fromWkb($multiPoint->toWkb());
@@ -154,7 +154,7 @@ it('throws exception when creating multi point from incorrect geometry', functio
 
 it('casts a MultiPoint to a string', function (): void {
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   expect($multiPoint->__toString())->toEqual('MULTIPOINT(180 0)');
@@ -168,7 +168,7 @@ it('adds a macro toMultiPoint', function (): void {
   });
 
   $multiPoint = new MultiPoint([
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   // @phpstan-ignore-next-line

@@ -15,14 +15,14 @@ it('creates a model record with geometry collection', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   /** @var TestPlace $testPlace */
@@ -36,14 +36,14 @@ it('creates a model record with geometry collection with SRID integer', function
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   /** @var TestPlace $testPlace */
@@ -56,14 +56,14 @@ it('creates a model record with geometry collection with SRID enum', function ()
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84);
 
   /** @var TestPlace $testPlace */
@@ -76,14 +76,14 @@ it('creates geometry collection from JSON', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $geometryCollectionFromJson = GeometryCollection::fromJson('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]},{"type":"Point","coordinates":[180,0]}]}');
@@ -95,14 +95,14 @@ it('creates geometry collection with SRID from JSON', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $geometryCollectionFromJson = GeometryCollection::fromJson('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]},{"type":"Point","coordinates":[180,0]}]}', Srid::WGS84->value);
@@ -114,14 +114,14 @@ it('creates geometry collection from feature collection JSON', function (): void
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $geometryCollectionFromFeatureCollectionJson = GeometryCollection::fromJson('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}},{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[180,0]}}]}');
@@ -133,14 +133,14 @@ it('generates geometry collection JSON', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $json = $geometryCollection->toJson();
@@ -153,14 +153,14 @@ it('generates geometry collection feature collection JSON', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $featureCollectionJson = $geometryCollection->toFeatureCollectionJson();
@@ -173,14 +173,14 @@ it('creates geometry collection from WKT', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $geometryCollectionFromWkt = GeometryCollection::fromWkt('GEOMETRYCOLLECTION(POLYGON((180 0, 179 1, 178 2, 177 3, 180 0)), POINT(180 0))');
@@ -192,14 +192,14 @@ it('creates geometry collection with SRID from WKT', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $geometryCollectionFromWkt = GeometryCollection::fromWkt('GEOMETRYCOLLECTION(POLYGON((180 0, 179 1, 178 2, 177 3, 180 0)), POINT(180 0))', Srid::WGS84->value);
@@ -211,14 +211,14 @@ it('generates geometry collection WKT', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $wkt = $geometryCollection->toWkt();
@@ -231,14 +231,14 @@ it('creates geometry collection from WKB', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $geometryCollectionFromWkb = GeometryCollection::fromWkb($geometryCollection->toWkb());
@@ -250,14 +250,14 @@ it('creates geometry collection with SRID from WKB', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ], Srid::WGS84->value);
 
   $geometryCollectionFromWkb = GeometryCollection::fromWkb($geometryCollection->toWkb());
@@ -272,15 +272,15 @@ it('does not throw exception when geometry collection has no geometries', functi
 });
 
 it('unsets geometry collection item', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
     $point,
@@ -295,11 +295,11 @@ it('unsets geometry collection item', function (): void {
 it('throws exception when unsetting geometry collection item below minimum', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
@@ -312,14 +312,14 @@ it('checks if geometry collection item is exists', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   $firstItemExists = isset($geometryCollection[0]);
@@ -335,18 +335,18 @@ it('sets item to geometry collection', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
   $lineString = new LineString([
-    new Point(0, 180),
-    new Point(1, 179),
+    new Point(180, 0),
+    new Point(179, 1),
   ]);
 
   $geometryCollection[2] = $lineString;
@@ -357,17 +357,17 @@ it('sets item to geometry collection', function (): void {
 it('throws exception when setting invalid item to geometry collection', function (): void {
   $polygon = new Polygon([
     new LineString([
-      new Point(0, 180),
-      new Point(1, 179),
-      new Point(2, 178),
-      new Point(3, 177),
-      new Point(0, 180),
+      new Point(180, 0),
+      new Point(179, 1),
+      new Point(178, 2),
+      new Point(177, 3),
+      new Point(180, 0),
     ]),
   ]);
 
   expect(function () use ($polygon): void {
     // @phpstan-ignore-next-line
-    $polygon[1] = new Point(0, 180);
+    $polygon[1] = new Point(180, 0);
   })->toThrow(InvalidArgumentException::class);
 });
 
@@ -375,14 +375,14 @@ it('casts a GeometryCollection to a string', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   expect($geometryCollection->__toString())->toEqual('GEOMETRYCOLLECTION(POLYGON((180 0, 179 1, 178 2, 177 3, 180 0)), POINT(180 0))');
@@ -398,14 +398,14 @@ it('adds a macro toGeometryCollection', function (): void {
   $geometryCollection = new GeometryCollection([
     new Polygon([
       new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
-        new Point(2, 178),
-        new Point(3, 177),
-        new Point(0, 180),
+        new Point(180, 0),
+        new Point(179, 1),
+        new Point(178, 2),
+        new Point(177, 3),
+        new Point(180, 0),
       ]),
     ]),
-    new Point(0, 180),
+    new Point(180, 0),
   ]);
 
   // @phpstan-ignore-next-line

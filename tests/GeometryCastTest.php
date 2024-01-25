@@ -17,7 +17,7 @@ it('creates a model record with null geometry', function (): void {
 });
 
 it('updates a model record', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   $point2 = new Point(0, 0);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
@@ -29,7 +29,7 @@ it('updates a model record', function (): void {
 });
 
 it('updates a model record with expression', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
   $pointFromAttributes = $testPlace->getAttributes()['point'];
@@ -40,7 +40,7 @@ it('updates a model record with expression', function (): void {
 });
 
 it('updates a model record with null geometry', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
 
@@ -50,7 +50,7 @@ it('updates a model record with null geometry', function (): void {
 });
 
 it('gets original geometry field', function (): void {
-  $point = new Point(0, 180, Srid::WGS84->value);
+  $point = new Point(180, 0, Srid::WGS84->value);
   $point2 = new Point(0, 0, Srid::WGS84->value);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
@@ -63,7 +63,7 @@ it('gets original geometry field', function (): void {
 });
 
 it('serializes a model record to array with geometry', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
 
@@ -74,7 +74,7 @@ it('serializes a model record to array with geometry', function (): void {
 });
 
 it('serializes a model record to json with geometry', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   /** @var TestPlace $testPlace */
   $testPlace = TestPlace::factory()->create(['point' => $point]);
 
@@ -90,8 +90,8 @@ it('throws exception when cast serializing incorrect geometry object', function 
   expect(function (): void {
     TestPlace::factory()->make([
       'point' => new LineString([
-        new Point(0, 180),
-        new Point(1, 179),
+        new Point(180, 0),
+        new Point(179, 1),
       ]),
     ]);
   })->toThrow(InvalidArgumentException::class);
@@ -118,7 +118,7 @@ it('throws exception when cast deserializing incorrect geometry object', functio
 });
 
 it('creates a model record with geometry from geo json array', function (): void {
-  $point = new Point(0, 180);
+  $point = new Point(180, 0);
   $pointGeoJsonArray = $point->toArray();
 
   /** @var TestPlace $testPlace */
