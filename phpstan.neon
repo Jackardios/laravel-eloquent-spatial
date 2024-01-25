@@ -1,15 +1,11 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+  - ./vendor/larastan/larastan/extension.neon
 parameters:
-    paths:
-        - src
-        - tests
-    level: max
-    ignoreErrors:
-        - '#Method MatanYadaev\\EloquentSpatial\\Objects\\(Geometry|GeometryCollection)::(toJson|toFeatureCollectionJson)\(\) should return string but returns string\|false\.#'
-        -
-            message: '#Call to private method .+\(\) of parent class Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>.#'
-            path: ./src/SpatialBuilder.php
-    excludePaths:
-        - ./src/Factory.php
-    checkMissingIterableValueType: true
+  paths:
+    - src
+    - tests
+  excludePaths:
+    - src/Factory.php
+  level: max
+  checkMissingIterableValueType: true
+  checkGenericClassInNonGenericObjectType: false

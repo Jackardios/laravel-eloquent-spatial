@@ -1,106 +1,218 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\Objects;
-
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Tests\TestCase;
 use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
-class MultiLineStringTest extends TestCase
-{
-    use DatabaseMigrations;
+uses(DatabaseMigrations::class);
 
-    /** @test */
-    public function it_stores_multi_line_string(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'multi_line_string' => new MultiLineString([
-                new LineString([
-                    new Point(0, 90),
-                    new Point(1, 89),
-                ]),
-            ]),
-        ]);
+it('creates a model record with multi line string', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
 
-        $this->assertTrue($testPlace->multi_line_string instanceof MultiLineString);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
 
-        $lineString = $testPlace->multi_line_string[0];
+  expect($testPlace->multi_line_string)->toBeInstanceOf(MultiLineString::class);
+  expect($testPlace->multi_line_string)->toEqual($multiLineString);
+});
 
-        $this->assertEquals(90, $lineString[0]->latitude);
-        $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(89, $lineString[1]->latitude);
-        $this->assertEquals(1, $lineString[1]->longitude);
+it('creates a model record with multi line string with SRID integer', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ], Srid::WGS84->value);
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
 
-    /** @test */
-    public function it_stores_multi_line_string_from_geo_json(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'multi_line_string' => MultiLineString::fromJson('{"type":"MultiLineString","coordinates":[[[0,90],[1,89]]]}'),
-        ]);
+  expect($testPlace->multi_line_string->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertTrue($testPlace->multi_line_string instanceof MultiLineString);
+it('creates a model record with multi line string with SRID enum', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ], Srid::WGS84);
 
-        $lineString = $testPlace->multi_line_string[0];
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
 
-        $this->assertEquals(90, $lineString[0]->latitude);
-        $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(89, $lineString[1]->latitude);
-        $this->assertEquals(1, $lineString[1]->longitude);
+  expect($testPlace->multi_line_string->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+it('creates multi line string from JSON', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
 
-    /** @test */
-    public function it_generates_multi_line_string_geo_json(): void
-    {
-        $multiLineString = new MultiLineString([
-            new LineString([
-                new Point(0, 90),
-                new Point(1, 89),
-            ]),
-        ]);
+  $multiLineStringFromJson = MultiLineString::fromJson('{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}');
 
-        $this->assertEquals('{"type":"MultiLineString","coordinates":[[[0,90],[1,89]]]}', $multiLineString->toJson());
-    }
+  expect($multiLineStringFromJson)->toEqual($multiLineString);
+});
 
-    /** @test */
-    public function it_generates_multi_line_string_feature_collection_json(): void
-    {
-        $multiLineString = new MultiLineString([
-            new LineString([
-                new Point(0, 90),
-                new Point(1, 89),
-            ]),
-        ]);
+it('creates multi line string with SRID from JSON', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ], Srid::WGS84->value);
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiLineString","coordinates":[[[0,90],[1,89]]]}}]}', $multiLineString->toFeatureCollectionJson());
-    }
+  $multiLineStringFromJson = MultiLineString::fromJson('{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}', Srid::WGS84->value);
 
-    /** @test */
-    public function it_throws_exception_when_multi_line_string_has_0_line_strings(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  expect($multiLineStringFromJson)->toEqual($multiLineString);
+});
 
-        new MultiLineString([]);
-    }
+it('generates multi line string JSON', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
 
-    /** @test */
-    public function it_throws_exception_when_multi_line_string_has_composed_by_point(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  $json = $multiLineString->toJson();
 
-        // @phpstan-ignore-next-line
-        new MultiLineString([
-            new Point(0, 0),
-        ]);
-    }
-}
+  $expectedJson = '{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}';
+  expect($json)->toBe($expectedJson);
+});
+
+it('generates multi line string feature collection JSON', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  $featureCollectionJson = $multiLineString->toFeatureCollectionJson();
+
+  $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}}]}';
+  expect($featureCollectionJson)->toBe($expectedFeatureCollectionJson);
+});
+
+it('creates multi line string from WKT', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  $multiLineStringFromWkt = MultiLineString::fromWkt('MULTILINESTRING((180 0, 179 1))');
+
+  expect($multiLineStringFromWkt)->toEqual($multiLineString);
+});
+
+it('creates multi line string with SRID from WKT', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ], Srid::WGS84->value);
+
+  $multiLineStringFromWkt = MultiLineString::fromWkt('MULTILINESTRING((180 0, 179 1))', Srid::WGS84->value);
+
+  expect($multiLineStringFromWkt)->toEqual($multiLineString);
+});
+
+it('generates multi line string WKT', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  $wkt = $multiLineString->toWkt();
+
+  $expectedWkt = 'MULTILINESTRING((180 0, 179 1))';
+  expect($wkt)->toBe($expectedWkt);
+});
+
+it('creates multi line string from WKB', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  $multiLineStringFromWkb = MultiLineString::fromWkb($multiLineString->toWkb());
+
+  expect($multiLineStringFromWkb)->toEqual($multiLineString);
+});
+
+it('creates multi line string with SRID from WKB', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ], Srid::WGS84->value);
+
+  $multiLineStringFromWkb = MultiLineString::fromWkb($multiLineString->toWkb());
+
+  expect($multiLineStringFromWkb)->toEqual($multiLineString);
+});
+
+it('throws exception when multi line string has no line strings', function (): void {
+  expect(function (): void {
+    new MultiLineString([]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('throws exception when creating multi line string from incorrect geometry', function (): void {
+  expect(function (): void {
+    // @phpstan-ignore-next-line
+    new MultiLineString([
+      new Point(0, 0),
+    ]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('casts a MultiLineString to a string', function (): void {
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  expect($multiLineString->__toString())->toEqual('MULTILINESTRING((180 0, 179 1))');
+});
+
+it('adds a macro toMultiLineString', function (): void {
+  Geometry::macro('getName', function (): string {
+    /** @var Geometry $this */
+    // @phpstan-ignore-next-line
+    return class_basename($this);
+  });
+
+  $multiLineString = new MultiLineString([
+    new LineString([
+      new Point(0, 180),
+      new Point(1, 179),
+    ]),
+  ]);
+
+  // @phpstan-ignore-next-line
+  expect($multiLineString->getName())->toBe('MultiLineString');
+});

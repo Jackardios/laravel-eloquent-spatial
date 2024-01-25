@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace MatanYadaev\EloquentSpatial\Objects;
 
-use Illuminate\Database\Query\Expression;
-use Illuminate\Support\Facades\DB;
-
 class LineString extends PointCollection
 {
-    protected int $minimumGeometries = 2;
+  protected int $minimumGeometries = 2;
 
-    public function toWkt(): Expression
-    {
-        return DB::raw("LINESTRING({$this->toCollectionWkt()})");
-    }
+  public function toWkt(): string
+  {
+    $wktData = $this->getWktData();
+
+    return "LINESTRING({$wktData})";
+  }
+
+  public function getWktData(): string
+  {
+    return $this->geometries
+      ->map(static function (Point $point): string {
+        return $point->getWktData();
+      })
+      ->join(', ');
+  }
 }

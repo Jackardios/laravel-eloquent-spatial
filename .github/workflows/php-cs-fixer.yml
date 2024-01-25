@@ -1,6 +1,6 @@
 name: Lint
 
-on: [push]
+on: [ push, pull_request ]
 
 jobs:
   php-cs-fixer:
@@ -15,12 +15,11 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.0
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          php-version: 8.3
           coverage: none
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction
 
       - name: Run PHP CS Fixer
-        run: ./vendor/bin/php-cs-fixer fix --allow-risky=yes --diff --dry-run
+        run: PHP_CS_FIXER_IGNORE_ENV=1 ./vendor/bin/php-cs-fixer fix --allow-risky=yes --diff --dry-run

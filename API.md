@@ -1,25 +1,31 @@
 # API
 
-## Available spatial classes
+## Available geometry classes
 
-* `Point(float $longitude, float $latitude)` - [MySQL Point](https://dev.mysql.com/doc/refman/8.0/en/gis-class-point.html)
-* `MultiPoint(Point[] | Collection<Point>)` - [MySQL MultiPoint](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multipoint.html)
-* `LineString(Point[] | Collection<Point>)` - [MySQL LineString](https://dev.mysql.com/doc/refman/8.0/en/gis-class-linestring.html)
-* `MultiLineString(LineString[] | Collection<LineString>)` - [MySQL MultiLineString](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multilinestring.html)
-* `Polygon(LineString[] | Collection<LineString>)` - [MySQL Polygon](https://dev.mysql.com/doc/refman/8.0/en/gis-class-polygon.html)
-* `MultiPolygon(Polygon[] | Collection<Polygon>)` - [MySQL MultiPolygon](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multipolygon.html)
-* `GeometryCollection(Geometry[] | Collection<Geometry>)` - [MySQL GeometryCollection](https://dev.mysql.com/doc/refman/8.0/en/gis-class-geometrycollection.html)
+* `Point(float $latitude, float $longitude, int|Srid $srid = 0)` - [MySQL Point](https://dev.mysql.com/doc/refman/8.0/en/gis-class-point.html)
+* `MultiPoint(Point[] | Collection<Point> $geometries, int|Srid $srid = 0)` - [MySQL MultiPoint](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multipoint.html)
+* `LineString(Point[] | Collection<Point> $geometries, int|Srid $srid = 0)` - [MySQL LineString](https://dev.mysql.com/doc/refman/8.0/en/gis-class-linestring.html)
+* `MultiLineString(LineString[] | Collection<LineString> $geometries, int|Srid $srid = 0)` - [MySQL MultiLineString](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multilinestring.html)
+* `Polygon(LineString[] | Collection<LineString> $geometries, int|Srid $srid = 0)` - [MySQL Polygon](https://dev.mysql.com/doc/refman/8.0/en/gis-class-polygon.html)
+* `MultiPolygon(Polygon[] | Collection<Polygon> $geometries, int|Srid $srid = 0)` - [MySQL MultiPolygon](https://dev.mysql.com/doc/refman/8.0/en/gis-class-multipolygon.html)
+* `GeometryCollection(Geometry[] | Collection<Geometry> $geometries, int|Srid $srid = 0)` - [MySQL GeometryCollection](https://dev.mysql.com/doc/refman/8.0/en/gis-class-geometrycollection.html)
 
-## Available spatial functions
+Geometry classes can be also created by these static methods:
 
-Every geometry class has these functions:
+* `fromArray(array $geometry)` - Creates a geometry object from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) array.
+* `fromJson(string $geoJson, int|Srid $srid = 0)` - Creates a geometry object from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) string.
+* `fromWkt(string $wkt, int|Srid $srid = 0)` - Creates a geometry object from a [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry).
+* `fromWkb(string $wkb)` - Creates a geometry object from a [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary).
+
+## Available geometry class methods
 
 * `toArray()` - Serializes the geometry object into a GeoJSON associative array.
 * `toJson()` - Serializes the geometry object into an GeoJSON string.
-* `fromJson(string $geoJson)` - Deserializes a geometry object from a GeoJSON string. (static method) 
 * `toFeatureCollectionJson()` - Serializes the geometry object into an GeoJSON's FeatureCollection string.
+* `toWkt()` - Serializes the geometry object into a WKT.
+* `toWkb()` - Serializes the geometry object into a WKB.
 * `getCoordinates()` - Returns the coordinates of the geometry object.
-
+* `toSqlExpression(ConnectionInterface $connection)` - Serializes the geometry object into an SQL query.
 In addition, `GeometryCollection` also has these functions:
 
 * `getGeometries()` - Returns a geometry array. Can be used with `ArrayAccess` as well.
@@ -39,10 +45,21 @@ $geometryCollection = new GeometryCollection([
     ]),
 ]);
 
-echo $geometryCollection->getGeometries()[1]->latitude; // 180
-// can also access as an array:
-echo $geometryCollection[1]->latitude; // 180
+echo $geometryCollection->getGeometries()[1]->latitude; // 0
+// or access as an array:
+echo $geometryCollection[1]->latitude; // 0
 ```
+
+## Available Enums
+
+Spatial reference identifiers (SRID) identify the type of coordinate system to use.
+
+An enum is provided with the following values:
+
+| Identifier           | Value  | Description                                                                         |
+|----------------------|--------|-------------------------------------------------------------------------------------|
+| `Srid::WGS84`        | `4326` | [Geographic coordinate system](https://epsg.org/crs_4326/WGS-84.html)               |
+| `Srid::WEB_MERCATOR` | `3857` | [Mercator coordinate system](https://epsg.org/crs_3857/WGS-84-Pseudo-Mercator.html) |
 
 ## Available spatial scopes
 
@@ -53,40 +70,44 @@ echo $geometryCollection[1]->latitude; // 180
 * [whereDistanceSphere](#whereDistanceSphere)
 * [orderByDistanceSphere](#orderByDistanceSphere)
 * [whereWithin](#whereWithin)
+* [whereNotWithin](#whereNotWithin)
 * [whereContains](#whereContains)
+* [whereNotContains](#whereNotContains)
 * [whereTouches](#whereTouches)
 * [whereIntersects](#whereIntersects)
 * [whereCrosses](#whereCrosses)
 * [whereDisjoint](#whereDisjoint)
 * [whereEquals](#whereEquals)
+* [whereSrid](#whereSrid)
+* [withCentroid](#withCentroid)
 
 ###  withDistance
 
 Retrieves the distance between 2 geometry objects. Uses [ST_Distance](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-distance).
 
-| parameter name      | type                 | default |
-| ------------------  | -------------------- | ------- |
-| `$column`           | `string`             |
-| `$geometryOrColumn` | `Geometry \| string` |
-| `$alias`            | `string`             | `'distance'`
+| parameter name      | type                | default      |
+|---------------------|---------------------|--------------|
+| `$column`           | `Geometry \ string` |              |
+| `$geometryOrColumn` | `Geometry \ string` |              |
+| `$alias`            | `string`            | `'distance'` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 $placeWithDistance = Place::query()
-    ->withDistance('location', new Point(1, 1))
+    ->withDistance('location', new Point(1, 1, 4326))
     ->first();
 
-echo $placeWithDistance->distance; // 1.4142135623731
+echo $placeWithDistance->distance; // 156897.79947260793
 
 // when using alias:
 $placeWithDistance = Place::query()
-    ->withDistance('location', new Point(1, 1), 'distance_in_meters')
+    ->withDistance('location', new Point(1, 1, 4326), 'distance_in_meters')
     ->first();
 
-echo $placeWithDistance->distance_in_meters; // 1.4142135623731
+echo $placeWithDistance->distance_in_meters; // 156897.79947260793
 ```
 </details>
 
@@ -94,21 +115,21 @@ echo $placeWithDistance->distance_in_meters; // 1.4142135623731
 
 Filters records by distance. Uses [ST_Distance](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-distance).
 
-| parameter name      | type
-| ------------------  | -------------------- 
-| `$column`           | `string`
-| `$geometryOrColumn` | `Geometry \| string` 
-| `$operator`         | `string`
-| `$value`            | `int \| float`
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
+| `$operator`         | `string`            |
+| `$value`            | `int \ float`       |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
-Place::create(['location' => new Point(100, 100)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
+Place::create(['location' => new Point(50, 50, 4326)]);
 
 $placesCountWithinDistance = Place::query()
-    ->whereDistance('location', new Point(1, 1), '<', 1.5)
+    ->whereDistance('location', new Point(1, 1, 4326), '<', 160000)
     ->count();
 
 echo $placesCountWithinDistance; // 1
@@ -119,26 +140,26 @@ echo $placesCountWithinDistance; // 1
 
 Orders records by distance. Uses [ST_Distance](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-distance).
 
-| parameter name      | type                 | default |
-| ------------------  | -------------------- | ------- |
-| `$column`           | `string`             |
-| `$geometryOrColumn` | `Geometry \| string` |
-| `$direction`         | `string`            | `'asc'`
+| parameter name      | type                | default |
+|---------------------|---------------------|---------|
+| `$column`           | `Geometry \ string` |         |
+| `$geometryOrColumn` | `Geometry \ string` |         |
+| `$direction`        | `string`            | `'asc'` |
 
 <details><summary>Example</summary>
 
 ```php
 Place::create([
     'name' => 'first',
-    'location' => new Point(0, 0),
+    'location' => new Point(0, 0, 4326),
 ]);
 Place::create([
     'name' => 'second',
-    'location' => new Point(100, 100),
+    'location' => new Point(50, 50, 4326),
 ]);
 
 $places = Place::query()
-    ->orderByDistance('location', new Point(1, 1), 'desc')
+    ->orderByDistance('location', new Point(1, 1, 4326), 'desc')
     ->get();
 
 echo $places[0]->name; // second
@@ -150,29 +171,29 @@ echo $places[1]->name; // first
 
 Retrieves the spherical distance between 2 geometry objects. Uses [ST_Distance_Sphere](https://dev.mysql.com/doc/refman/8.0/en/spatial-convenience-functions.html#function_st-distance-sphere).
 
-| parameter name      | type                 | default |
-| ------------------  | -------------------- | ------- |
-| `$column`           | `string`             |
-| `$geometryOrColumn` | `Geometry \| string` |
-| `$alias`            | `string`             | `'distance'`
+| parameter name      | type                | default      |
+|---------------------|---------------------|--------------|
+| `$column`           | `Geometry \ string` |              |
+| `$geometryOrColumn` | `Geometry \ string` |              |
+| `$alias`            | `string`            | `'distance'` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 $placeWithDistance = Place::query()
-    ->withDistanceSphere('location', new Point(1, 1))
+    ->withDistanceSphere('location', new Point(1, 1, 4326))
     ->first();
 
-echo $placeWithDistance->distance; // 157249.0357231545
+echo $placeWithDistance->distance; // 157249.59776850493
 
 // when using alias:
 $placeWithDistance = Place::query()
-    ->withDistanceSphere('location', new Point(1, 1), 'distance_in_meters')
+    ->withDistanceSphere('location', new Point(1, 1, 4326), 'distance_in_meters')
     ->first();
 
-echo $placeWithDistance->distance_in_meters; // 157249.0357231545
+echo $placeWithDistance->distance_in_meters; // 157249.59776850493
 ```
 </details>
 
@@ -180,21 +201,21 @@ echo $placeWithDistance->distance_in_meters; // 157249.0357231545
 
 Filters records by spherical distance. Uses [ST_Distance_Sphere](https://dev.mysql.com/doc/refman/8.0/en/spatial-convenience-functions.html#function_st-distance-sphere).
 
-| parameter name      | type
-| ------------------  | -------------------- 
-| `$column`           | `string`
-| `$geometryOrColumn` | `Geometry \| string` 
-| `$operator`         | `string`
-| `$value`            | `int \| float`
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
+| `$operator`         | `string`            |
+| `$value`            | `int \ float`       |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
-Place::create(['location' => new Point(100, 100)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
+Place::create(['location' => new Point(50, 50, 4326)]);
 
 $placesCountWithinDistance = Place::query()
-    ->whereDistanceSphere('location', new Point(1, 1), '<', 160000)
+    ->whereDistanceSphere('location', new Point(1, 1, 4326), '<', 160000)
     ->count();
 
 echo $placesCountWithinDistance; // 1
@@ -205,26 +226,26 @@ echo $placesCountWithinDistance; // 1
 
 Orders records by spherical distance. Uses [ST_Distance_Sphere](https://dev.mysql.com/doc/refman/8.0/en/spatial-convenience-functions.html#function_st-distance-sphere).
 
-| parameter name      | type                 | default |
-| ------------------  | -------------------- | ------- |
-| `$column`           | `string`             |
-| `$geometryOrColumn` | `Geometry \| string` |
-| `$direction`         | `string`            | `'asc'`
+| parameter name      | type                | default |
+|---------------------|---------------------|---------|
+| `$column`           | `Geometry \ string` |         |
+| `$geometryOrColumn` | `Geometry \ string` |         |
+| `$direction`        | `string`            | `'asc'` |
 
 <details><summary>Example</summary>
 
 ```php
 Place::create([
     'name' => 'first',
-    'location' => new Point(0, 0),
+    'location' => new Point(0, 0, 4326),
 ]);
 Place::create([
     'name' => 'second',
-    'location' => new Point(100, 100),
+    'location' => new Point(100, 100, 4326),
 ]);
 
 $places = Place::query()
-    ->orderByDistanceSphere('location', new Point(1, 1), 'desc')
+    ->orderByDistanceSphere('location', new Point(1, 1, 4326), 'desc')
     ->get();
 
 echo $places[0]->name; // second
@@ -236,15 +257,15 @@ echo $places[1]->name; // first
 
 Filters records by the [ST_Within](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-within) function.
 
-| parameter name      | type                 
-| ------------------  | -------------------- 
-| `$column`           | `string`             
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 Place::query()
     ->whereWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
@@ -252,14 +273,34 @@ Place::query()
 ```
 </details>
 
+###  whereNotWithin
+
+Filters records by the [ST_Within](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-within) function.
+
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
+
+<details><summary>Example</summary>
+
+```php
+Place::create(['location' => new Point(0, 0, 4326)]);
+
+Place::query()
+    ->whereNotWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
+    ->exists(); // false
+```
+</details>
+
 ###  whereContains
 
 Filters records by the [ST_Contains](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-contains) function.
 
-| parameter name      | type                 
-| ------------------  | -------------------- 
-| `$column`           | `string`             
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
@@ -267,8 +308,28 @@ Filters records by the [ST_Contains](https://dev.mysql.com/doc/refman/8.0/en/spa
 Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'),]);
 
 Place::query()
-    ->whereContains('area', new Point(0, 0))
+    ->whereContains('area', new Point(0, 0, 4326))
     ->exists(); // true
+```
+</details>
+
+###  whereNotContains
+
+Filters records by the [ST_Contains](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-contains) function.
+
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
+
+<details><summary>Example</summary>
+
+```php
+Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'),]);
+
+Place::query()
+    ->whereNotContains('area', new Point(0, 0, 4326))
+    ->exists(); // false
 ```
 </details>
 
@@ -276,15 +337,15 @@ Place::query()
 
 Filters records by the [ST_Touches](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-touches) function.
 
-| parameter name      | type                 
-| ------------------  | -------------------- 
-| `$column`           | `string`             
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 Place::query()
     ->whereTouches('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[0,-1],[0,0],[-1,0],[-1,-1]]]}'))
@@ -296,15 +357,15 @@ Place::query()
 
 Filters records by the [ST_Intersects](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-intersects) function.
 
-| parameter name      | type                 
-| ------------------  | -------------------- 
-| `$column`           | `string`             
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 Place::query()
     ->whereIntersects('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
@@ -316,10 +377,10 @@ Place::query()
 
 Filters records by the [ST_Crosses](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-crosses) function.
 
-| parameter name      | type                 
-| ------------------  | -------------------- 
-| `$column`           | `string`             
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
@@ -336,15 +397,15 @@ Place::query()
 
 Filters records by the [ST_Disjoint](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-disjoint) function.
 
-| parameter name      | type
-| ------------------  | -------------------- 
-| `$column`           | `string`
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 Place::query()
     ->whereDisjoint('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[-0.5,-1],[-0.5,-0.5],[-1,-0.5],[-1,-1]]]}'))
@@ -356,19 +417,71 @@ Place::query()
 
 Filters records by the [ST_Equal](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-equals) function.
 
-| parameter name      | type
-| ------------------  | -------------------- 
-| `$column`           | `string`
-| `$geometryOrColumn` | `Geometry \| string` 
+| parameter name      | type                |
+|---------------------|---------------------|
+| `$column`           | `Geometry \ string` |
+| `$geometryOrColumn` | `Geometry \ string` |
 
 <details><summary>Example</summary>
 
 ```php
-Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(0, 0, 4326)]);
 
 Place::query()
-    ->whereEquals('location', new Point(0, 0))
+    ->whereEquals('location', new Point(0, 0, 4326))
     ->exists(); // true
 ```
 </details>
 
+###  whereSrid
+
+Filters records by the [ST_Srid](https://dev.mysql.com/doc/refman/8.0/en/gis-general-property-functions.html#function_st-srid) function.
+
+| parameter name | type                |
+|----------------|---------------------|
+| `$column`      | `Geometry \ string` |
+| `$operator`    | `string`            |
+| `$value`       | `int`               |
+
+<details><summary>Example</summary>
+
+```php
+Place::create(['location' => new Point(0, 0, 4326)]);
+
+Place::query()
+    ->whereSrid('location', '=', 4326)
+    ->exists(); // true
+```
+</details>
+
+###  withCentroid
+
+Retrieves the centroid of the geometry object. Uses [ST_Centroid](https://dev.mysql.com/doc/refman/8.0/en/gis-polygon-property-functions.html#function_st-centroid).
+
+| parameter name      | type                | default      |
+|---------------------|---------------------|--------------|
+| `$column`           | `Geometry \ string` |              |
+| `$alias`            | `string`            | `'centroid'` |
+
+<details><summary>Example</summary>
+
+```php
+$polygon = Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}');
+Place::create(['polygon' => $polygon]);
+
+$placeWithCentroid = Place::query()
+    ->withCentroid('polygon')
+    ->withCasts(['centroid' => Point::class]) // This is important, otherwise the centroid will be returned as a binary string.
+    ->first();
+
+echo $placeWithDistance->centroid; // POINT(0 0)
+
+// when using alias:
+$placeWithCentroid = Place::query()
+    ->withCentroid('polygon', 'centroid_alias')
+    ->withCasts(['centroid_alias' => Point::class])
+    ->first();
+
+echo $placeWithDistance->centroid_alias; // POINT(0 0)
+```
+</details>

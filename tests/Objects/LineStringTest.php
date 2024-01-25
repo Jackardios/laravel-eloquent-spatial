@@ -1,98 +1,192 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\Objects;
-
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestCase;
 use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
-class LineStringTest extends TestCase
-{
-    use DatabaseMigrations;
+uses(DatabaseMigrations::class);
 
-    /** @test */
-    public function it_stores_line_string(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'line_string' => new LineString([
-                new Point(0, 90),
-                new Point(1, 89),
-            ]),
-        ]);
+it('creates a model record with line string', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
 
-        $this->assertTrue($testPlace->line_string instanceof LineString);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
 
-        $this->assertEquals(90, $testPlace->line_string[0]->latitude);
-        $this->assertEquals(0, $testPlace->line_string[0]->longitude);
-        $this->assertEquals(89, $testPlace->line_string[1]->latitude);
-        $this->assertEquals(1, $testPlace->line_string[1]->longitude);
+  expect($testPlace->line_string)->toBeInstanceOf(LineString::class);
+  expect($testPlace->line_string)->toEqual($lineString);
+});
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+it('creates a model record with line string with SRID integer', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ], Srid::WGS84->value);
 
-    /** @test */
-    public function it_stores_line_string_from_json(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'line_string' => LineString::fromJson('{"type":"LineString","coordinates":[[0,90],[1,89]]}'),
-        ]);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
 
-        $this->assertTrue($testPlace->line_string instanceof LineString);
+  expect($testPlace->line_string->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertEquals(90, $testPlace->line_string[0]->latitude);
-        $this->assertEquals(0, $testPlace->line_string[0]->longitude);
-        $this->assertEquals(89, $testPlace->line_string[1]->latitude);
-        $this->assertEquals(1, $testPlace->line_string[1]->longitude);
+it('creates a model record with line string with SRID enum', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ], Srid::WGS84);
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
 
-    /** @test */
-    public function it_generates_line_string_geo_json(): void
-    {
-        $lineString = new LineString([
-            new Point(0, 90),
-            new Point(1, 89),
-        ]);
+  expect($testPlace->line_string->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertEquals('{"type":"LineString","coordinates":[[0,90],[1,89]]}', $lineString->toJson());
-    }
+it('creates line string from JSON', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
 
-    /** @test */
-    public function it_generates_line_string_feature_collection_json(): void
-    {
-        $lineString = new LineString([
-            new Point(0, 90),
-            new Point(1, 89),
-        ]);
+  $lineStringFromJson = LineString::fromJson('{"type":"LineString","coordinates":[[180,0],[179,1]]}');
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"LineString","coordinates":[[0,90],[1,89]]}}]}', $lineString->toFeatureCollectionJson());
-    }
+  expect($lineStringFromJson)->toEqual($lineString);
+});
 
-    /** @test */
-    public function it_throws_exception_when_line_string_has_less_than_2_points(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+it('creates line string with SRID from JSON', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ], Srid::WGS84->value);
 
-        new LineString([
-            new Point(0, 90),
-        ]);
-    }
+  $lineStringFromJson = LineString::fromJson('{"type":"LineString","coordinates":[[180,0],[179,1]]}', Srid::WGS84->value);
 
-    /** @test */
-    public function it_throws_exception_when_line_string_has_composed_by_polygon(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  expect($lineStringFromJson)->toEqual($lineString);
+});
 
-        // @phpstan-ignore-next-line
-        new LineString([
-            Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,90],[1,89],[2,88],[3,87],[0,90]]]}'),
-        ]);
-    }
-}
+it('generates line string JSON', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  $json = $lineString->toJson();
+
+  $expectedJson = '{"type":"LineString","coordinates":[[180,0],[179,1]]}';
+  expect($json)->toBe($expectedJson);
+});
+
+it('generates line string feature collection JSON', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  $featureCollectionJson = $lineString->toFeatureCollectionJson();
+
+  $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"LineString","coordinates":[[180,0],[179,1]]}}]}';
+  expect($featureCollectionJson)->toBe($expectedFeatureCollectionJson);
+});
+
+it('creates line string from WKT', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  $lineStringFromWkt = LineString::fromWkt('LINESTRING(180 0, 179 1)');
+
+  expect($lineStringFromWkt)->toEqual($lineString);
+});
+
+it('creates line string with SRID from WKT', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ], Srid::WGS84->value);
+
+  $lineStringFromWkt = LineString::fromWkt('LINESTRING(180 0, 179 1)', Srid::WGS84->value);
+
+  expect($lineStringFromWkt)->toEqual($lineString);
+});
+
+it('generates line string WKT', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  $wkt = $lineString->toWkt();
+
+  $expectedWkt = 'LINESTRING(180 0, 179 1)';
+  expect($wkt)->toBe($expectedWkt);
+});
+
+it('creates line string from WKB', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  $lineStringFromWkb = LineString::fromWkb($lineString->toWkb());
+
+  expect($lineStringFromWkb)->toEqual($lineString);
+});
+
+it('creates line string with SRID from WKB', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ], Srid::WGS84->value);
+
+  $lineStringFromWkb = LineString::fromWkb($lineString->toWkb());
+
+  expect($lineStringFromWkb)->toEqual($lineString);
+});
+
+it('throws exception when line string has less than two points', function (): void {
+  expect(function (): void {
+    new LineString([
+      new Point(0, 180),
+    ]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('throws exception when creating line string from incorrect geometry', function (): void {
+  expect(function (): void {
+    // @phpstan-ignore-next-line
+    new LineString([
+      Polygon::fromJson('{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}'),
+    ]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('casts a LineString to a string', function (): void {
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  expect($lineString->__toString())->toEqual('LINESTRING(180 0, 179 1)');
+});
+
+it('adds a macro toLineString', function (): void {
+  Geometry::macro('getName', function (): string {
+    /** @var Geometry $this */
+    // @phpstan-ignore-next-line
+    return class_basename($this);
+  });
+
+  $lineString = new LineString([
+    new Point(0, 180),
+    new Point(1, 179),
+  ]);
+
+  // @phpstan-ignore-next-line
+  expect($lineString->getName())->toBe('LineString');
+});

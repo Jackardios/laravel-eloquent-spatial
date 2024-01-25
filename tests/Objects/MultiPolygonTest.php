@@ -1,134 +1,289 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\Objects;
-
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use InvalidArgumentException;
+use MatanYadaev\EloquentSpatial\Enums\Srid;
+use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestCase;
 use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
 
-class MultiPolygonTest extends TestCase
-{
-    use DatabaseMigrations;
+uses(DatabaseMigrations::class);
 
-    /** @test */
-    public function it_stores_multi_polygon(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'multi_polygon' => new MultiPolygon([
-                new Polygon([
-                    new LineString([
-                        new Point(0, 90),
-                        new Point(1, 89),
-                        new Point(2, 88),
-                        new Point(3, 87),
-                        new Point(0, 90),
-                    ]),
-                ]),
-            ]),
-        ]);
+it('creates a model record with multi polygon', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
 
-        $this->assertTrue($testPlace->multi_polygon instanceof MultiPolygon);
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
 
-        $lineString = $testPlace->multi_polygon[0][0];
+  expect($testPlace->multi_polygon)->toBeInstanceOf(MultiPolygon::class);
+  expect($testPlace->multi_polygon)->toEqual($multiPolygon);
+});
 
-        $this->assertEquals(90, $lineString[0]->latitude);
-        $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(89, $lineString[1]->latitude);
-        $this->assertEquals(1, $lineString[1]->longitude);
-        $this->assertEquals(88, $lineString[2]->latitude);
-        $this->assertEquals(2, $lineString[2]->longitude);
-        $this->assertEquals(87, $lineString[3]->latitude);
-        $this->assertEquals(3, $lineString[3]->longitude);
-        $this->assertEquals(90, $lineString[4]->latitude);
-        $this->assertEquals(0, $lineString[4]->longitude);
+it('creates a model record with multi polygon with SRID integer', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ], Srid::WGS84->value);
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
 
-    /** @test */
-    public function it_stores_multi_polygon_from_geo_json(): void
-    {
-        /** @var TestPlace $testPlace */
-        $testPlace = TestPlace::factory()->create([
-            'multi_polygon' => MultiPolygon::fromJson('{"type":"MultiPolygon","coordinates":[[[[0,90],[1,89],[2,88],[3,87],[0,90]]]]}'),
-        ]);
+  expect($testPlace->multi_polygon->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertTrue($testPlace->multi_polygon instanceof MultiPolygon);
+it('creates a model record with multi polygon with SRID enum', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ], Srid::WGS84);
 
-        $lineString = $testPlace->multi_polygon[0][0];
+  /** @var TestPlace $testPlace */
+  $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
 
-        $this->assertEquals(90, $lineString[0]->latitude);
-        $this->assertEquals(0, $lineString[0]->longitude);
-        $this->assertEquals(89, $lineString[1]->latitude);
-        $this->assertEquals(1, $lineString[1]->longitude);
-        $this->assertEquals(88, $lineString[2]->latitude);
-        $this->assertEquals(2, $lineString[2]->longitude);
-        $this->assertEquals(87, $lineString[3]->latitude);
-        $this->assertEquals(3, $lineString[3]->longitude);
-        $this->assertEquals(90, $lineString[4]->latitude);
-        $this->assertEquals(0, $lineString[4]->longitude);
+  expect($testPlace->multi_polygon->srid)->toBe(Srid::WGS84->value);
+});
 
-        $this->assertDatabaseCount($testPlace->getTable(), 1);
-    }
+it('creates multi polygon from JSON', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
 
-    /** @test */
-    public function it_generates_multi_polygon_geo_json(): void
-    {
-        $multiPolygon = new MultiPolygon([
-            new Polygon([
-                new LineString([
-                    new Point(0, 90),
-                    new Point(1, 89),
-                    new Point(2, 88),
-                    new Point(3, 87),
-                    new Point(0, 90),
-                ]),
-            ]),
-        ]);
+  $multiPolygonFromJson = MultiPolygon::fromJson('{"type":"MultiPolygon","coordinates":[[[[180,0],[179,1],[178,2],[177,3],[180,0]]]]}');
 
-        $this->assertEquals('{"type":"MultiPolygon","coordinates":[[[[0,90],[1,89],[2,88],[3,87],[0,90]]]]}', $multiPolygon->toJson());
-    }
+  expect($multiPolygonFromJson)->toEqual($multiPolygon);
+});
 
-    /** @test */
-    public function it_generates_multi_polygon_feature_collection_json(): void
-    {
-        $multiPolygon = new MultiPolygon([
-            new Polygon([
-                new LineString([
-                    new Point(0, 90),
-                    new Point(1, 89),
-                    new Point(2, 88),
-                    new Point(3, 87),
-                    new Point(0, 90),
-                ]),
-            ]),
-        ]);
+it('creates multi polygon with SRID from JSON', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ], Srid::WGS84->value);
 
-        $this->assertEquals('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiPolygon","coordinates":[[[[0,90],[1,89],[2,88],[3,87],[0,90]]]]}}]}', $multiPolygon->toFeatureCollectionJson());
-    }
+  $multiPolygonFromJson = MultiPolygon::fromJson('{"type":"MultiPolygon","coordinates":[[[[180,0],[179,1],[178,2],[177,3],[180,0]]]]}', Srid::WGS84->value);
 
-    /** @test */
-    public function it_throws_exception_when_multi_polygon_has_0_polygons(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  expect($multiPolygonFromJson)->toEqual($multiPolygon);
+});
 
-        new MultiPolygon([]);
-    }
+it('generates multi polygon JSON', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
 
-    /** @test */
-    public function it_throws_exception_when_multi_polygon_has_composed_by_point(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+  $json = $multiPolygon->toJson();
 
-        // @phpstan-ignore-next-line
-        new MultiPolygon([
-            new Point(0, 0),
-        ]);
-    }
-}
+  $expectedJson = '{"type":"MultiPolygon","coordinates":[[[[180,0],[179,1],[178,2],[177,3],[180,0]]]]}';
+  expect($json)->toBe($expectedJson);
+});
+
+it('generates multi polygon feature collection JSON', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  $featureCollectionJson = $multiPolygon->toFeatureCollectionJson();
+
+  $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiPolygon","coordinates":[[[[180,0],[179,1],[178,2],[177,3],[180,0]]]]}}]}';
+  expect($featureCollectionJson)->toBe($expectedFeatureCollectionJson);
+});
+
+it('creates multi polygon from WKT', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  $multiPolygonFromWkt = MultiPolygon::fromWkt('MULTIPOLYGON(((180 0, 179 1, 178 2, 177 3, 180 0)))');
+
+  expect($multiPolygonFromWkt)->toEqual($multiPolygon);
+});
+
+it('creates multi polygon with SRID from WKT', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ], Srid::WGS84->value);
+
+  $multiPolygonFromWkt = MultiPolygon::fromWkt('MULTIPOLYGON(((180 0, 179 1, 178 2, 177 3, 180 0)))', Srid::WGS84->value);
+
+  expect($multiPolygonFromWkt)->toEqual($multiPolygon);
+});
+
+it('generates multi polygon WKT', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  $wkt = $multiPolygon->toWkt();
+
+  $expectedWkt = 'MULTIPOLYGON(((180 0, 179 1, 178 2, 177 3, 180 0)))';
+  expect($wkt)->toBe($expectedWkt);
+});
+
+it('creates multi polygon from WKB', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  $multiPolygonFromWkb = MultiPolygon::fromWkb($multiPolygon->toWkb());
+
+  expect($multiPolygonFromWkb)->toEqual($multiPolygon);
+});
+
+it('creates multi polygon with SRID from WKB', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ], Srid::WGS84->value);
+
+  $multiPolygonFromWkb = MultiPolygon::fromWkb($multiPolygon->toWkb());
+
+  expect($multiPolygonFromWkb)->toEqual($multiPolygon);
+});
+
+it('throws exception when multi polygon has no polygons', function (): void {
+  expect(function (): void {
+    new MultiPolygon([]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('throws exception when creating multi polygon from incorrect geometry', function (): void {
+  expect(function (): void {
+    // @phpstan-ignore-next-line
+    new MultiPolygon([
+      new Point(0, 0),
+    ]);
+  })->toThrow(InvalidArgumentException::class);
+});
+
+it('casts a MultiPolygon to a string', function (): void {
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  expect($multiPolygon->__toString())->toEqual('MULTIPOLYGON(((180 0, 179 1, 178 2, 177 3, 180 0)))');
+});
+
+it('adds a macro toMultiPolygon', function (): void {
+  Geometry::macro('getName', function (): string {
+    /** @var Geometry $this */
+    // @phpstan-ignore-next-line
+    return class_basename($this);
+  });
+
+  $multiPolygon = new MultiPolygon([
+    new Polygon([
+      new LineString([
+        new Point(0, 180),
+        new Point(1, 179),
+        new Point(2, 178),
+        new Point(3, 177),
+        new Point(0, 180),
+      ]),
+    ]),
+  ]);
+
+  // @phpstan-ignore-next-line
+  expect($multiPolygon->getName())->toBe('MultiPolygon');
+});
