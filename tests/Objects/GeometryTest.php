@@ -65,7 +65,7 @@ it('creates an SQL expression from a geometry', function (): void {
   $grammar = DB::getQueryGrammar();
   $expressionValue = $expression->getValue($grammar);
   expect($expressionValue)->toEqual("ST_GeomFromText('POINT(180 0)', 4326, 'axis-order=long-lat')");
-})->skip(fn () => ! (new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => ! AxisOrder::supported(DB::connection()));
 
 it('creates an SQL expression from a geometry - without axis-order', function (): void {
   $point = new Point(180, 0, Srid::WGS84->value);
@@ -75,7 +75,7 @@ it('creates an SQL expression from a geometry - without axis-order', function ()
   $grammar = DB::getQueryGrammar();
   $expressionValue = $expression->getValue($grammar);
   expect($expressionValue)->toEqual("ST_GeomFromText('POINT(180 0)', 4326)");
-})->skip(fn () => (new AxisOrder)->supported(DB::connection()));
+})->skip(fn () => AxisOrder::supported(DB::connection()));
 
 it('creates a geometry object from a geo json array', function (): void {
   $point = new Point(180, 0);

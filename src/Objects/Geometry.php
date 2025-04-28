@@ -20,6 +20,7 @@ use MatanYadaev\EloquentSpatial\AxisOrder;
 use MatanYadaev\EloquentSpatial\Enums\Srid;
 use MatanYadaev\EloquentSpatial\Factory;
 use MatanYadaev\EloquentSpatial\GeometryCast;
+use MatanYadaev\EloquentSpatial\GeometryExpression;
 use Stringable;
 use WKB as geoPHPWkb;
 
@@ -217,13 +218,13 @@ abstract class Geometry implements Castable, Arrayable, Jsonable, JsonSerializab
   {
     $wkt = $this->toWkt();
 
-    if (! (new AxisOrder)->supported($connection)) {
+    if (! AxisOrder::supported($connection)) {
       // @codeCoverageIgnoreStart
-      return DB::raw("ST_GeomFromText('{$wkt}', {$this->srid})");
+      return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid})"))->normalize($connection));
       // @codeCoverageIgnoreEnd
     }
 
-    return DB::raw("ST_GeomFromText('{$wkt}', {$this->srid}, 'axis-order=long-lat')");
+    return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid}, 'axis-order=long-lat')"))->normalize($connection));
   }
 
   public function toBoundingBox(float $minPadding = 0): ?BoundingBox
