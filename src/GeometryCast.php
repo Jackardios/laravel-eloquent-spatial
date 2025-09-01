@@ -13,90 +13,92 @@ use MatanYadaev\EloquentSpatial\Objects\Geometry;
 
 class GeometryCast implements CastsAttributes
 {
-  /** @var class-string<Geometry> */
-  private string $className;
+    /** @var class-string<Geometry> */
+    private string $className;
 
-  /**
-   * @param  class-string<Geometry>  $className
-   */
-  public function __construct(string $className)
-  {
-    $this->className = $className;
-  }
-
-  /**
-   * @param  Model  $model
-   * @param  string  $key
-   * @param  string|ExpressionContract|null  $value
-   * @param  array<string, mixed>  $attributes
-   * @return Geometry|null
-   */
-  public function get($model, string $key, $value, array $attributes): ?Geometry
-  {
-    if (! $value) {
-      return null;
+    /**
+     * @param  class-string<Geometry>  $className
+     */
+    public function __construct(string $className)
+    {
+        $this->className = $className;
     }
 
-    if ($value instanceof ExpressionContract) {
-      $wkt = $this->extractWktFromExpression($value, $model->getConnection());
-      $srid = $this->extractSridFromExpression($value, $model->getConnection());
+    /**
+     * @param  Model  $model
+     * @param  string|ExpressionContract|null  $value
+     * @param  array<string, mixed>  $attributes
+     */
+    public function get($model, string $key, $value, array $attributes): ?Geometry
+    {
+        if (! $value) {
+            return null;
+        }
 
-      return $this->className::fromWkt($wkt, $srid);
+        if ($value instanceof ExpressionContract) {
+            ['wkt' => $wkt, 'srid' => $srid] = $this->extractValuesFromExpression($value, $model->getConnection());
+
+            return $this->className::fromWkt($wkt, $srid);
+        }
+
+        return $this->className::fromWkb($value);
     }
 
-    return $this->className::fromWkb($value);
-  }
+    /**
+     * @param  Model  $model
+     * @param  Geometry|mixed|null  $value
+     * @param  array<string, mixed>  $attributes
+     *
+     * @throws InvalidArgumentException
+     */
+    public function set($model, string $key, $value, array $attributes): ?ExpressionContract
+    {
+        if (! $value) {
+            return null;
+        }
 
-  /**
-   * @param  Model  $model
-   * @param  string  $key
-   * @param  Geometry|mixed|null  $value
-   * @param  array<string, mixed>  $attributes
-   * @return ExpressionContract|null
-   *
-   * @throws InvalidArgumentException
-   */
-  public function set($model, string $key, $value, array $attributes): ExpressionContract|null
-  {
-    if (! $value) {
-      return null;
+        if (is_array($value)) {
+            $value = Geometry::fromArray($value);
+        }
+
+        if ($value instanceof ExpressionContract) {
+            return $value;
+        }
+
+        if (! $this->isCorrectGeometryType($value)) {
+            $geometryType = is_object($value) ? $value::class : gettype($value);
+            throw new InvalidArgumentException(
+                sprintf('Expected %s, %s given.', $this->className, $geometryType)
+            );
+        }
+
+        /** @var Geometry $value */
+
+        return $value->toSqlExpression($model->getConnection());
     }
 
-    if (is_array($value)) {
-      $value = Geometry::fromArray($value);
+    private function isCorrectGeometryType(mixed $value): bool
+    {
+        if ($this->className === Geometry::class && $value instanceof Geometry) {
+            return true;
+        }
+
+        return $value instanceof $this->className && get_class($value) === $this->className;
     }
 
-    if ($value instanceof ExpressionContract) {
-      return $value;
+    /**
+     * @return array{wkt: string, srid: int}
+     */
+    private function extractValuesFromExpression(ExpressionContract $expression, Connection $connection): array
+    {
+        $grammar = $connection->getQueryGrammar();
+        $expressionValue = $expression->getValue($grammar);
+
+        preg_match("/ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'([^']+)')?\s*\)/", (string) $expressionValue, $matches);
+
+        return [
+            'wkt' => $matches[1] ?? '',
+            'srid' => (int) ($matches[2] ?? 0),
+        ];
     }
-
-    if (! ($value instanceof $this->className)) {
-      $geometryType = is_object($value) ? $value::class : gettype($value);
-      throw new InvalidArgumentException(
-        sprintf('Expected %s, %s given.', static::class, $geometryType)
-      );
-    }
-
-    return $value->toSqlExpression($model->getConnection());
-  }
-
-  private function extractWktFromExpression(ExpressionContract $expression, Connection $connection): string
-  {
-    $grammar = $connection->getQueryGrammar();
-    $expressionValue = $expression->getValue($grammar);
-
-    preg_match('/ST_GeomFromText\(\'(.+)\', .+(, .+)?\)/', (string) $expressionValue, $match);
-
-    return $match[1];
-  }
-
-  private function extractSridFromExpression(ExpressionContract $expression, Connection $connection): int
-  {
-    $grammar = $connection->getQueryGrammar();
-    $expressionValue = $expression->getValue($grammar);
-
-    preg_match('/ST_GeomFromText\(\'.+\', (.+)(, .+)?\)/', (string) $expressionValue, $match);
-
-    return (int) $match[1];
-  }
 }
