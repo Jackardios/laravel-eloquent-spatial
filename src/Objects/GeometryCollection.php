@@ -96,6 +96,28 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
+     * @return Collection<int, Point>
+     */
+    public function getPoints(): Collection
+    {
+        $points = collect([]);
+
+        foreach ($this->getGeometries() as $geometry) {
+            if ($geometry instanceof Point) {
+                $points->push($geometry);
+            }
+            if ($geometry instanceof self) {
+                $points->push($geometry->getPoints());
+            }
+        }
+
+        /** @var Collection<int, Point> $flattenedPoints */
+        $flattenedPoints = $points->flatten();
+
+        return $flattenedPoints;
+    }
+
+    /**
      * @param  int  $offset
      */
     public function offsetExists($offset): bool

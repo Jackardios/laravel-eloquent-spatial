@@ -209,4 +209,9 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
 
         return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid}, 'axis-order=long-lat')"))->normalize($connection));
     }
+
+    public function toBoundingBox(float $minPadding = 0): ?BoundingBox
+    {
+        return BoundingBox::fromGeometry($this, $minPadding);
+    }
 }
