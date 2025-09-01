@@ -2,6 +2,91 @@
 
 All notable changes to `laravel-eloquent-spatial` will be documented in this file.
 
+## v4.5.0 - 2025-02-26
+
+### What's Changed
+
+* Laravel 12 upgrade by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/136
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.4.1...4.5.0
+
+## v4.4.1 - 2024-11-30
+
+### What's Changed
+
+* Fix WKT for empty geometry collections by @LachlanArthur in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/132
+
+### New Contributors
+
+* @LachlanArthur made their first contribution in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/132
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.4.0...4.4.1
+
+## v4.4.0 - 2024-11-23
+
+### What's Changed
+
+* Allow setting default SRID by @MatanYadaev  in https://github.com/MatanYadaev/laravel-eloquent-spatial/commit/43edde698892659c9ef28b83a774f62a91ff7559
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.3.2...4.4.0
+
+## v4.3.2 - 2024-08-07
+
+### What's Changed
+
+* Fix SRID not being optional for expression in GeometryCast by @nickknissen in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/124
+
+### New Contributors
+
+* @nickknissen made their first contribution in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/124
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.3.1...4.3.2
+
+## v4.3.1 - 2024-08-03
+
+### What's Changed
+
+* Fix columns that their cast is `Geometry` by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/127
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.3.0...4.3.1
+
+## v4.3.0 - 2024-07-24
+
+### What's Changed
+
+* Support Geometry class extension by @jobverplanke in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/125
+
+### New Contributors
+
+* @jobverplanke made their first contribution in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/125
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.2.1...4.3.0
+
+## v4.2.0 - 2024-03-13
+
+### What's Changed
+
+* Support Laravel 11 by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/113
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.1.1...4.2.0
+
+## v4.1.1 - 2024-03-05
+
+### What's Changed
+
+* Laravel Pint by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/112
+* Bugfix: `isDirty` is always `true` after creation by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/115
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.1.0...4.1.1
+
+## v4.1.0 - 2024-02-24
+
+### What's Changed
+
+* Postgres support by @MatanYadaev in https://github.com/MatanYadaev/laravel-eloquent-spatial/pull/109
+
+**Full Changelog**: https://github.com/MatanYadaev/laravel-eloquent-spatial/compare/4.0.0...4.1.0
+
 ## v4.0.0 - 2024-01-18
 
 ### What's Changed

@@ -8,40 +8,40 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\MySqlConnection;
 use PDO;
 
+/** @codeCoverageIgnore */
 class AxisOrder
 {
-  public function __construct()
-  {
-  }
+    public static function supported(ConnectionInterface $connection): bool
+    {
+        if (self::isMariaDb($connection)) {
+            return false;
+        }
 
-  public function supported(ConnectionInterface $connection): bool
-  {
-    /** @var MySqlConnection $connection */
-    if ($this->isMariaDb($connection)) {
-      // @codeCoverageIgnoreStart
-      return false;
-      // @codeCoverageIgnoreEnd
+        if (self::isMySql8OrAbove($connection)) {
+            return true;
+        }
+
+        return false;
     }
 
-    if ($this->isMySql57($connection)) {
-      // @codeCoverageIgnoreStart
-      return false;
-      // @codeCoverageIgnoreEnd
+    private static function isMariaDb(ConnectionInterface $connection): bool
+    {
+        if (! ($connection instanceof MySqlConnection)) {
+            return false;
+        }
+
+        return $connection->isMaria();
     }
 
-    return true;
-  }
+    private static function isMySql8OrAbove(ConnectionInterface $connection): bool
+    {
+        if (! ($connection instanceof MySqlConnection)) {
+            return false;
+        }
 
-  private function isMariaDb(MySqlConnection $connection): bool
-  {
-    return $connection->isMaria();
-  }
+        /** @var string $version */
+        $version = $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION);
 
-  private function isMySql57(MySqlConnection $connection): bool
-  {
-    /** @var string $version */
-    $version = $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION);
-
-    return version_compare($version, '5.8.0', '<');
-  }
+        return version_compare($version, '8.0.0', '>=');
+    }
 }
