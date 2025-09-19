@@ -9,6 +9,7 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -161,39 +162,65 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         {
             /**
              * @param  Model  $model
-             * @param  string|null  $wkb
+             * @param  string|ExpressionContract|null $value
              * @param  array<string, mixed>  $attributes
              */
-            public function get($model, string $key, $wkb, $attributes): ?BoundingBox
+            public function get($model, string $key, $value, $attributes): ?BoundingBox
             {
-                if (! $wkb) {
+                if (! $value) {
                     return null;
                 }
 
-                return Polygon::fromWkb($wkb)->toBoundingBox();
+                if ($value instanceof ExpressionContract) {
+                    ['wkt' => $wkt, 'srid' => $srid] = $this->extractValuesFromExpression($value, $model->getConnection());
+
+                    return Polygon::fromWkt($wkt, $srid)->toBoundingBox();
+                }
+
+                return Polygon::fromWkb($value)->toBoundingBox();
             }
 
             /**
              * @param  Model  $model
-             * @param  BoundingBox|mixed|null  $bbox
+             * @param  BoundingBox|mixed|null  $value
              * @param  array<string, mixed>  $attributes
              *
              * @throws InvalidArgumentException
              */
-            public function set($model, string $key, $bbox, $attributes): ?ExpressionContract
+            public function set($model, string $key, $value, $attributes): ?ExpressionContract
             {
-                if (! $bbox) {
+                if (! $value) {
                     return null;
                 }
 
-                if (! ($bbox instanceof BoundingBox)) {
-                    $bboxType = is_object($bbox) ? $bbox::class : gettype($bbox);
+                if ($value instanceof ExpressionContract) {
+                    return $value;
+                }
+
+                if (! ($value instanceof BoundingBox)) {
+                    $bboxType = is_object($value) ? $value::class : gettype($value);
                     throw new InvalidArgumentException(
-                        sprintf('Expected %s, %s given.', self::class, $bboxType)
+                        sprintf('Expected %s, %s given.', BoundingBox::class, $bboxType)
                     );
                 }
 
-                return $bbox->toPolygon()->toSqlExpression($model->getConnection());
+                return $value->toPolygon()->toSqlExpression($model->getConnection());
+            }
+
+            /**
+             * @return array{wkt: string, srid: int}
+             */
+            private function extractValuesFromExpression(ExpressionContract $expression, Connection $connection): array
+            {
+                $grammar = $connection->getQueryGrammar();
+                $expressionValue = $expression->getValue($grammar);
+
+                preg_match("/ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'([^']+)')?\s*\)/", (string) $expressionValue, $matches);
+
+                return [
+                    'wkt' => $matches[1] ?? '',
+                    'srid' => (int) ($matches[2] ?? 0),
+                ];
             }
         };
     }

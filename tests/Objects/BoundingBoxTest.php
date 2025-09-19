@@ -198,18 +198,6 @@ it('throws exception when serializing invalid type', function () {
     })->toThrow(InvalidArgumentException::class);
 });
 
-it('throws exception when deserializing invalid bounding box object', function () {
-    expect(function () {
-        TestPlace::factory()->create([
-            'bounding_box' => DB::raw('POINT(0, 90)'),
-        ]);
-
-        $testPlace = TestPlace::firstOrFail();
-
-        $testPlace->getAttribute('bounding_box');
-    })->toThrow(InvalidArgumentException::class);
-});
-
 it('serializes and deserializes null', function () {
     /** @var TestPlace $testPlace */
     $testPlace = TestPlace::factory()->create([
