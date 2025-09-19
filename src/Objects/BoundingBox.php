@@ -162,7 +162,7 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         {
             /**
              * @param  Model  $model
-             * @param  string|ExpressionContract|null $value
+             * @param  string|ExpressionContract|null  $value
              * @param  array<string, mixed>  $attributes
              */
             public function get($model, string $key, $value, $attributes): ?BoundingBox

@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
 use MatanYadaev\EloquentSpatial\Objects\BoundingBox;
 use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
