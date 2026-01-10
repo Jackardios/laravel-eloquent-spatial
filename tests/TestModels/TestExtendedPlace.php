@@ -1,18 +1,18 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestModels;
+namespace Jackardios\EloquentSpatial\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use MatanYadaev\EloquentSpatial\Tests\TestFactories\TestExtendedPlaceFactory;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedGeometryCollection;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedLineString;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedMultiLineString;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedMultiPoint;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedMultiPolygon;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedPoint;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedPolygon;
-use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use Jackardios\EloquentSpatial\Tests\TestFactories\TestExtendedPlaceFactory;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedGeometryCollection;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedLineString;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedMultiLineString;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedMultiPoint;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedMultiPolygon;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedPoint;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedPolygon;
+use Jackardios\EloquentSpatial\Traits\HasSpatial;
 
 /**
  * @property ExtendedGeometryCollection $geometry_collection

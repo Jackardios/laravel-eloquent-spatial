@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial;
+namespace Jackardios\EloquentSpatial;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\Geometry;
 
 class GeometryCast implements CastsAttributes
 {
@@ -92,13 +92,8 @@ class GeometryCast implements CastsAttributes
     private function extractValuesFromExpression(ExpressionContract $expression, Connection $connection): array
     {
         $grammar = $connection->getQueryGrammar();
-        $expressionValue = $expression->getValue($grammar);
+        $expressionValue = (string) $expression->getValue($grammar);
 
-        preg_match("/ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'([^']+)')?\s*\)/", (string) $expressionValue, $matches);
-
-        return [
-            'wkt' => $matches[1] ?? '',
-            'srid' => (int) ($matches[2] ?? 0),
-        ];
+        return Helper::parseStGeomFromText($expressionValue);
     }
 }

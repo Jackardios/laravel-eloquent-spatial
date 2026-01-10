@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
 
 class ExtendedMultiPoint extends MultiPoint {}

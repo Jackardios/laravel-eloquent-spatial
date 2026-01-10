@@ -1,15 +1,15 @@
 <?php
 
-use MatanYadaev\EloquentSpatial\EloquentSpatial;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedGeometryCollection;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestPlace;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedGeometryCollection;
 
 it('creates a model record with geometry collection', function (): void {
     $geometryCollection = new GeometryCollection([
@@ -543,6 +543,23 @@ it('checks if geometry collection item is exists', function (): void {
     expect($thirdItemExists)->toBeFalse();
 });
 
+it('gets item from geometry collection by offset', function (): void {
+    $point = new Point(180, 0);
+    $polygon = new Polygon([
+        new LineString([
+            new Point(180, 0),
+            new Point(179, 1),
+            new Point(178, 2),
+            new Point(177, 3),
+            new Point(180, 0),
+        ]),
+    ]);
+    $geometryCollection = new GeometryCollection([$polygon, $point]);
+
+    expect($geometryCollection[0])->toBe($polygon);
+    expect($geometryCollection[1])->toBe($point);
+});
+
 it('sets item to geometry collection', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
@@ -690,4 +707,99 @@ it('throws exception when storing a record with extended GeometryCollection inst
     expect(function () use ($geometryCollection): void {
         TestPlace::factory()->create(['geometry_collection' => $geometryCollection]);
     })->toThrow(InvalidArgumentException::class);
+});
+
+// Edge case tests for nested GeometryCollections
+
+it('creates deeply nested geometry collection', function (): void {
+    $innerCollection = new GeometryCollection([
+        new Point(1.0, 2.0),
+        new Point(3.0, 4.0),
+    ]);
+
+    $middleCollection = new GeometryCollection([
+        $innerCollection,
+        new Point(5.0, 6.0),
+    ]);
+
+    $outerCollection = new GeometryCollection([
+        $middleCollection,
+        new Point(7.0, 8.0),
+    ]);
+
+    expect(count($outerCollection->getGeometries()))->toBe(2);
+
+    /** @var GeometryCollection $level1 */
+    $level1 = $outerCollection[0];
+    expect($level1)->toBeInstanceOf(GeometryCollection::class);
+
+    /** @var GeometryCollection $level2 */
+    $level2 = $level1[0];
+    expect($level2)->toBeInstanceOf(GeometryCollection::class);
+
+    expect($level2[0])->toBeInstanceOf(Point::class);
+});
+
+it('creates and persists deeply nested geometry collection', function (): void {
+    $innerCollection = new GeometryCollection([
+        new Point(1.0, 2.0),
+        new LineString([
+            new Point(0.0, 0.0),
+            new Point(1.0, 1.0),
+        ]),
+    ]);
+
+    $outerCollection = new GeometryCollection([
+        $innerCollection,
+        new Point(3.0, 4.0),
+    ]);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $outerCollection]);
+
+    expect($testPlace->geometry_collection)->toBeInstanceOf(GeometryCollection::class);
+
+    /** @var GeometryCollection $nested */
+    $nested = $testPlace->geometry_collection[0];
+    expect($nested)->toBeInstanceOf(GeometryCollection::class);
+    expect($nested[0])->toBeInstanceOf(Point::class);
+    expect($nested[1])->toBeInstanceOf(LineString::class);
+});
+
+it('preserves SRID through nested geometry collection roundtrip', function (): void {
+    $collection = new GeometryCollection([
+        new GeometryCollection([
+            new Point(1.0, 2.0, Srid::WGS84->value),
+        ], Srid::WGS84->value),
+    ], Srid::WGS84->value);
+
+    $wkb = $collection->toWkb();
+    $restored = GeometryCollection::fromWkb($wkb);
+
+    expect($restored->srid)->toBe(Srid::WGS84->value);
+});
+
+it('handles geometry collection with all geometry types', function (): void {
+    $collection = new GeometryCollection([
+        new Point(1.0, 2.0),
+        new LineString([
+            new Point(0.0, 0.0),
+            new Point(1.0, 1.0),
+        ]),
+        new Polygon([
+            new LineString([
+                new Point(0.0, 0.0),
+                new Point(1.0, 0.0),
+                new Point(1.0, 1.0),
+                new Point(0.0, 0.0),
+            ]),
+        ]),
+    ]);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $collection]);
+
+    expect($testPlace->geometry_collection[0])->toBeInstanceOf(Point::class);
+    expect($testPlace->geometry_collection[1])->toBeInstanceOf(LineString::class);
+    expect($testPlace->geometry_collection[2])->toBeInstanceOf(Polygon::class);
 });

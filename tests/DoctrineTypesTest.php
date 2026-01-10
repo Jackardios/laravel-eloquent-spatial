@@ -3,15 +3,15 @@
 use Doctrine\DBAL\Types\Type;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
-use MatanYadaev\EloquentSpatial\Doctrine\GeographyType;
-use MatanYadaev\EloquentSpatial\Doctrine\GeometryCollectionType;
-use MatanYadaev\EloquentSpatial\Doctrine\GeometryType;
-use MatanYadaev\EloquentSpatial\Doctrine\LineStringType;
-use MatanYadaev\EloquentSpatial\Doctrine\MultiLineStringType;
-use MatanYadaev\EloquentSpatial\Doctrine\MultiPointType;
-use MatanYadaev\EloquentSpatial\Doctrine\MultiPolygonType;
-use MatanYadaev\EloquentSpatial\Doctrine\PointType;
-use MatanYadaev\EloquentSpatial\Doctrine\PolygonType;
+use Jackardios\EloquentSpatial\Doctrine\GeographyType;
+use Jackardios\EloquentSpatial\Doctrine\GeometryCollectionType;
+use Jackardios\EloquentSpatial\Doctrine\GeometryType;
+use Jackardios\EloquentSpatial\Doctrine\LineStringType;
+use Jackardios\EloquentSpatial\Doctrine\MultiLineStringType;
+use Jackardios\EloquentSpatial\Doctrine\MultiPointType;
+use Jackardios\EloquentSpatial\Doctrine\MultiPolygonType;
+use Jackardios\EloquentSpatial\Doctrine\PointType;
+use Jackardios\EloquentSpatial\Doctrine\PolygonType;
 
 /** @var array{column: string, postgresType: class-string<Type>, mySqlType: class-string<Type>} $typeClass */
 $dataset = [

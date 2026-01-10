@@ -1,295 +1,382 @@
 # Laravel Eloquent Spatial
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
-![Tests](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Tests/badge.svg)
-![Static code analysis](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Static%20code%20analysis/badge.svg)
-![Lint](https://github.com/matanyadaev/laravel-eloquent-spatial/workflows/Lint/badge.svg)
-[![Total Downloads](https://img.shields.io/packagist/dt/matanyadaev/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/matanyadaev/laravel-eloquent-spatial)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
+[![Total Downloads](https://img.shields.io/packagist/dt/jackardios/laravel-eloquent-spatial.svg?style=flat-square)](https://packagist.org/packages/jackardios/laravel-eloquent-spatial)
 
-**This Laravel package allows you to easily work with spatial data types and functions.**
+Laravel package for working with spatial data types and functions in Eloquent.
 
-Supported databases:
+## Supported Databases
 
-- MySQL 5.7/8
-- MariaDB 10
-- Postgres 12/13/14/15/16 with PostGIS 3.4
+- MySQL 5.7 / 8.x
+- MariaDB 10.x
+- PostgreSQL 12+ with PostGIS 3.4+
 
-## Getting Started
+## Requirements
 
-### Installing the Package
+- PHP 8.1+
+- Laravel 10.x / 11.x / 12.x
 
-You can install the package via composer:
+## Installation
 
 ```bash
-composer require matanyadaev/laravel-eloquent-spatial
+composer require jackardios/laravel-eloquent-spatial
 ```
 
-### Setting Up Your First Model
+## Quick Start
 
-1. First, generate a new model along with a migration file by running:
-
-   ```bash
-   php artisan make:model {modelName} --migration
-   ```
-
-2. Next, add some spatial columns to the migration file. For instance, to create a "places" table:
-
-    ```php
-    use Illuminate\Database\Migrations\Migration;
-    use Illuminate\Database\Schema\Blueprint;
-
-    class CreatePlacesTable extends Migration
-    {
-        public function up(): void
-        {
-            Schema::create('places', static function (Blueprint $table) {
-                $table->id();
-                $table->string('name')->unique();
-                $table->geometry('location', subtype: 'point')->nullable();
-                $table->geometry('area', subtype: 'polygon')->nullable();
-                $table->timestamps();
-            });
-        }
-
-        public function down(): void
-        {
-            Schema::dropIfExists('places');
-        }
-    }
-    ```
-
-3. Run the migration:
-
-    ```bash
-    php artisan migrate
-    ```
-
-4. In your new model, fill the `$fillable` and `$casts` arrays and use the `HasSpatial` trait:
-
-    ```php
-    namespace App\Models;
-
-    use Illuminate\Database\Eloquent\Model;
-    use MatanYadaev\EloquentSpatial\Objects\Point;
-    use MatanYadaev\EloquentSpatial\Objects\Polygon;
-    use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
-
-    /**
-     * @property Point $location
-     * @property Polygon $area
-     */
-    class Place extends Model
-    {
-        use HasSpatial;
-
-        protected $fillable = [
-            'name',
-            'location',
-            'area',
-        ];
-
-        protected $casts = [
-            'location' => Point::class,
-            'area' => Polygon::class,
-        ];
-    }
-    ```
-
-### Interacting with Spatial Data
-
-After setting up your model, you can now create and access spatial data. Here's an example:
+### 1. Create a Migration
 
 ```php
-use App\Models\Place;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-// Create new records
-
-$londonEye = Place::create([
-    'name' => 'London Eye',
-    'location' => new Point(-0.1217424, 51.5032973),
-]);
-
-$whiteHouse = Place::create([
-    'name' => 'White House',
-    'location' => new Point(-77.0365298, 38.8976763, Srid::WGS84->value), // with SRID
-]);
-
-$vaticanCity = Place::create([
-    'name' => 'Vatican City',
-    'area' => new Polygon([
-        new LineString([
-              new Point(41.90746728266806, 12.455363273620605),
-              new Point(41.906636872349075, 12.450309991836548),
-              new Point(41.90197359839437, 12.445632219314575),
-              new Point(41.90027269624499, 12.447413206100464),
-              new Point(41.90000118654431, 12.457906007766724),
-              new Point(41.90281205461268, 12.458517551422117),
-              new Point(41.903107507989986, 12.457584142684937),
-              new Point(41.905918239316286, 12.457734346389769),
-              new Point(41.90637337450963, 12.45572805404663),
-              new Point(41.90746728266806, 12.455363273620605),
-        ]),
-    ]),
-])
-
-// Access the data
-
-echo $londonEye->location->longitude; // -0.1217424
-echo $londonEye->location->latitude; // 51.5032973
-
-echo $whiteHouse->location->srid; // 4326
-
-echo $vacationCity->area->toJson(); // {"type":"Polygon","coordinates":[[[41.90746728266806,12.455363273620605],[41.906636872349075,12.450309991836548],[41.90197359839437,12.445632219314575],[41.90027269624499,12.447413206100464],[41.90000118654431,12.457906007766724],[41.90281205461268,12.458517551422117],[41.903107507989986,12.457584142684937],[41.905918239316286,12.457734346389769],[41.90637337450963,12.45572805404663],[41.90746728266806,12.455363273620605]]]}
-```
-
-## Further Reading
-
-For more comprehensive documentation on the API, please refer to the [API](API.md) page.
-
-## Extension
-
-### Extend Geometry class with macros
-
-You can add new methods to the `Geometry` class through macros.
-
-Here's an example of how to register a macro in your service provider's `boot` method:
-
-```php
-class AppServiceProvider extends ServiceProvider
+return new class extends Migration
 {
-    public function boot(): void
+    public function up(): void
     {
-        Geometry::macro('getName', function (): string {
-            /** @var Geometry $this */
-            return class_basename($this);
+        Schema::create('places', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->geometry('location', subtype: 'point')->nullable();
+            $table->geometry('area', subtype: 'polygon')->nullable();
+            $table->timestamps();
         });
     }
-}
-```
 
-Use the method in your code:
-
-```php
-$londonEyePoint = new Point(-0.1217424, 51.5032973);
-
-echo $londonEyePoint->getName(); // Point
-```
-
-### Extend with custom geometry classes
-
-You can extend the geometry classes by creating custom geometry classes and add functionality. You can also override existing methods, although it is not recommended, as it may lead to unexpected behavior.
-
-1. Create a custom geometry class that extends the base geometry class. 
-
-```php
-use MatanYadaev\EloquentSpatial\Objects\Point;
-
-class ExtendedPoint extends Point
-{
-    public function toCustomArray(): array
+    public function down(): void
     {
-        return 'coordinates' => [
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude
-        ]
+        Schema::dropIfExists('places');
     }
-}
+};
 ```
 
-2. Update the geometry class mapping in a service provider file.
+### 2. Set Up Your Model
 
 ```php
-use App\ValueObjects\ExtendedPoint;
-use Illuminate\Support\ServiceProvider;
-use MatanYadaev\EloquentSpatial\EloquentSpatial;
+namespace App\Models;
 
-class AppServiceProvider extends ServiceProvider
-{
-    public function boot(): void
-    {
-        EloquentSpatial::usePoint(ExtendedPoint::class);
-    }
-}
-```
-
-3. Update your model to use the custom geometry class in the `$casts` property or `casts()` method.
-
-```php
-use App\ValueObjects\ExtendedPoint;
 use Illuminate\Database\Eloquent\Model;
-use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Traits\HasSpatial;
 
+/**
+ * @property Point $location
+ * @property Polygon $area
+ */
 class Place extends Model
 {
     use HasSpatial;
-    
-    protected $casts = [
-        'coordinates' => ExtendedPoint::class,
-    ];
-    
-    // Or:
 
-    protected function casts(): array
-    {
-        return [
-            'coordinates' => ExtendedPoint::class,
-        ];
-    }
+    protected $fillable = [
+        'name',
+        'location',
+        'area',
+    ];
+
+    protected $casts = [
+        'location' => Point::class,
+        'area' => Polygon::class,
+    ];
 }
 ```
 
-4. Use the custom geometry class in your code.
+### 3. Work with Spatial Data
 
 ```php
-use App\Models\Location;
-use App\ValueObjects\ExtendedPoint;
+use App\Models\Place;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Enums\Srid;
 
+// Create a place with a point location
+// Note: Point constructor uses (longitude, latitude) order
 $place = Place::create([
-    'name' => 'London Eye',
-    'coordinates' => new ExtendedPoint(-0.1217424, 51.5032973),
+    'name' => 'Eiffel Tower',
+    'location' => new Point(2.2945, 48.8584),
 ]);
 
-echo $place->coordinates->toCustomArray(); // ['longitude' => -0.1217424, 'latitude' => 51.5032973]
+// Create with SRID
+$place = Place::create([
+    'name' => 'Big Ben',
+    'location' => new Point(-0.1246, 51.5007, Srid::WGS84),
+]);
+
+// Create with polygon area
+$place = Place::create([
+    'name' => 'Central Park',
+    'area' => new Polygon([
+        new LineString([
+            new Point(-73.9819, 40.7681),
+            new Point(-73.9580, 40.8006),
+            new Point(-73.9498, 40.7969),
+            new Point(-73.9737, 40.7644),
+            new Point(-73.9819, 40.7681), // Close the ring
+        ]),
+    ]),
+]);
+
+// Access coordinates
+echo $place->location->longitude; // 2.2945
+echo $place->location->latitude;  // 48.8584
+echo $place->location->srid;      // 4326 (if using WGS84)
+
+// Convert to different formats
+$place->location->toWkt();     // POINT(2.2945 48.8584)
+$place->location->toJson();    // {"type":"Point","coordinates":[2.2945,48.8584]}
+$place->location->toArray();   // ['type' => 'Point', 'coordinates' => [2.2945, 48.8584]]
 ```
 
-## Set default SRID
+## Geometry Classes
 
-By default, the SRID is set to 0 (EPSG:0).
-You can set the default SRID for your application by setting the `SRID` constant in a service provider's `boot` method:
+All geometry classes support creating instances from various formats:
 
 ```php
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use Illuminate\Support\ServiceProvider;
+use Jackardios\EloquentSpatial\Objects\Point;
 
-class AppServiceProvider extends ServiceProvider
+// From constructor
+$point = new Point(longitude: 2.2945, latitude: 48.8584, srid: 4326);
+
+// From WKT
+$point = Point::fromWkt('POINT(2.2945 48.8584)', srid: 4326);
+
+// From GeoJSON
+$point = Point::fromJson('{"type":"Point","coordinates":[2.2945,48.8584]}');
+
+// From array
+$point = Point::fromArray(['type' => 'Point', 'coordinates' => [2.2945, 48.8584]]);
+
+// From WKB
+$point = Point::fromWkb($binaryData);
+```
+
+### Available Geometry Types
+
+| Class | Description |
+|-------|-------------|
+| `Point` | Single coordinate (longitude, latitude) |
+| `LineString` | Ordered sequence of Points |
+| `Polygon` | Closed shape defined by LineStrings |
+| `MultiPoint` | Collection of Points |
+| `MultiLineString` | Collection of LineStrings |
+| `MultiPolygon` | Collection of Polygons |
+| `GeometryCollection` | Mixed collection of any geometry types |
+| `BoundingBox` | Rectangular bounds with antimeridian support |
+
+### Coordinate Validation
+
+The `Point` class validates coordinates automatically:
+
+```php
+// Valid coordinates
+$point = new Point(180, 90);    // OK
+$point = new Point(-180, -90);  // OK
+
+// Invalid coordinates throw InvalidArgumentException
+$point = new Point(200, 0);     // Error: Longitude must be between -180 and 180
+$point = new Point(0, 100);     // Error: Latitude must be between -90 and 90
+```
+
+## Spatial Query Scopes
+
+The `HasSpatial` trait provides query scopes for spatial operations:
+
+### Distance Queries
+
+```php
+use App\Models\Place;
+use Jackardios\EloquentSpatial\Objects\Point;
+
+$referencePoint = new Point(-0.1246, 51.5007, 4326);
+
+// Add distance to results
+$places = Place::query()
+    ->withDistanceSphere('location', $referencePoint)
+    ->get();
+
+foreach ($places as $place) {
+    echo $place->distance; // Distance in meters
+}
+
+// Filter by distance
+$nearbyPlaces = Place::query()
+    ->whereDistanceSphere('location', $referencePoint, '<', 5000) // Within 5km
+    ->get();
+
+// Order by distance
+$closestPlaces = Place::query()
+    ->orderByDistanceSphere('location', $referencePoint)
+    ->limit(10)
+    ->get();
+```
+
+### Spatial Relationship Queries
+
+```php
+use Jackardios\EloquentSpatial\Objects\Polygon;
+
+$searchArea = Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}');
+
+// Find places within an area
+Place::whereWithin('location', $searchArea)->get();
+Place::whereNotWithin('location', $searchArea)->get();
+
+// Find places containing a point
+Place::whereContains('area', $point)->get();
+Place::whereNotContains('area', $point)->get();
+
+// Other spatial relationships
+Place::whereTouches('area', $geometry)->get();
+Place::whereIntersects('location', $geometry)->get();
+Place::whereCrosses('route', $geometry)->get();
+Place::whereDisjoint('location', $geometry)->get();
+Place::whereOverlaps('area', $geometry)->get();
+Place::whereEquals('location', $point)->get();
+
+// Filter by SRID
+Place::whereSrid('location', '=', 4326)->get();
+
+// Get centroid
+Place::query()
+    ->withCentroid('area')
+    ->withCasts(['centroid' => Point::class])
+    ->get();
+```
+
+## BoundingBox
+
+The `BoundingBox` class represents rectangular geographic bounds:
+
+```php
+use Jackardios\EloquentSpatial\Objects\BoundingBox;
+use Jackardios\EloquentSpatial\Objects\Point;
+
+// Create from corner points
+$bbox = new BoundingBox(
+    leftBottom: new Point(-74.0, 40.7),
+    rightTop: new Point(-73.9, 40.8)
+);
+
+// Create from geometry
+$bbox = BoundingBox::fromGeometry($polygon);
+
+// Create from points with padding
+$bbox = BoundingBox::fromPoints($pointsArray, minPadding: 0.01);
+
+// Access bounds
+$bbox->getLeftBottom();  // Bottom-left Point
+$bbox->getRightTop();    // Top-right Point
+
+// Convert to geometry
+$polygon = $bbox->toPolygon();
+$geometry = $bbox->toGeometry(); // Returns MultiPolygon if crosses antimeridian
+
+// Check if crosses antimeridian (dateline)
+$bbox->crossesAntimeridian(); // true/false
+
+// Serialize
+$bbox->toArray();  // ['left' => ..., 'bottom' => ..., 'right' => ..., 'top' => ...]
+$bbox->toJson();
+```
+
+### BoundingBox as Model Attribute
+
+```php
+use Jackardios\EloquentSpatial\Objects\BoundingBox;
+
+class Region extends Model
 {
-    public function boot(): void
-    {
-        // Set the default SRID to WGS84 (EPSG:4326)
-        EloquentSpatial::setDefaultSrid(Srid::WGS84);
-    }
+    use HasSpatial;
+
+    protected $casts = [
+        // Store as geometry column
+        'bounds' => BoundingBox::class,
+
+        // Or store as JSON
+        'bounds' => BoundingBox::class . ':json',
+    ];
 }
 ```
+
+## SRID Support
+
+Spatial Reference Identifiers define coordinate systems:
+
+```php
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+
+// Available SRID constants
+Srid::WGS84;        // 4326 - GPS coordinates
+Srid::WEB_MERCATOR; // 3857 - Web maps (Google Maps, etc.)
+
+// Set default SRID for all geometries
+EloquentSpatial::setDefaultSrid(Srid::WGS84);
+```
+
+## Extending Geometry Classes
+
+### Using Macros
+
+```php
+use Jackardios\EloquentSpatial\Objects\Geometry;
+
+// Register in a service provider
+Geometry::macro('distanceToKm', function (Point $other): float {
+    /** @var Geometry $this */
+    // Custom distance calculation
+});
+
+// Usage
+$point->distanceToKm($otherPoint);
+```
+
+### Custom Geometry Classes
+
+```php
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+
+class CustomPoint extends Point
+{
+    public function toLatLngArray(): array
+    {
+        return ['lat' => $this->latitude, 'lng' => $this->longitude];
+    }
+}
+
+// Register in service provider
+EloquentSpatial::usePoint(CustomPoint::class);
+```
+
+## API Reference
+
+For complete API documentation, see [API.md](API.md).
+
+## Upgrading
+
+See [UPGRADE.md](UPGRADE.md) for upgrade instructions from previous versions.
 
 ## Development
 
-Here are some useful commands for development:
+```bash
+# Start database containers
+docker-compose up -d
 
-* Run tests: `composer pest:mysql`, `composer pest:mariadb`, `composer pest:postgres`
-* Run tests with coverage: `composer pest-coverage:mysql`
-* Perform type checking: `composer phpstan`
-* Perform code formatting: `composer pint`
+# Run tests
+composer pest:mysql
+composer pest:mariadb
+composer pest:postgres
 
-Before running tests, make sure to run `docker-compose up` to start the database container.
+# Static analysis
+composer phpstan
 
-## Updates and Changes
-
-For details on updates and changes, please refer to our [CHANGELOG](CHANGELOG.md).
+# Code formatting
+composer pint
+```
 
 ## License
 
-Laravel Eloquent Spatial is released under The MIT License (MIT). For more information, please see our [License File](LICENSE.md).
+MIT License. See [LICENSE.md](LICENSE.md) for details.

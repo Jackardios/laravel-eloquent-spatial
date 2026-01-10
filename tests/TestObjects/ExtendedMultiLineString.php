@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
 
 class ExtendedMultiLineString extends MultiLineString {}

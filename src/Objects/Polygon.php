@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
 class Polygon extends MultiLineString
 {

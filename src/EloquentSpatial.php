@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial;
+namespace Jackardios\EloquentSpatial;
 
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiPoint;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
 
 class EloquentSpatial
 {

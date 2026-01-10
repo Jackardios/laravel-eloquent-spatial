@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\LineString;
 
 class ExtendedLineString extends LineString {}

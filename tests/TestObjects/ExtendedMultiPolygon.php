@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
 
 class ExtendedMultiPolygon extends MultiPolygon {}

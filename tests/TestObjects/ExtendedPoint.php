@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Point;
 
 class ExtendedPoint extends Point {}

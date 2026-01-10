@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Helper;
+use InvalidArgumentException;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Helper;
 
 class Point extends Geometry
 {
@@ -15,6 +16,13 @@ class Point extends Geometry
 
     public function __construct(float $longitude, float $latitude, int|Srid|null $srid = null)
     {
+        if ($latitude < -90 || $latitude > 90) {
+            throw new InvalidArgumentException("Latitude must be between -90 and 90, got: $latitude");
+        }
+        if ($longitude < -180 || $longitude > 180) {
+            throw new InvalidArgumentException("Longitude must be between -180 and 180, got: $longitude");
+        }
+
         $this->longitude = $longitude;
         $this->latitude = $latitude;
         $this->srid = Helper::getSrid($srid);

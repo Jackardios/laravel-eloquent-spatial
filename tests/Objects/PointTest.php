@@ -1,12 +1,12 @@
 <?php
 
-use MatanYadaev\EloquentSpatial\EloquentSpatial;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedPoint;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestPlace;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedPoint;
 
 it('creates a model record with point', function (): void {
     $point = new Point(180, 0);
@@ -237,4 +237,107 @@ it('throws exception when storing a record with extended Point instead of the re
     expect(function () use ($point): void {
         TestPlace::factory()->create(['point' => $point]);
     })->toThrow(InvalidArgumentException::class);
+});
+
+// Edge case tests for boundary coordinates
+
+it('creates point at maximum longitude boundary', function (): void {
+    $point = new Point(180.0, 0.0);
+
+    expect($point->longitude)->toBe(180.0);
+    expect($point->latitude)->toBe(0.0);
+});
+
+it('creates point at minimum longitude boundary', function (): void {
+    $point = new Point(-180.0, 0.0);
+
+    expect($point->longitude)->toBe(-180.0);
+    expect($point->latitude)->toBe(0.0);
+});
+
+it('creates point at maximum latitude boundary', function (): void {
+    $point = new Point(0.0, 90.0);
+
+    expect($point->longitude)->toBe(0.0);
+    expect($point->latitude)->toBe(90.0);
+});
+
+it('creates point at minimum latitude boundary', function (): void {
+    $point = new Point(0.0, -90.0);
+
+    expect($point->longitude)->toBe(0.0);
+    expect($point->latitude)->toBe(-90.0);
+});
+
+it('creates point at zero coordinates', function (): void {
+    $point = new Point(0.0, 0.0);
+
+    expect($point->longitude)->toBe(0.0);
+    expect($point->latitude)->toBe(0.0);
+});
+
+it('creates point with high precision coordinates', function (): void {
+    $longitude = 123.45678901234;
+    $latitude = -12.34567890123;
+    $point = new Point($longitude, $latitude);
+
+    expect($point->longitude)->toBe($longitude);
+    expect($point->latitude)->toBe($latitude);
+});
+
+it('preserves SRID through WKB roundtrip', function (): void {
+    $point = new Point(100.0, 50.0, Srid::WGS84->value);
+    $wkb = $point->toWkb();
+    $restored = Point::fromWkb($wkb);
+
+    expect($restored->srid)->toBe(Srid::WGS84->value);
+    expect($restored->longitude)->toBe(100.0);
+    expect($restored->latitude)->toBe(50.0);
+});
+
+it('preserves high precision coordinates through WKB roundtrip', function (): void {
+    $longitude = 123.45678901234;
+    $latitude = -12.34567890123;
+    $point = new Point($longitude, $latitude);
+    $wkb = $point->toWkb();
+    $restored = Point::fromWkb($wkb);
+
+    expect($restored->longitude)->toBe($longitude);
+    expect($restored->latitude)->toBe($latitude);
+});
+
+// Coordinate validation tests
+
+it('throws exception for latitude above maximum', function (): void {
+    expect(function (): void {
+        new Point(0.0, 90.1);
+    })->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
+});
+
+it('throws exception for latitude below minimum', function (): void {
+    expect(function (): void {
+        new Point(0.0, -90.1);
+    })->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
+});
+
+it('throws exception for longitude above maximum', function (): void {
+    expect(function (): void {
+        new Point(180.1, 0.0);
+    })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
+});
+
+it('throws exception for longitude below minimum', function (): void {
+    expect(function (): void {
+        new Point(-180.1, 0.0);
+    })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
+});
+
+it('allows boundary coordinates', function (): void {
+    $point1 = new Point(180.0, 90.0);
+    $point2 = new Point(-180.0, -90.0);
+
+    expect($point1->longitude)->toBe(180.0);
+    expect($point1->latitude)->toBe(90.0);
+    expect($point2->longitude)->toBe(-180.0);
+    expect($point2->latitude)->toBe(-90.0);
 });

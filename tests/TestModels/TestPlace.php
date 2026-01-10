@@ -1,20 +1,20 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestModels;
+namespace Jackardios\EloquentSpatial\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use MatanYadaev\EloquentSpatial\Objects\BoundingBox;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiPoint;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestFactories\TestPlaceFactory;
-use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use Jackardios\EloquentSpatial\Objects\BoundingBox;
+use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Tests\TestFactories\TestPlaceFactory;
+use Jackardios\EloquentSpatial\Traits\HasSpatial;
 
 /**
  * @property Geometry $geometry
@@ -26,6 +26,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
  * @property MultiPolygon $multi_polygon
  * @property GeometryCollection $geometry_collection
  * @property BoundingBox $bounding_box
+ * @property BoundingBox $bounding_box_json
  * @property float|null $distance
  * @property float|null $distance_in_meters
  * @property Point|null $centroid
@@ -49,6 +50,7 @@ class TestPlace extends Model
         'geometry_collection',
         'point_with_line_string_cast',
         'bounding_box',
+        'bounding_box_json',
     ];
 
     protected $casts = [
@@ -62,6 +64,7 @@ class TestPlace extends Model
         'geometry_collection' => GeometryCollection::class,
         'point_with_line_string_cast' => LineString::class,
         'bounding_box' => BoundingBox::class,
+        'bounding_box_json' => BoundingBox::class.':json',
         'distance' => 'float',
         'distance_in_meters' => 'float',
     ];

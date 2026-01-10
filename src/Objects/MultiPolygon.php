@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Enums\Srid;
 
 /**
  * @property Collection<int, Polygon> $geometries

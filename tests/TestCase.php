@@ -1,18 +1,18 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests;
+namespace Jackardios\EloquentSpatial\Tests;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use MatanYadaev\EloquentSpatial\EloquentSpatial;
-use MatanYadaev\EloquentSpatial\EloquentSpatialServiceProvider;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiPoint;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+use Jackardios\EloquentSpatial\EloquentSpatialServiceProvider;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
 use ArrayAccess;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Helper;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Helper;
 
 class GeometryCollection extends Geometry implements ArrayAccess
 {
@@ -59,7 +59,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function getCoordinates(): array
     {
@@ -71,7 +71,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function toArray(): array
     {
@@ -100,21 +100,19 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function getPoints(): Collection
     {
-        $points = collect([]);
+        $points = [];
 
-        foreach ($this->getGeometries() as $geometry) {
+        foreach ($this->geometries as $geometry) {
             if ($geometry instanceof Point) {
-                $points->push($geometry);
-            }
-            if ($geometry instanceof self) {
-                $points->push($geometry->getPoints());
+                $points[] = $geometry;
+            } elseif ($geometry instanceof self) {
+                foreach ($geometry->getPoints() as $point) {
+                    $points[] = $point;
+                }
             }
         }
 
-        /** @var Collection<int, Point> $flattenedPoints */
-        $flattenedPoints = $points->flatten();
-
-        return $flattenedPoints;
+        return new Collection($points);
     }
 
     /**
@@ -176,14 +174,13 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     protected function validateGeometriesType(): void
     {
-        $this->geometries->each(function (mixed $geometry): void {
-            // @phpstan-ignore-next-line function.alreadyNarrowedType
-            if (! is_object($geometry) || ! ($geometry instanceof $this->collectionOf)) {
+        foreach ($this->geometries as $geometry) {
+            if (! ($geometry instanceof $this->collectionOf)) {
                 throw new InvalidArgumentException(
                     sprintf('%s must be a collection of %s', static::class, $this->collectionOf)
                 );
             }
-        });
+        }
     }
 
     /**

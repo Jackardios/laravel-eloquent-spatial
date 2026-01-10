@@ -1,6 +1,8 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Exceptions;
+declare(strict_types=1);
+
+namespace Jackardios\EloquentSpatial\Exceptions;
 
 use InvalidArgumentException;
 

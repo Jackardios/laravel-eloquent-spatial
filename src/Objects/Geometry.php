@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
 use geoPHP;
 use Illuminate\Contracts\Database\Eloquent\Castable;
@@ -14,14 +14,14 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Traits\Macroable;
 use InvalidArgumentException;
+use Jackardios\EloquentSpatial\AxisOrder;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Factory;
+use Jackardios\EloquentSpatial\GeometryCast;
+use Jackardios\EloquentSpatial\GeometryExpression;
+use Jackardios\EloquentSpatial\Helper;
 use JsonException;
 use JsonSerializable;
-use MatanYadaev\EloquentSpatial\AxisOrder;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Factory;
-use MatanYadaev\EloquentSpatial\GeometryCast;
-use MatanYadaev\EloquentSpatial\GeometryExpression;
-use MatanYadaev\EloquentSpatial\Helper;
 use Stringable;
 use WKB as geoPHPWkb;
 
@@ -70,10 +70,14 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
             $geometry = Factory::parse($wkb);
             // @codeCoverageIgnoreEnd
         } else {
-            $srid = substr($wkb, 0, 4);
-            // @phpstan-ignore-next-line
-            $srid = unpack('L', $srid)[1];
+            $sridBinary = substr($wkb, 0, 4);
+            $unpackedSrid = unpack('L', $sridBinary);
 
+            if ($unpackedSrid === false) {
+                throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
+            }
+
+            $srid = $unpackedSrid[1];
             $wkb = substr($wkb, 4);
 
             $geometry = Factory::parse($wkb);
@@ -125,7 +129,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @param  array<mixed>  $geometry
+     * @param  array  $geometry
      *
      * @throws JsonException
      */
@@ -137,7 +141,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     public function jsonSerialize(): array
     {
@@ -145,7 +149,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array{type: string, coordinates: array<mixed>}
+     * @return array{type: string, coordinates: array}
      */
     public function toArray(): array
     {
@@ -185,7 +189,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array<mixed>
+     * @return array
      */
     abstract public function getCoordinates(): array;
 
@@ -199,7 +203,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
 
     public function toSqlExpression(ConnectionInterface $connection): ExpressionContract
     {
-        $wkt = $this->toWkt();
+        $wkt = addslashes($this->toWkt());
 
         if (! AxisOrder::supported($connection)) {
             // @codeCoverageIgnoreStart
@@ -210,7 +214,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid}, 'axis-order=long-lat')"))->normalize($connection));
     }
 
-    public function toBoundingBox(float $minPadding = 0): ?BoundingBox
+    public function toBoundingBox(float $minPadding = 0): BoundingBox
     {
         return BoundingBox::fromGeometry($this, $minPadding);
     }

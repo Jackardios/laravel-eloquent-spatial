@@ -1,20 +1,18 @@
 <?php
 
-use Illuminate\Database\PostgresConnection;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use MatanYadaev\EloquentSpatial\AxisOrder;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\GeometryExpression;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiLineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiPoint;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
+use Jackardios\EloquentSpatial\AxisOrder;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\GeometryExpression;
+use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestPlace;
 
 it('throws exception when generating geometry from other geometry WKB', function (): void {
     expect(function (): void {
@@ -24,41 +22,17 @@ it('throws exception when generating geometry from other geometry WKB', function
     })->toThrow(InvalidArgumentException::class);
 });
 
-it('throws exception when generating geometry with invalid latitude', function (): void {
+it('throws exception when creating point with invalid latitude', function (): void {
     expect(function (): void {
-        $point = (new Point(0, 91, Srid::WGS84->value));
-        TestPlace::factory()->create(['point' => $point]);
-    })->toThrow(QueryException::class);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+        new Point(0, 91, Srid::WGS84->value);
+    })->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
+});
 
-it('throws exception when generating geometry with invalid latitude - without axis-order', function (): void {
+it('throws exception when creating point with invalid longitude', function (): void {
     expect(function (): void {
-        $point = (new Point(0, 91, Srid::WGS84->value));
-        TestPlace::factory()->create(['point' => $point]);
-
-        TestPlace::query()
-            ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value))
-            ->firstOrFail();
-    })->toThrow(QueryException::class);
-})->skip(fn () => AxisOrder::supported(DB::connection()) || DB::connection() instanceof PostgresConnection);
-
-it('throws exception when generating geometry with invalid longitude', function (): void {
-    expect(function (): void {
-        $point = (new Point(181, 0, Srid::WGS84->value));
-        TestPlace::factory()->create(['point' => $point]);
-    })->toThrow(QueryException::class);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
-
-it('throws exception when generating geometry with invalid longitude - without axis-order', function (): void {
-    expect(function (): void {
-        $point = (new Point(181, 0, Srid::WGS84->value));
-        TestPlace::factory()->create(['point' => $point]);
-
-        TestPlace::query()
-            ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value))
-            ->firstOrFail();
-    })->toThrow(QueryException::class);
-})->skip(fn () => AxisOrder::supported(DB::connection()) || DB::connection() instanceof PostgresConnection);
+        new Point(181, 0, Srid::WGS84->value);
+    })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
+});
 
 it('throws exception when generating geometry from other geometry WKT', function (): void {
     expect(function (): void {
@@ -230,4 +204,39 @@ it('creates a model record with geometry (geometry collection)', function (): vo
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(GeometryCollection::class);
     expect($testPlace->geometry)->toEqual($geometryCollection);
+});
+
+// Edge case tests for WKB/WKT parsing
+
+it('throws exception when parsing invalid WKB with truncated data', function (): void {
+    // Invalid WKB: only 2 bytes instead of a complete geometry
+    $invalidWkb = "\x00\x20";
+
+    expect(function () use ($invalidWkb): void {
+        Geometry::fromWkb($invalidWkb);
+    })->toThrow(Exception::class);
+});
+
+it('throws exception when parsing empty WKB', function (): void {
+    expect(function (): void {
+        Geometry::fromWkb('');
+    })->toThrow(Exception::class);
+});
+
+it('throws exception when parsing invalid hex WKB', function (): void {
+    expect(function (): void {
+        Geometry::fromWkb('GGGG');
+    })->toThrow(Exception::class);
+});
+
+it('throws exception when parsing malformed WKT', function (): void {
+    expect(function (): void {
+        Point::fromWkt('POINT(abc def)');
+    })->toThrow(InvalidArgumentException::class);
+});
+
+it('throws exception when parsing incomplete WKT', function (): void {
+    expect(function (): void {
+        Point::fromWkt('POINT(');
+    })->toThrow(InvalidArgumentException::class);
 });

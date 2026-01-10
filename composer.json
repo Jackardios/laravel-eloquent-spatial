@@ -26,12 +26,12 @@
     },
     "autoload": {
         "psr-4": {
-            "MatanYadaev\\EloquentSpatial\\": "src"
+            "Jackardios\\EloquentSpatial\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MatanYadaev\\EloquentSpatial\\Tests\\": "tests"
+            "Jackardios\\EloquentSpatial\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -53,7 +53,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "MatanYadaev\\EloquentSpatial\\EloquentSpatialServiceProvider"
+                "Jackardios\\EloquentSpatial\\EloquentSpatialServiceProvider"
             ]
         }
     }

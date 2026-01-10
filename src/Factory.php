@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial;
+namespace Jackardios\EloquentSpatial;
 
 use Geometry as geoPHPGeometry;
 use GeometryCollection as geoPHPGeometryCollection;
 use geoPHP;
 use InvalidArgumentException;
+use Jackardios\EloquentSpatial\Objects\Geometry;
 use LineString as geoPHPLineString;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
 use MultiLineString as geoPHPMultiLineString;
 use MultiPoint as geoPHPMultiPoint;
 use MultiPolygon as geoPHPMultiPolygon;
 use Point as geoPHPPoint;
 use Polygon as geoPHPPolygon;
+use Throwable;
 
 class Factory
 {
@@ -23,10 +24,12 @@ class Factory
         try {
             /** @var geoPHPGeometry|false $geoPHPGeometry */
             $geoPHPGeometry = geoPHP::load($value);
-        } finally {
-            if (! isset($geoPHPGeometry) || ! $geoPHPGeometry) {
-                throw new InvalidArgumentException('Invalid spatial value');
-            }
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException('Invalid spatial value: '.$e->getMessage(), 0, $e);
+        }
+
+        if ($geoPHPGeometry === false) {
+            throw new InvalidArgumentException('Invalid spatial value');
         }
 
         return self::createFromGeometry($geoPHPGeometry);
@@ -45,28 +48,22 @@ class Factory
         }
 
         /** @var geoPHPGeometryCollection $geometry */
-        $components = collect($geometry->components)
-            ->map(static function (geoPHPGeometry $geometryComponent): Geometry {
-                return self::createFromGeometry($geometryComponent);
-            });
+        $components = array_map(
+            static fn (geoPHPGeometry $component): Geometry => self::createFromGeometry($component),
+            $geometry->components
+        );
 
-        if ($geometry::class === geoPHPMultiPoint::class) {
+        $geometryClass = $geometry::class;
+
+        if ($geometryClass === geoPHPMultiPoint::class) {
             return new EloquentSpatial::$multiPoint($components, $srid);
-        }
-
-        if ($geometry::class === geoPHPLineString::class) {
+        } elseif ($geometryClass === geoPHPLineString::class) {
             return new EloquentSpatial::$lineString($components, $srid);
-        }
-
-        if ($geometry::class === geoPHPPolygon::class) {
+        } elseif ($geometryClass === geoPHPPolygon::class) {
             return new EloquentSpatial::$polygon($components, $srid);
-        }
-
-        if ($geometry::class === geoPHPMultiLineString::class) {
+        } elseif ($geometryClass === geoPHPMultiLineString::class) {
             return new EloquentSpatial::$multiLineString($components, $srid);
-        }
-
-        if ($geometry::class === geoPHPMultiPolygon::class) {
+        } elseif ($geometryClass === geoPHPMultiPolygon::class) {
             return new EloquentSpatial::$multiPolygon($components, $srid);
         }
 

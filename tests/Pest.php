@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use MatanYadaev\EloquentSpatial\Tests\TestCase;
+use Jackardios\EloquentSpatial\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);
 

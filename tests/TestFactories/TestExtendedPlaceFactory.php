@@ -1,9 +1,9 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestFactories;
+namespace Jackardios\EloquentSpatial\Tests\TestFactories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
 
 /**
  * @extends Factory<TestExtendedPlace>

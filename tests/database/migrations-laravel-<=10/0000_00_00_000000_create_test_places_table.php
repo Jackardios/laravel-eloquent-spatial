@@ -23,7 +23,8 @@ class CreateTestPlacesTable extends Migration
             $table->geometryCollection('geometry_collection')->isGeometry()->nullable();
             $table->point('point_with_line_string_cast')->isGeometry()->nullable();
             $table->point('point_geography')->nullable();
-            $table->polygon('bounding_box')->isGeometry()->nullable();
+            $table->geometry('bounding_box')->nullable();
+            $table->json('bounding_box_json')->nullable();
             $table->decimal('longitude')->nullable();
             $table->decimal('latitude')->nullable();
         });

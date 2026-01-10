@@ -1,13 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use MatanYadaev\EloquentSpatial\AxisOrder;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\GeometryExpression;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
+use Jackardios\EloquentSpatial\AxisOrder;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\GeometryExpression;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestPlace;
 
 it('calculates distance', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);

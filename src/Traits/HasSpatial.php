@@ -1,13 +1,15 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Traits;
+declare(strict_types=1);
+
+namespace Jackardios\EloquentSpatial\Traits;
 
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
-use MatanYadaev\EloquentSpatial\GeometryExpression;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\GeometryExpression;
+use Jackardios\EloquentSpatial\Objects\Geometry;
 
 trait HasSpatial
 {
@@ -95,16 +97,10 @@ trait HasSpatial
             $query->select('*');
         }
 
-        // @codeCoverageIgnoreStart
-        $function = $this->getConnection() instanceof PostgresConnection
-          ? 'ST_DistanceSphere'
-          : 'ST_DISTANCE_SPHERE';
-        // @codeCoverageIgnoreEnd
-
         $query->selectRaw(
             sprintf(
                 '%s(%s, %s) AS %s',
-                $function,
+                $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
                 $alias,
@@ -119,16 +115,10 @@ trait HasSpatial
         string $operator,
         int|float $value
     ): void {
-        // @codeCoverageIgnoreStart
-        $function = $this->getConnection() instanceof PostgresConnection
-          ? 'ST_DistanceSphere'
-          : 'ST_DISTANCE_SPHERE';
-        // @codeCoverageIgnoreEnd
-
         $query->whereRaw(
             sprintf(
                 '%s(%s, %s) %s ?',
-                $function,
+                $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
                 $operator,
@@ -143,21 +133,25 @@ trait HasSpatial
         ExpressionContract|Geometry|string $geometryOrColumn,
         string $direction = 'asc'
     ): void {
-        // @codeCoverageIgnoreStart
-        $function = $this->getConnection() instanceof PostgresConnection
-          ? 'ST_DistanceSphere'
-          : 'ST_DISTANCE_SPHERE';
-        // @codeCoverageIgnoreEnd
-
         $query->orderByRaw(
             sprintf(
                 '%s(%s, %s) %s',
-                $function,
+                $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
                 $direction
             )
         );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected function getDistanceSphereFunction(): string
+    {
+        return $this->getConnection() instanceof PostgresConnection
+            ? 'ST_DistanceSphere'
+            : 'ST_DISTANCE_SPHERE';
     }
 
     public function scopeWhereWithin(

@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial\Objects;
+namespace Jackardios\EloquentSpatial\Objects;
 
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Database\Connection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use Jackardios\EloquentSpatial\BoundingBoxCast;
+use Jackardios\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
+use Jackardios\EloquentSpatial\Exceptions\InvalidGeometry;
 use JsonException;
 use JsonSerializable;
-use MatanYadaev\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
-use MatanYadaev\EloquentSpatial\Exceptions\InvalidGeometry;
 use Stringable;
 
 class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, Stringable
@@ -39,13 +37,24 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
 
     protected function validatePoints(Point $leftBottom, Point $rightTop): void
     {
-        if ($rightTop->longitude <= $leftBottom->longitude) {
-            throw new InvalidBoundingBoxPoints('The longitude of $leftBottom Point must be less than the longitude of $rightBottom Point');
-        }
-
         if ($rightTop->latitude <= $leftBottom->latitude) {
-            throw new InvalidBoundingBoxPoints('The latitude of $leftBottom Point must be less than the latitude of $rightBottom Point');
+            throw new InvalidBoundingBoxPoints('The latitude of the bottom point must be less than the latitude of the top point');
         }
+    }
+
+    public function getLeftBottom(): Point
+    {
+        return $this->leftBottom;
+    }
+
+    public function getRightTop(): Point
+    {
+        return $this->rightTop;
+    }
+
+    public function crossesAntimeridian(): bool
+    {
+        return $this->leftBottom->longitude > $this->rightTop->longitude;
     }
 
     public static function fromGeometry(Geometry $geometry, float $minPadding = 0): self
@@ -68,16 +77,17 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
      */
     public static function fromPoints(array|Collection $points, float $minPadding = 0): self
     {
-        $left = $bottom = $right = $top = null;
+        if ($minPadding < 0) {
+            throw new InvalidArgumentException('minPadding must be non-negative');
+        }
+
+        $longitudes = [];
+        $bottom = $top = null;
+
         foreach ($points as $point) {
             [$longitude, $latitude] = $point->getCoordinates();
+            $longitudes[] = $longitude;
 
-            if (! isset($left) || $longitude < $left) {
-                $left = $longitude;
-            }
-            if (! isset($right) || $longitude > $right) {
-                $right = $longitude;
-            }
             if (! isset($bottom) || $latitude < $bottom) {
                 $bottom = $latitude;
             }
@@ -86,40 +96,145 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
             }
         }
 
-        if (! isset($left) || ! isset($right) || ! isset($bottom) || ! isset($top)) {
+        if (empty($longitudes) || ! isset($bottom) || ! isset($top)) {
             throw new InvalidArgumentException('cannot create bounding box from empty points');
         }
 
-        $lonPadding = $right - $left;
-        if ($lonPadding < $minPadding) {
-            $halfPadding = ($minPadding - $lonPadding) / 2;
-            $left -= $halfPadding;
-            $right += $halfPadding;
+        [$left, $right] = self::findShortestLongitudeArc($longitudes);
+
+        $crossesAntimeridian = $left > $right;
+        $lonSpan = $crossesAntimeridian
+            ? (180.0 - $left) + ($right + 180.0)
+            : $right - $left;
+
+        if ($lonSpan < $minPadding) {
+            $halfPadding = ($minPadding - $lonSpan) / 2;
+            $left = self::normalizeLongitude($left - $halfPadding);
+            $right = self::normalizeLongitude($right + $halfPadding);
         }
 
         $latPadding = $top - $bottom;
         if ($latPadding < $minPadding) {
             $halfPadding = ($minPadding - $latPadding) / 2;
-            $bottom -= $halfPadding;
-            $top += $halfPadding;
+            $bottom = max(-90.0, $bottom - $halfPadding);
+            $top = min(90.0, $top + $halfPadding);
         }
 
         return new self(new Point($left, $bottom), new Point($right, $top));
     }
 
+    /**
+     * @param  array<int, float>  $longitudes
+     * @return array{0: float, 1: float}
+     */
+    protected static function findShortestLongitudeArc(array $longitudes): array
+    {
+        $longitudes = array_unique($longitudes);
+        sort($longitudes);
+
+        $count = count($longitudes);
+        if ($count === 1) {
+            return [$longitudes[0], $longitudes[0]];
+        }
+
+        $maxGap = 0;
+        $maxGapIndex = 0;
+
+        for ($i = 0; $i < $count; $i++) {
+            $next = ($i + 1) % $count;
+            $gap = $next === 0
+                ? ($longitudes[0] + 360.0) - $longitudes[$count - 1]
+                : $longitudes[$next] - $longitudes[$i];
+
+            if ($gap > $maxGap) {
+                $maxGap = $gap;
+                $maxGapIndex = $i;
+            }
+        }
+
+        $rightIndex = $maxGapIndex;
+        $leftIndex = ($maxGapIndex + 1) % $count;
+
+        return [$longitudes[$leftIndex], $longitudes[$rightIndex]];
+    }
+
+    protected static function normalizeLongitude(float $longitude): float
+    {
+        while ($longitude > 180.0) {
+            $longitude -= 360.0;
+        }
+        while ($longitude < -180.0) {
+            $longitude += 360.0;
+        }
+
+        return $longitude;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function toPolygon(): Polygon
     {
-        ['left' => $left, 'bottom' => $bottom, 'right' => $right, 'top' => $top] = $this->toArray();
+        if ($this->crossesAntimeridian()) {
+            throw new InvalidArgumentException(
+                'Cannot convert antimeridian-crossing bounding box to single Polygon. Use toGeometry() instead.'
+            );
+        }
 
+        return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude);
+    }
+
+    public function toGeometry(): Polygon|MultiPolygon
+    {
+        if (! $this->crossesAntimeridian()) {
+            return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude);
+        }
+
+        return new MultiPolygon([
+            $this->createPolygon($this->leftBottom->longitude, 180.0),
+            $this->createPolygon(-180.0, $this->rightTop->longitude),
+        ]);
+    }
+
+    protected function createPolygon(float $left, float $right): Polygon
+    {
+        $bottom = $this->leftBottom->latitude;
+        $top = $this->rightTop->latitude;
+
+        // Counter-clockwise winding order (GeoJSON RFC 7946)
         return new Polygon([
             new LineString([
-                new Point($left, $top),
-                new Point($right, $top),
-                new Point($right, $bottom),
                 new Point($left, $bottom),
+                new Point($right, $bottom),
+                new Point($right, $top),
                 new Point($left, $top),
+                new Point($left, $bottom),
             ]),
         ]);
+    }
+
+    /**
+     * @param  array  $array
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromArray(array $array): self
+    {
+        if (! isset($array['left'], $array['bottom'], $array['right'], $array['top'])) {
+            throw new InvalidArgumentException(
+                'Array must contain keys: left, bottom, right, top'
+            );
+        }
+
+        $left = $array['left'];
+        $bottom = $array['bottom'];
+        $right = $array['right'];
+        $top = $array['top'];
+
+        return new self(
+            new Point((float) $left, (float) $bottom),
+            new Point((float) $right, (float) $top)
+        );
     }
 
     /**
@@ -158,70 +273,8 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
-        return new class implements CastsAttributes
-        {
-            /**
-             * @param  Model  $model
-             * @param  string|ExpressionContract|null  $value
-             * @param  array<string, mixed>  $attributes
-             */
-            public function get($model, string $key, $value, $attributes): ?BoundingBox
-            {
-                if (! $value) {
-                    return null;
-                }
+        $format = $arguments[0] ?? BoundingBoxCast::FORMAT_GEOMETRY;
 
-                if ($value instanceof ExpressionContract) {
-                    ['wkt' => $wkt, 'srid' => $srid] = $this->extractValuesFromExpression($value, $model->getConnection());
-
-                    return Polygon::fromWkt($wkt, $srid)->toBoundingBox();
-                }
-
-                return Polygon::fromWkb($value)->toBoundingBox();
-            }
-
-            /**
-             * @param  Model  $model
-             * @param  BoundingBox|mixed|null  $value
-             * @param  array<string, mixed>  $attributes
-             *
-             * @throws InvalidArgumentException
-             */
-            public function set($model, string $key, $value, $attributes): ?ExpressionContract
-            {
-                if (! $value) {
-                    return null;
-                }
-
-                if ($value instanceof ExpressionContract) {
-                    return $value;
-                }
-
-                if (! ($value instanceof BoundingBox)) {
-                    $bboxType = is_object($value) ? $value::class : gettype($value);
-                    throw new InvalidArgumentException(
-                        sprintf('Expected %s, %s given.', BoundingBox::class, $bboxType)
-                    );
-                }
-
-                return $value->toPolygon()->toSqlExpression($model->getConnection());
-            }
-
-            /**
-             * @return array{wkt: string, srid: int}
-             */
-            private function extractValuesFromExpression(ExpressionContract $expression, Connection $connection): array
-            {
-                $grammar = $connection->getQueryGrammar();
-                $expressionValue = $expression->getValue($grammar);
-
-                preg_match("/ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'([^']+)')?\s*\)/", (string) $expressionValue, $matches);
-
-                return [
-                    'wkt' => $matches[1] ?? '',
-                    'srid' => (int) ($matches[2] ?? 0),
-                ];
-            }
-        };
+        return new BoundingBoxCast($format);
     }
 }

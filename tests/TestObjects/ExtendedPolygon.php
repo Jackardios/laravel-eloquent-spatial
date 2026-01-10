@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Objects\Polygon;
 
 class ExtendedPolygon extends Polygon {}

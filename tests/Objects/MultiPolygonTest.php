@@ -1,15 +1,15 @@
 <?php
 
-use MatanYadaev\EloquentSpatial\EloquentSpatial;
-use MatanYadaev\EloquentSpatial\Enums\Srid;
-use MatanYadaev\EloquentSpatial\Objects\Geometry;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\MultiPolygon;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestModels\TestPlace;
-use MatanYadaev\EloquentSpatial\Tests\TestObjects\ExtendedMultiPolygon;
+use Jackardios\EloquentSpatial\EloquentSpatial;
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
+use Jackardios\EloquentSpatial\Tests\TestModels\TestPlace;
+use Jackardios\EloquentSpatial\Tests\TestObjects\ExtendedMultiPolygon;
 
 it('creates a model record with multi polygon', function (): void {
     $multiPolygon = new MultiPolygon([

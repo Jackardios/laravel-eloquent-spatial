@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MatanYadaev\EloquentSpatial;
+namespace Jackardios\EloquentSpatial;
 
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\PostgresConnection;

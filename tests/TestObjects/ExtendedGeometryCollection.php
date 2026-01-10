@@ -1,7 +1,7 @@
 <?php
 
-namespace MatanYadaev\EloquentSpatial\Tests\TestObjects;
+namespace Jackardios\EloquentSpatial\Tests\TestObjects;
 
-use MatanYadaev\EloquentSpatial\Objects\GeometryCollection;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 
 class ExtendedGeometryCollection extends GeometryCollection {}
