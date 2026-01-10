@@ -214,7 +214,7 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
     }
 
     /**
-     * @param  array  $array
+     * @param  array<string, mixed>  $array
      *
      * @throws InvalidArgumentException
      */
@@ -230,6 +230,12 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         $bottom = $array['bottom'];
         $right = $array['right'];
         $top = $array['top'];
+
+        if (! is_numeric($left) || ! is_numeric($bottom) || ! is_numeric($right) || ! is_numeric($top)) {
+            throw new InvalidArgumentException(
+                'Array values for left, bottom, right, top must be numeric'
+            );
+        }
 
         return new self(
             new Point((float) $left, (float) $bottom),

@@ -59,7 +59,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
-     * @return array
+     * @return array<int, array<mixed>>
      */
     public function getCoordinates(): array
     {
@@ -71,7 +71,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {

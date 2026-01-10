@@ -74,7 +74,7 @@ class BoundingBoxCast implements CastsAttributes
     private function fromJson(string $value): BoundingBox
     {
         try {
-            /** @var array $array */
+            /** @var array<string, mixed> $array */
             $array = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
             return BoundingBox::fromArray($array);
@@ -109,7 +109,7 @@ class BoundingBoxCast implements CastsAttributes
         }
 
         if (is_array($value)) {
-            /** @var array $value */
+            // @phpstan-ignore argument.type
             $value = BoundingBox::fromArray($value);
         }
 

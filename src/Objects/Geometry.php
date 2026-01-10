@@ -129,7 +129,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @param  array  $geometry
+     * @param  array<string, mixed>  $geometry
      *
      * @throws JsonException
      */
@@ -141,7 +141,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
@@ -149,7 +149,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array{type: string, coordinates: array}
+     * @return array{type: string, coordinates: array<mixed>}
      */
     public function toArray(): array
     {
@@ -189,7 +189,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     abstract public function getCoordinates(): array;
 

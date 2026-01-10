@@ -58,6 +58,7 @@ class GeometryCast implements CastsAttributes
         }
 
         if (is_array($value)) {
+            // @phpstan-ignore argument.type
             $value = Geometry::fromArray($value);
         }
 
