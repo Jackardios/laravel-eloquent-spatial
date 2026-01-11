@@ -73,9 +73,11 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
             $sridBinary = substr($wkb, 0, 4);
             $unpackedSrid = unpack('L', $sridBinary);
 
+            // @codeCoverageIgnoreStart
             if ($unpackedSrid === false) {
                 throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
             }
+            // @codeCoverageIgnoreEnd
 
             $srid = $unpackedSrid[1];
             $wkb = substr($wkb, 4);

@@ -449,6 +449,17 @@ it('throws exception when creating from array with missing keys', function () {
     })->toThrow(InvalidArgumentException::class, 'Array must contain keys: left, bottom, right, top');
 });
 
+it('throws exception when creating from array with non-numeric values', function () {
+    expect(function () {
+        BoundingBox::fromArray([
+            'left' => 'invalid',
+            'bottom' => -12.0,
+            'right' => 91.0,
+            'top' => 40.0,
+        ]);
+    })->toThrow(InvalidArgumentException::class, 'Array values for left, bottom, right, top must be numeric');
+});
+
 it('serializes and deserializes bounding box from array', function () {
     /** @var TestPlace $testPlace */
     $testPlace = TestPlace::factory()->create([

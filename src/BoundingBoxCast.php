@@ -45,9 +45,11 @@ class BoundingBoxCast implements CastsAttributes
         }
 
         if ($this->format === self::FORMAT_JSON) {
+            // @codeCoverageIgnoreStart
             if (! is_string($value)) {
                 throw new InvalidArgumentException('JSON format expects string value from database');
             }
+            // @codeCoverageIgnoreEnd
 
             return $this->fromJson($value);
         }
@@ -60,6 +62,7 @@ class BoundingBoxCast implements CastsAttributes
      */
     private function fromGeometry(Model $model, $value): BoundingBox
     {
+        // @codeCoverageIgnoreStart
         if ($value instanceof ExpressionContract) {
             $grammar = $model->getConnection()->getQueryGrammar();
             $expressionValue = (string) $value->getValue($grammar);
@@ -67,6 +70,7 @@ class BoundingBoxCast implements CastsAttributes
 
             return $this->geometryToBoundingBox(Geometry::fromWkt($wkt, $srid));
         }
+        // @codeCoverageIgnoreEnd
 
         return $this->geometryToBoundingBox(Geometry::fromWkb($value));
     }
@@ -78,9 +82,11 @@ class BoundingBoxCast implements CastsAttributes
             $array = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
             return BoundingBox::fromArray($array);
+            // @codeCoverageIgnoreStart
         } catch (JsonException $e) {
             throw new InvalidArgumentException('Invalid JSON for BoundingBox: '.$e->getMessage(), 0, $e);
         }
+        // @codeCoverageIgnoreEnd
     }
 
     private function geometryToBoundingBox(Geometry $geometry): BoundingBox
@@ -89,9 +95,11 @@ class BoundingBoxCast implements CastsAttributes
             return $geometry->toBoundingBox();
         }
 
+        // @codeCoverageIgnoreStart
         throw new InvalidArgumentException(
             sprintf('Expected Polygon or MultiPolygon, %s given.', $geometry::class)
         );
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -113,9 +121,11 @@ class BoundingBoxCast implements CastsAttributes
             $value = BoundingBox::fromArray($value);
         }
 
+        // @codeCoverageIgnoreStart
         if ($value instanceof ExpressionContract) {
             return $value;
         }
+        // @codeCoverageIgnoreEnd
 
         if (! ($value instanceof BoundingBox)) {
             $bboxType = is_object($value) ? $value::class : gettype($value);

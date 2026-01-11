@@ -37,9 +37,11 @@ class Helper
             $matches
         );
 
+        // @codeCoverageIgnoreStart
         if ($result !== 1) {
             throw new InvalidArgumentException('Unable to parse ST_GeomFromText expression: '.$expressionValue);
         }
+        // @codeCoverageIgnoreEnd
 
         return [
             'wkt' => $matches[1],

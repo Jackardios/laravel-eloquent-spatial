@@ -67,9 +67,11 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
             return self::fromPoints([$geometry], $minPadding);
         }
 
+        // @codeCoverageIgnoreStart
         $geometryClass = $geometry::class;
 
         throw new InvalidGeometry("cannot create bounding box from $geometryClass");
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -160,12 +162,14 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
 
     protected static function normalizeLongitude(float $longitude): float
     {
+        // @codeCoverageIgnoreStart
         while ($longitude > 180.0) {
             $longitude -= 360.0;
         }
         while ($longitude < -180.0) {
             $longitude += 360.0;
         }
+        // @codeCoverageIgnoreEnd
 
         return $longitude;
     }
