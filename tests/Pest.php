@@ -14,7 +14,7 @@ function databaseServerVersion(): string
 }
 
 /**
- * Detected from the server rather than the driver: Laravel 10 connects to MariaDB with the mysql driver.
+ * Detected from the server rather than the driver: a MariaDB server can also be reached with the mysql driver.
  */
 function isMariaDb(): bool
 {

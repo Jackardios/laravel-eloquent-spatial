@@ -77,4 +77,4 @@ it('does not support axis order on PostgreSQL', function (): void {
 
 it('does not connect to detect a MariaDB connection', function (): void {
     expect(AxisOrder::supported(new MariaDbConnection(unreachablePdo())))->toBeFalse();
-})->skip(! class_exists(MariaDbConnection::class), 'MariaDbConnection exists since Laravel 11.');
+});

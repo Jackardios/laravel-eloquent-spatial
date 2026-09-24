@@ -21,8 +21,7 @@ class AxisOrder
             return false;
         }
 
-        // MariaDbConnection only exists since Laravel 11.
-        if (class_exists(MariaDbConnection::class) && $connection instanceof MariaDbConnection) {
+        if ($connection instanceof MariaDbConnection) {
             return false;
         }
 

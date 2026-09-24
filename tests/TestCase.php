@@ -3,9 +3,7 @@
 namespace Jackardios\EloquentSpatial\Tests;
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\ServiceProvider;
 use Jackardios\EloquentSpatial\EloquentSpatial;
-use Jackardios\EloquentSpatial\EloquentSpatialServiceProvider;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
@@ -38,21 +36,9 @@ class TestCase extends Orchestra
     protected function defineDatabaseMigrationsAfterDatabaseRefreshed(): void
     {
         $this->app->make(Kernel::class)->call('migrate', [
-            '--path' => version_compare($this->app->version(), '11.0.0', '>=')
-                ? __DIR__.'/database/migrations'
-                : __DIR__.'/database/migrations-laravel-10',
+            '--path' => __DIR__.'/database/migrations',
             '--realpath' => true,
         ]);
-    }
-
-    /**
-     * @return class-string<ServiceProvider>[]
-     */
-    protected function getPackageProviders($app): array
-    {
-        return [
-            EloquentSpatialServiceProvider::class,
-        ];
     }
 
     protected function resetEloquentSpatial(): void

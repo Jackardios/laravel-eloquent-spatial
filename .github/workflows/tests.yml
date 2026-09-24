@@ -19,8 +19,8 @@ concurrency:
     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-    # Composer >= 2.9 refuses to install releases with security advisories, which blocks every
-    # Laravel 10 and 11 release and the lowest allowed versions. The dependencies are audited in static.yml.
+    # Composer >= 2.9 refuses to install releases with security advisories and silently resolves
+    # --prefer-lowest to newer releases instead. The dependencies are audited in static.yml.
     COMPOSER_NO_BLOCKING: 1
     # Fail on deprecations triggered while the tests run instead of only logging them.
     TESTBENCH_CONVERT_DEPRECATIONS_TO_EXCEPTIONS: true
@@ -38,19 +38,11 @@ jobs:
             matrix:
                 db: [ 'mysql:8.0', 'mariadb:10.11', 'postgis/postgis:16-3.4' ]
                 target:
-                    -   { laravel: '10.*', testbench: '^8.0', php: '8.1', lowest: true }
-                    -   { laravel: '10.*', testbench: '^8.0', php: '8.1' }
-                    -   { laravel: '10.*', testbench: '^8.0', php: '8.2' }
-                    -   { laravel: '10.*', testbench: '^8.0', php: '8.3' }
-                    -   { laravel: '11.*', testbench: '^9.0', php: '8.2', lowest: true }
-                    -   { laravel: '11.*', testbench: '^9.0', php: '8.2' }
-                    -   { laravel: '11.*', testbench: '^9.0', php: '8.3' }
-                    -   { laravel: '11.*', testbench: '^9.0', php: '8.4' }
-                    -   { laravel: '12.*', testbench: '^10.0', php: '8.2', lowest: true }
-                    -   { laravel: '12.*', testbench: '^10.0', php: '8.2' }
-                    -   { laravel: '12.*', testbench: '^10.0', php: '8.3' }
-                    -   { laravel: '12.*', testbench: '^10.0', php: '8.4' }
-                    -   { laravel: '12.*', testbench: '^10.0', php: '8.5' }
+                    # "^12.18", not "12.*": composer require replaces the constraint from composer.json.
+                    -   { laravel: '^12.18', testbench: '^10.0', php: '8.3', lowest: true }
+                    -   { laravel: '^12.18', testbench: '^10.0', php: '8.3' }
+                    -   { laravel: '^12.18', testbench: '^10.0', php: '8.4' }
+                    -   { laravel: '^12.18', testbench: '^10.0', php: '8.5' }
                     -   { laravel: '13.*', testbench: '^11.0', php: '8.3', lowest: true }
                     -   { laravel: '13.*', testbench: '^11.0', php: '8.3' }
                     -   { laravel: '13.*', testbench: '^11.0', php: '8.4' }
@@ -95,21 +87,13 @@ jobs:
                     coverage: none
 
             -   name: Install dependencies
-                env:
-                    LOWEST: ${{ matrix.target.lowest && 'true' || 'false' }}
                 run: |
-                    if [[ "$LOWEST" == true ]]; then
-                        # Their lowest versions require newer Laravel releases (larastan 2.9.7 needs 10.28,
-                        # pest-plugin-laravel 2.0 needs 10.4). The tests use neither; PHPStan runs separately.
-                        composer remove --dev larastan/larastan pestphp/pest-plugin-laravel --no-interaction --no-update
-                    fi
                     composer require "laravel/framework:${{ matrix.target.laravel }}" "orchestra/testbench:${{ matrix.target.testbench }}" --no-interaction --no-update
                     composer update --prefer-dist --no-interaction ${{ matrix.target.lowest && '--prefer-lowest' || '--prefer-stable' }}
 
             -   name: Configure the database connection
                 env:
                     DB_IMAGE: ${{ matrix.db }}
-                    LARAVEL: ${{ matrix.target.laravel }}
                     PG_PORT: ${{ job.services.db.ports['5432'] }}
                     MY_PORT: ${{ job.services.db.ports['3306'] }}
                 run: |
@@ -117,8 +101,7 @@ jobs:
                         if [[ "$DB_IMAGE" == postgis* ]]; then
                             echo "DB_CONNECTION=pgsql"
                             echo "DB_PORT=$PG_PORT"
-                        elif [[ "$DB_IMAGE" == mariadb* && "$LARAVEL" != "10.*" ]]; then
-                            # Laravel 10 has no mariadb driver and connects with the mysql one.
+                        elif [[ "$DB_IMAGE" == mariadb* ]]; then
                             echo "DB_CONNECTION=mariadb"
                             echo "DB_PORT=$MY_PORT"
                         else

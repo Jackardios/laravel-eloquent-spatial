@@ -6,8 +6,6 @@ parameters:
     - tests
   excludePaths:
     - src/Factory.php
-    - src/EloquentSpatialServiceProvider.php
-    - tests/DoctrineTypesTest.php
     - tests/database
   ignoreErrors:
     -
@@ -24,10 +22,6 @@ parameters:
         - src/Objects/Geometry.php
         - tests/*.php
     -
-      # MariaDbConnection only exists since Laravel 11; the test is skipped on Laravel 10.
-      message: '#MariaDbConnection#'
-      path: tests/AxisOrderTest.php
-    -
       identifier: missingType.generics
     -
       identifier: method.nonObject
@@ -35,5 +29,5 @@ parameters:
       identifier: varTag.nativeType
 
   level: max
-  # The analysed stack differs between the lowest (Laravel 10) and highest (Laravel 13) supported versions.
+  # The analysed stack differs between the lowest (Laravel 12) and highest (Laravel 13) supported versions.
   reportUnmatchedIgnoredErrors: false
