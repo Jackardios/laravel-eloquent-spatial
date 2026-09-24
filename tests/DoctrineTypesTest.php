@@ -32,3 +32,17 @@ it('uses custom Doctrine types for spatial columns', function ($column, $postgre
 
     expect($columns[$column]->getType())->toBeInstanceOfOnPostgres($postgresType)->toBeInstanceOfOnMysql($mySqlType);
 })->with($dataset)->skip(version_compare(Application::VERSION, '11.0.0', '>='));
+
+it('uses custom Doctrine types on connections opened after boot', function (): void {
+    // The provider registers the types on the already-open connection and on the manager,
+    // which applies them to every connection it creates later.
+    config(['database.connections.opened_after_boot' => config('database.connections.'.config('database.default'))]);
+
+    try {
+        $columns = DB::connection('opened_after_boot')->getDoctrineSchemaManager()->listTableColumns('test_places');
+
+        expect($columns['point']->getType())->toBeInstanceOfOnPostgres(GeometryType::class)->toBeInstanceOfOnMysql(PointType::class);
+    } finally {
+        DB::purge('opened_after_boot');
+    }
+})->skip(version_compare(Application::VERSION, '11.0.0', '>='));
