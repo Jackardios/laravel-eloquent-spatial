@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Jackardios\EloquentSpatial;
 
 use Illuminate\Database\Connection;
-use Illuminate\Database\DatabaseServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\ServiceProvider;
 use Jackardios\EloquentSpatial\Doctrine\GeographyType;
 use Jackardios\EloquentSpatial\Doctrine\GeometryCollectionType;
 use Jackardios\EloquentSpatial\Doctrine\GeometryType;
@@ -18,7 +18,7 @@ use Jackardios\EloquentSpatial\Doctrine\MultiPolygonType;
 use Jackardios\EloquentSpatial\Doctrine\PointType;
 use Jackardios\EloquentSpatial\Doctrine\PolygonType;
 
-class EloquentSpatialServiceProvider extends DatabaseServiceProvider
+class EloquentSpatialServiceProvider extends ServiceProvider
 {
     // @codeCoverageIgnoreStart
     public function boot(): void
