@@ -8,6 +8,7 @@ use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 
@@ -48,7 +49,7 @@ trait HasSpatial
                 'ST_DISTANCE(%s, %s) AS %s',
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $alias,
+                $query->getGrammar()->wrap($alias),
             )
         );
     }
@@ -65,7 +66,7 @@ trait HasSpatial
                 'ST_DISTANCE(%s, %s) %s ?',
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $operator,
+                $this->validateComparisonOperator($operator),
             ),
             [$value],
         );
@@ -82,7 +83,7 @@ trait HasSpatial
                 'ST_DISTANCE(%s, %s) %s',
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $direction,
+                $this->validateOrderDirection($direction),
             )
         );
     }
@@ -103,7 +104,7 @@ trait HasSpatial
                 $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $alias,
+                $query->getGrammar()->wrap($alias),
             )
         );
     }
@@ -121,7 +122,7 @@ trait HasSpatial
                 $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $operator,
+                $this->validateComparisonOperator($operator),
             ),
             [$value],
         );
@@ -139,9 +140,39 @@ trait HasSpatial
                 $this->getDistanceSphereFunction(),
                 $this->toExpressionString($column),
                 $this->toExpressionString($geometryOrColumn),
-                $direction
+                $this->validateOrderDirection($direction),
             )
         );
+    }
+
+    /**
+     * The operator is written into the SQL, so only comparison operators are accepted.
+     *
+     * @throws InvalidArgumentException
+     */
+    protected function validateComparisonOperator(string $operator): string
+    {
+        if (! in_array($operator, ['=', '<', '>', '<=', '>=', '<>', '!='], true)) {
+            throw new InvalidArgumentException(sprintf('Invalid comparison operator "%s".', $operator));
+        }
+
+        return $operator;
+    }
+
+    /**
+     * The direction is written into the SQL, so only "asc" and "desc" are accepted, like in Laravel's orderBy().
+     *
+     * @throws InvalidArgumentException
+     */
+    protected function validateOrderDirection(string $direction): string
+    {
+        $direction = strtolower($direction);
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            throw new InvalidArgumentException('Order direction must be "asc" or "desc".');
+        }
+
+        return $direction;
     }
 
     protected function getDistanceSphereFunction(): string
@@ -307,7 +338,7 @@ trait HasSpatial
             sprintf(
                 'ST_SRID(%s) %s ?',
                 $this->toExpressionString($column),
-                $operator,
+                $this->validateComparisonOperator($operator),
             ),
             [$value],
         );
