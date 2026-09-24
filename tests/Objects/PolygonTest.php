@@ -81,12 +81,12 @@ it('creates polygon from JSON', function (): void {
 it('creates polygon with SRID from JSON', function (): void {
     $polygon = new Polygon([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+            new Point(178, 2, Srid::WGS84->value),
+            new Point(177, 3, Srid::WGS84->value),
+            new Point(180, 0, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $polygonFromJson = Polygon::fromJson('{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}', Srid::WGS84->value);
@@ -113,12 +113,12 @@ it('creates polygon from array', function (): void {
 it('creates polygon with SRID from array', function (): void {
     $polygon = new Polygon([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+            new Point(178, 2, Srid::WGS84->value),
+            new Point(177, 3, Srid::WGS84->value),
+            new Point(180, 0, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $polygonFromJson = Polygon::fromArray(['type' => 'Polygon', 'coordinates' => [[[180, 0], [179, 1], [178, 2], [177, 3], [180, 0]]]], Srid::WGS84->value);
@@ -179,12 +179,12 @@ it('creates polygon from WKT', function (): void {
 it('creates polygon with SRID from WKT', function (): void {
     $polygon = new Polygon([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+            new Point(178, 2, Srid::WGS84->value),
+            new Point(177, 3, Srid::WGS84->value),
+            new Point(180, 0, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $polygonFromWkt = Polygon::fromWkt('POLYGON((180 0, 179 1, 178 2, 177 3, 180 0))', Srid::WGS84->value);
@@ -228,12 +228,12 @@ it('creates polygon from WKB', function (): void {
 it('creates polygon with SRID from WKB', function (): void {
     $polygon = new Polygon([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+            new Point(178, 2, Srid::WGS84->value),
+            new Point(177, 3, Srid::WGS84->value),
+            new Point(180, 0, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $polygonFromWkb = Polygon::fromWkb($polygon->toWkb());
@@ -295,12 +295,12 @@ it('uses an extended Polygon class', function (): void {
     EloquentSpatial::usePolygon(ExtendedPolygon::class);
     $polygon = new ExtendedPolygon([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
+            new Point(180, 0, 4326),
+            new Point(179, 1, 4326),
+            new Point(178, 2, 4326),
+            new Point(177, 3, 4326),
+            new Point(180, 0, 4326),
+        ], 4326),
     ], 4326);
 
     // Act

@@ -91,13 +91,13 @@ it('creates multi polygon with SRID from JSON', function (): void {
     $multiPolygon = new MultiPolygon([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPolygonFromJson = MultiPolygon::fromJson('{"type":"MultiPolygon","coordinates":[[[[180,0],[179,1],[178,2],[177,3],[180,0]]]]}', Srid::WGS84->value);
@@ -127,13 +127,13 @@ it('creates multi polygon with SRID from array', function (): void {
     $multiPolygon = new MultiPolygon([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPolygonFromJson = MultiPolygon::fromArray(['type' => 'MultiPolygon', 'coordinates' => [[[[180, 0], [179, 1], [178, 2], [177, 3], [180, 0]]]]], Srid::WGS84->value);
@@ -201,13 +201,13 @@ it('creates multi polygon with SRID from WKT', function (): void {
     $multiPolygon = new MultiPolygon([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPolygonFromWkt = MultiPolygon::fromWkt('MULTIPOLYGON(((180 0, 179 1, 178 2, 177 3, 180 0)))', Srid::WGS84->value);
@@ -256,13 +256,13 @@ it('creates multi polygon with SRID from WKB', function (): void {
     $multiPolygon = new MultiPolygon([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPolygonFromWkb = MultiPolygon::fromWkb($multiPolygon->toWkb());
@@ -329,13 +329,13 @@ it('uses an extended MultiPolygon class', function (): void {
     $multiPolygon = new ExtendedMultiPolygon([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
+                new Point(180, 0, 4326),
+                new Point(179, 1, 4326),
+                new Point(178, 2, 4326),
+                new Point(177, 3, 4326),
+                new Point(180, 0, 4326),
+            ], 4326),
+        ], 4326),
     ], 4326);
 
     // Act

@@ -71,18 +71,14 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
             $geometry = Factory::parse($wkb);
         } else {
             $sridBinary = substr($wkb, 0, 4);
+            /** @var array{1: int}|false $unpackedSrid */
             $unpackedSrid = unpack('L', $sridBinary);
 
             if ($unpackedSrid === false) {
                 throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
             }
 
-            $srid = $unpackedSrid[1];
-            $wkb = substr($wkb, 4);
-
-            $geometry = Factory::parse($wkb);
-            // @phpstan-ignore-next-line assign.propertyType
-            $geometry->srid = $srid;
+            $geometry = Factory::parseWithSrid(substr($wkb, 4), $unpackedSrid[1]);
         }
 
         if (! ($geometry instanceof static)) {
@@ -99,8 +95,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
      */
     public static function fromWkt(string $wkt, int|Srid|null $srid = null): static
     {
-        $geometry = Factory::parse($wkt);
-        $geometry->srid = Helper::getSrid($srid);
+        $geometry = Factory::parseWithSrid($wkt, Helper::getSrid($srid));
 
         if (! ($geometry instanceof static)) {
             throw new InvalidArgumentException(
@@ -116,8 +111,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
      */
     public static function fromJson(string $geoJson, int|Srid|null $srid = null): static
     {
-        $geometry = Factory::parse($geoJson);
-        $geometry->srid = Helper::getSrid($srid);
+        $geometry = Factory::parseWithSrid($geoJson, Helper::getSrid($srid));
 
         if (! ($geometry instanceof static)) {
             throw new InvalidArgumentException(

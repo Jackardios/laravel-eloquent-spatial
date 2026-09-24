@@ -60,8 +60,8 @@ it('creates line string from JSON', function (): void {
 
 it('creates line string with SRID from JSON', function (): void {
     $lineString = new LineString([
-        new Point(180, 0),
-        new Point(179, 1),
+        new Point(180, 0, Srid::WGS84->value),
+        new Point(179, 1, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $lineStringFromJson = LineString::fromJson('{"type":"LineString","coordinates":[[180,0],[179,1]]}', Srid::WGS84->value);
@@ -82,8 +82,8 @@ it('creates line string from array', function (): void {
 
 it('creates line string with SRID from array', function (): void {
     $lineString = new LineString([
-        new Point(180, 0),
-        new Point(179, 1),
+        new Point(180, 0, Srid::WGS84->value),
+        new Point(179, 1, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $lineStringFromJson = LineString::fromArray(['type' => 'LineString', 'coordinates' => [[180, 0], [179, 1]]], Srid::WGS84->value);
@@ -128,8 +128,8 @@ it('creates line string from WKT', function (): void {
 
 it('creates line string with SRID from WKT', function (): void {
     $lineString = new LineString([
-        new Point(180, 0),
-        new Point(179, 1),
+        new Point(180, 0, Srid::WGS84->value),
+        new Point(179, 1, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $lineStringFromWkt = LineString::fromWkt('LINESTRING(180 0, 179 1)', Srid::WGS84->value);
@@ -162,8 +162,8 @@ it('creates line string from WKB', function (): void {
 
 it('creates line string with SRID from WKB', function (): void {
     $lineString = new LineString([
-        new Point(180, 0),
-        new Point(179, 1),
+        new Point(180, 0, Srid::WGS84->value),
+        new Point(179, 1, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $lineStringFromWkb = LineString::fromWkb($lineString->toWkb());
@@ -216,8 +216,8 @@ it('uses an extended LineString class', function (): void {
     // Arrange
     EloquentSpatial::useLineString(ExtendedLineString::class);
     $lineString = new ExtendedLineString([
-        new Point(180, 0),
-        new Point(179, 1),
+        new Point(180, 0, 4326),
+        new Point(179, 1, 4326),
     ], 4326);
 
     // Act

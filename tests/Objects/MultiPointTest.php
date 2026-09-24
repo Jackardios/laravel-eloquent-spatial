@@ -56,7 +56,7 @@ it('creates multi point from JSON', function (): void {
 
 it('creates multi point with SRID from JSON', function (): void {
     $multiPoint = new MultiPoint([
-        new Point(180, 0),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPointFromJson = MultiPoint::fromJson('{"type":"MultiPoint","coordinates":[[180,0]]}', Srid::WGS84->value);
@@ -76,7 +76,7 @@ it('creates multi point from array', function (): void {
 
 it('creates multi point with SRID from array', function (): void {
     $multiPoint = new MultiPoint([
-        new Point(180, 0),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPointFromJson = MultiPoint::fromArray(['type' => 'MultiPoint', 'coordinates' => [[180, 0]]], Srid::WGS84->value);
@@ -118,7 +118,7 @@ it('creates multi point from WKT', function (): void {
 
 it('creates multi point with SRID from WKT', function (): void {
     $multiPoint = new MultiPoint([
-        new Point(180, 0),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPointFromWkt = MultiPoint::fromWkt('MULTIPOINT(180 0)', Srid::WGS84->value);
@@ -149,7 +149,7 @@ it('creates multi point from WKB', function (): void {
 
 it('creates multi point with SRID from WKB', function (): void {
     $multiPoint = new MultiPoint([
-        new Point(180, 0),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiPointFromWkb = MultiPoint::fromWkb($multiPoint->toWkb());
@@ -198,7 +198,7 @@ it('uses an extended MultiPoint class', function (): void {
     // Arrange
     EloquentSpatial::useMultiPoint(ExtendedMultiPoint::class);
     $multiPoint = new ExtendedMultiPoint([
-        new Point(180, 0),
+        new Point(180, 0, 4326),
     ], 4326);
 
     // Act

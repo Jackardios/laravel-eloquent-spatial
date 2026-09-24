@@ -69,9 +69,9 @@ it('creates multi line string from JSON', function (): void {
 it('creates multi line string with SRID from JSON', function (): void {
     $multiLineString = new MultiLineString([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiLineStringFromJson = MultiLineString::fromJson('{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}', Srid::WGS84->value);
@@ -95,9 +95,9 @@ it('creates multi line string from array', function (): void {
 it('creates multi line string with SRID from array', function (): void {
     $multiLineString = new MultiLineString([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiLineStringFromJson = MultiLineString::fromArray(['type' => 'MultiLineString', 'coordinates' => [[[180, 0], [179, 1]]]], Srid::WGS84->value);
@@ -149,9 +149,9 @@ it('creates multi line string from WKT', function (): void {
 it('creates multi line string with SRID from WKT', function (): void {
     $multiLineString = new MultiLineString([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiLineStringFromWkt = MultiLineString::fromWkt('MULTILINESTRING((180 0, 179 1))', Srid::WGS84->value);
@@ -189,9 +189,9 @@ it('creates multi line string from WKB', function (): void {
 it('creates multi line string with SRID from WKB', function (): void {
     $multiLineString = new MultiLineString([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
+            new Point(180, 0, Srid::WGS84->value),
+            new Point(179, 1, Srid::WGS84->value),
+        ], Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $multiLineStringFromWkb = MultiLineString::fromWkb($multiLineString->toWkb());
@@ -247,9 +247,9 @@ it('uses an extended MultiLineString class', function (): void {
     EloquentSpatial::useMultiLineString(ExtendedMultiLineString::class);
     $multiLineString = new ExtendedMultiLineString([
         new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
+            new Point(180, 0, 4326),
+            new Point(179, 1, 4326),
+        ], 4326),
     ], 4326);
 
     // Act

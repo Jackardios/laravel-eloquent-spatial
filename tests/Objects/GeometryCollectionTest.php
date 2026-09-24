@@ -127,14 +127,14 @@ it('creates geometry collection with SRID from JSON', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $geometryCollectionFromJson = GeometryCollection::fromJson('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]},{"type":"Point","coordinates":[180,0]}]}', Srid::WGS84->value);
@@ -197,14 +197,14 @@ it('creates geometry collection with SRID from array', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $geometryCollectionFromJson = GeometryCollection::fromArray(json_decode('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]},{"type":"Point","coordinates":[180,0]}]}', true), Srid::WGS84->value);
@@ -235,14 +235,14 @@ it('creates geometry collection from feature collection with SRID from JSON', fu
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84),
+                new Point(179, 1, Srid::WGS84),
+                new Point(178, 2, Srid::WGS84),
+                new Point(177, 3, Srid::WGS84),
+                new Point(180, 0, Srid::WGS84),
+            ], Srid::WGS84),
+        ], Srid::WGS84),
+        new Point(180, 0, Srid::WGS84),
     ], Srid::WGS84);
 
     $geometryCollectionFromFeatureCollectionJson = GeometryCollection::fromJson('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}},{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[180,0]}}]}', Srid::WGS84);
@@ -273,14 +273,14 @@ it('creates geometry collection from feature collection with SRID from array', f
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84),
+                new Point(179, 1, Srid::WGS84),
+                new Point(178, 2, Srid::WGS84),
+                new Point(177, 3, Srid::WGS84),
+                new Point(180, 0, Srid::WGS84),
+            ], Srid::WGS84),
+        ], Srid::WGS84),
+        new Point(180, 0, Srid::WGS84),
     ], Srid::WGS84);
 
     $geometryCollectionFromFeatureCollectionJson = GeometryCollection::fromArray(json_decode('{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}},{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[180,0]}}]}', true), Srid::WGS84);
@@ -382,14 +382,14 @@ it('creates geometry collection with SRID from WKT', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $geometryCollectionFromWkt = GeometryCollection::fromWkt('GEOMETRYCOLLECTION(POLYGON((180 0, 179 1, 178 2, 177 3, 180 0)), POINT(180 0))', Srid::WGS84->value);
@@ -462,14 +462,14 @@ it('creates geometry collection with SRID from WKB', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, Srid::WGS84->value),
+                new Point(179, 1, Srid::WGS84->value),
+                new Point(178, 2, Srid::WGS84->value),
+                new Point(177, 3, Srid::WGS84->value),
+                new Point(180, 0, Srid::WGS84->value),
+            ], Srid::WGS84->value),
+        ], Srid::WGS84->value),
+        new Point(180, 0, Srid::WGS84->value),
     ], Srid::WGS84->value);
 
     $geometryCollectionFromWkb = GeometryCollection::fromWkb($geometryCollection->toWkb());
@@ -646,14 +646,14 @@ it('uses an extended GeometryCollection class', function (): void {
     $geometryCollection = new ExtendedGeometryCollection([
         new Polygon([
             new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
+                new Point(180, 0, 4326),
+                new Point(179, 1, 4326),
+                new Point(178, 2, 4326),
+                new Point(177, 3, 4326),
+                new Point(180, 0, 4326),
+            ], 4326),
+        ], 4326),
+        new Point(180, 0, 4326),
     ], 4326);
 
     // Act

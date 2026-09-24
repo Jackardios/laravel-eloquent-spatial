@@ -21,6 +21,16 @@ class Factory
 {
     public static function parse(string $value): Geometry
     {
+        return self::parseWithSrid($value, null);
+    }
+
+    /**
+     * Parses the value into geometries created with the given SRID, or with the SRID read from the value if it is null.
+     *
+     * @internal
+     */
+    public static function parseWithSrid(string $value, ?int $srid): Geometry
+    {
         self::loadGeoPhp();
 
         try {
@@ -34,7 +44,7 @@ class Factory
             throw new InvalidArgumentException('Invalid spatial value');
         }
 
-        return self::createFromGeometry($geoPHPGeometry);
+        return self::createFromGeometry($geoPHPGeometry, $srid);
     }
 
     /**
@@ -58,9 +68,9 @@ class Factory
         }
     }
 
-    protected static function createFromGeometry(geoPHPGeometry $geometry): Geometry
+    protected static function createFromGeometry(geoPHPGeometry $geometry, ?int $srid): Geometry
     {
-        $srid = is_int($geometry->getSRID()) ? $geometry->getSRID() : 0;
+        $srid ??= is_int($geometry->getSRID()) ? $geometry->getSRID() : 0;
 
         if ($geometry instanceof geoPHPPoint) {
             if ($geometry->coords[0] === null || $geometry->coords[1] === null) {
@@ -72,7 +82,7 @@ class Factory
 
         /** @var geoPHPGeometryCollection $geometry */
         $components = array_map(
-            static fn (geoPHPGeometry $component): Geometry => self::createFromGeometry($component),
+            static fn (geoPHPGeometry $component): Geometry => self::createFromGeometry($component, $srid),
             $geometry->components
         );
 
