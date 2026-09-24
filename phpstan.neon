@@ -24,6 +24,10 @@ parameters:
         - src/Objects/Geometry.php
         - tests/*.php
     -
+      # MariaDbConnection only exists since Laravel 11; the test is skipped on Laravel 10.
+      message: '#MariaDbConnection#'
+      path: tests/AxisOrderTest.php
+    -
       identifier: missingType.generics
     -
       identifier: method.nonObject
