@@ -208,26 +208,39 @@ it('creates a model record with geometry (geometry collection)', function (): vo
 
 // Edge case tests for WKB/WKT parsing
 
-it('throws exception when parsing invalid WKB with truncated data', function (): void {
-    // Invalid WKB: only 2 bytes instead of a complete geometry
-    $invalidWkb = "\x00\x20";
+it('throws when WKB is too short to contain an SRID', function (string $wkb): void {
+    $warnings = 0;
+    set_error_handler(static function () use (&$warnings): bool {
+        $warnings++;
 
-    expect(function () use ($invalidWkb): void {
-        Geometry::fromWkb($invalidWkb);
-    })->toThrow(Exception::class);
+        return true;
+    });
+
+    try {
+        expect(fn () => Geometry::fromWkb($wkb))
+            ->toThrow(InvalidArgumentException::class, 'Invalid WKB: cannot extract SRID');
+    } finally {
+        restore_error_handler();
+    }
+
+    // unpack() warns before it returns false, so a Laravel app gets an ErrorException instead.
+    expect($warnings)->toBe(1);
+})->with([
+    'empty' => [''],
+    'two bytes' => ["\x00\x20"],
+]);
+
+it('throws when WKB has an SRID but no geometry', function (): void {
+    expect(fn () => Geometry::fromWkb('GGGG'))
+        ->toThrow(InvalidArgumentException::class, 'Invalid spatial value');
 });
 
-it('throws exception when parsing empty WKB', function (): void {
-    expect(function (): void {
-        Geometry::fromWkb('');
-    })->toThrow(Exception::class);
-});
-
-it('throws exception when parsing invalid hex WKB', function (): void {
-    expect(function (): void {
-        Geometry::fromWkb('GGGG');
-    })->toThrow(Exception::class);
-});
+it('parses hex-encoded WKB and EWKB', function (string $wkb, int $srid): void {
+    expect(Point::fromWkb($wkb))->toEqual(new Point(1, 2, $srid));
+})->with([
+    'WKB' => ['0101000000000000000000F03F0000000000000040', 0],
+    'EWKB with SRID' => ['0101000020E6100000000000000000F03F0000000000000040', 4326],
+]);
 
 it('throws exception when parsing malformed WKT', function (): void {
     expect(function (): void {

@@ -66,18 +66,14 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     public static function fromWkb(string $wkb): static
     {
         if (ctype_xdigit($wkb)) {
-            // @codeCoverageIgnoreStart
             $geometry = Factory::parse($wkb);
-            // @codeCoverageIgnoreEnd
         } else {
             $sridBinary = substr($wkb, 0, 4);
             $unpackedSrid = unpack('L', $sridBinary);
 
-            // @codeCoverageIgnoreStart
             if ($unpackedSrid === false) {
                 throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
             }
-            // @codeCoverageIgnoreEnd
 
             $srid = $unpackedSrid[1];
             $wkb = substr($wkb, 4);
@@ -208,9 +204,7 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         $wkt = addslashes($this->toWkt());
 
         if (! AxisOrder::supported($connection)) {
-            // @codeCoverageIgnoreStart
             return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid})"))->normalize($connection));
-            // @codeCoverageIgnoreEnd
         }
 
         return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid}, 'axis-order=long-lat')"))->normalize($connection));

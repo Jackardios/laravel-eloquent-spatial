@@ -7,7 +7,6 @@ namespace Jackardios\EloquentSpatial;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\PostgresConnection;
 
-/** @codeCoverageIgnore */
 class GeometryExpression
 {
     public function __construct(private readonly string $expression) {}

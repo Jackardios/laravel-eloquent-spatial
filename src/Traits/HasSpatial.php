@@ -144,9 +144,6 @@ trait HasSpatial
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     protected function getDistanceSphereFunction(): string
     {
         return $this->getConnection() instanceof PostgresConnection

@@ -1,8 +1,9 @@
 <?php
 
-use Jackardios\EloquentSpatial\BoundingBoxCast;
 use Jackardios\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
+use Jackardios\EloquentSpatial\Exceptions\InvalidGeometry;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
+use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\MultiLineString;
@@ -121,6 +122,40 @@ it('can create bounding box with min padding', function () {
         'right' => -30.453423,
         'top' => 40.756244,
     ]);
+});
+
+it('wraps padded longitudes across the antimeridian', function (float $longitude, float $left, float $right): void {
+    $bbox = BoundingBox::fromPoints([new Point($longitude, 0), new Point($longitude, 1)], 1.0);
+
+    expect($bbox->crossesAntimeridian())->toBeTrue()
+        ->and($bbox->getLeftBottom()->longitude)->toEqualWithDelta($left, 1e-9)
+        ->and($bbox->getRightTop()->longitude)->toEqualWithDelta($right, 1e-9);
+})->with([
+    'east edge' => [179.8, 179.3, -179.7],
+    'west edge' => [-179.8, 179.7, -179.3],
+]);
+
+it('throws when creating a bounding box from an unsupported geometry', function (): void {
+    $geometry = new class extends Geometry
+    {
+        public function toWkt(): string
+        {
+            return 'CURVE EMPTY';
+        }
+
+        public function getWktData(): string
+        {
+            return 'EMPTY';
+        }
+
+        public function getCoordinates(): array
+        {
+            return [];
+        }
+    };
+
+    expect(fn () => BoundingBox::fromGeometry($geometry))
+        ->toThrow(InvalidGeometry::class, 'cannot create bounding box from '.$geometry::class);
 });
 
 it('throws exception when min padding is negative', function () {
@@ -491,43 +526,7 @@ it('roundtrips bounding box through toArray and fromArray', function () {
     expect($recreated->toArray())->toBe($original->toArray());
 });
 
-// BoundingBoxCast format tests
-
-it('creates BoundingBoxCast with geometry format by default', function () {
-    $cast = new BoundingBoxCast;
-
-    expect($cast)->toBeInstanceOf(BoundingBoxCast::class);
-});
-
-it('creates BoundingBoxCast with explicit geometry format', function () {
-    $cast = new BoundingBoxCast(BoundingBoxCast::FORMAT_GEOMETRY);
-
-    expect($cast)->toBeInstanceOf(BoundingBoxCast::class);
-});
-
-it('creates BoundingBoxCast with json format', function () {
-    $cast = new BoundingBoxCast(BoundingBoxCast::FORMAT_JSON);
-
-    expect($cast)->toBeInstanceOf(BoundingBoxCast::class);
-});
-
-it('throws exception for invalid BoundingBoxCast format', function () {
-    expect(function () {
-        new BoundingBoxCast('invalid');
-    })->toThrow(InvalidArgumentException::class, 'Invalid format "invalid"');
-});
-
-it('BoundingBox castUsing returns geometry format by default', function () {
-    $cast = BoundingBox::castUsing([]);
-
-    expect($cast)->toBeInstanceOf(BoundingBoxCast::class);
-});
-
-it('BoundingBox castUsing accepts json format argument', function () {
-    $cast = BoundingBox::castUsing(['json']);
-
-    expect($cast)->toBeInstanceOf(BoundingBoxCast::class);
-});
+// JSON cast round trips
 
 it('serializes and deserializes bounding box with json cast', function () {
     /** @var TestPlace $testPlace */
