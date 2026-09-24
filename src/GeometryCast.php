@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Jackardios\EloquentSpatial;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Contracts\Database\Eloquent\ComparesCastableAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\Objects\Geometry;
+use Throwable;
 
-class GeometryCast implements CastsAttributes
+class GeometryCast implements CastsAttributes, ComparesCastableAttributes
 {
     /** @var class-string<Geometry> */
     private string $className;
@@ -76,6 +78,32 @@ class GeometryCast implements CastsAttributes
         /** @var Geometry $value */
 
         return $value->toSqlExpression($model->getConnection());
+    }
+
+    /**
+     * Compares the stored values, so that a change of only the SRID or the geometry type is saved.
+     *
+     * @param  Model  $model
+     * @param  string|ExpressionContract|null  $firstValue
+     * @param  string|ExpressionContract|null  $secondValue
+     */
+    public function compare($model, string $key, mixed $firstValue, mixed $secondValue): bool
+    {
+        try {
+            $first = $this->get($model, $key, $firstValue, []);
+            $second = $this->get($model, $key, $secondValue, []);
+        } catch (Throwable) {
+            // An unreadable value is treated as changed, so that it is saved rather than kept.
+            return false;
+        }
+
+        if ($first === null || $second === null) {
+            return $first === $second;
+        }
+
+        return $first::class === $second::class
+            && $first->srid === $second->srid
+            && $first->toWkt() === $second->toWkt();
     }
 
     private function isCorrectGeometryType(mixed $value): bool

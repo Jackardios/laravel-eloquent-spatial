@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Jackardios\EloquentSpatial;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Contracts\Database\Eloquent\ComparesCastableAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -13,8 +14,9 @@ use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\MultiPolygon;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 use JsonException;
+use Throwable;
 
-class BoundingBoxCast implements CastsAttributes
+class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
 {
     public const FORMAT_GEOMETRY = 'geometry';
 
@@ -129,5 +131,25 @@ class BoundingBoxCast implements CastsAttributes
         }
 
         return $value->toGeometry()->toSqlExpression($model->getConnection());
+    }
+
+    /**
+     * Compares the bounds rather than the stored representation, which the database may normalise.
+     *
+     * @param  Model  $model
+     * @param  string|ExpressionContract|null  $firstValue
+     * @param  string|ExpressionContract|null  $secondValue
+     */
+    public function compare($model, string $key, mixed $firstValue, mixed $secondValue): bool
+    {
+        try {
+            $first = $this->get($model, $key, $firstValue, []);
+            $second = $this->get($model, $key, $secondValue, []);
+        } catch (Throwable) {
+            // An unreadable value is treated as changed, so that it is saved rather than kept.
+            return false;
+        }
+
+        return $first?->toArray() === $second?->toArray();
     }
 }
