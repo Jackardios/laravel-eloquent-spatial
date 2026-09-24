@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Jackardios\EloquentSpatial\Objects;
 
-use geoPHP;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
@@ -20,10 +19,10 @@ use Jackardios\EloquentSpatial\Factory;
 use Jackardios\EloquentSpatial\GeometryCast;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Helper;
+use Jackardios\EloquentSpatial\Wkb;
 use JsonException;
 use JsonSerializable;
 use Stringable;
-use WKB as geoPHPWkb;
 
 abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializable, Stringable
 {
@@ -50,19 +49,12 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         return json_encode($this, $options | JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * The WKB as MySQL stores it: the SRID as a little-endian 32-bit integer, followed by little-endian WKB.
+     */
     public function toWkb(): string
     {
-        Factory::loadGeoPhp();
-
-        $geoPHPGeometry = geoPHP::load($this->toJson());
-
-        $sridInBinary = pack('L', $this->srid);
-
-        // @phpstan-ignore-next-line
-        $wkbWithoutSrid = (new geoPHPWkb)->write($geoPHPGeometry);
-
-        // @phpstan-ignore-next-line binaryOp.invalid
-        return $sridInBinary.$wkbWithoutSrid;
+        return pack('V', $this->srid).Wkb::write($this);
     }
 
     public static function fromWkb(string $wkb): static
