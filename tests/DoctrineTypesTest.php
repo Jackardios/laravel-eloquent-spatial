@@ -13,48 +13,16 @@ use Jackardios\EloquentSpatial\Doctrine\MultiPolygonType;
 use Jackardios\EloquentSpatial\Doctrine\PointType;
 use Jackardios\EloquentSpatial\Doctrine\PolygonType;
 
-/** @var array{column: string, postgresType: class-string<Type>, mySqlType: class-string<Type>} $typeClass */
+/** @var list<array{string, class-string<Type>, class-string<Type>}> $dataset */
 $dataset = [
-    [
-        'column' => 'point',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => PointType::class,
-    ],
-    [
-        'column' => 'point_geography',
-        'postgresType' => GeographyType::class,
-        'mySqlType' => PointType::class,
-    ],
-    [
-        'column' => 'line_string',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => LineStringType::class,
-    ],
-    [
-        'column' => 'multi_point',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => MultiPointType::class,
-    ],
-    [
-        'column' => 'polygon',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => PolygonType::class,
-    ],
-    [
-        'column' => 'multi_line_string',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => MultiLineStringType::class,
-    ],
-    [
-        'column' => 'multi_polygon',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => MultiPolygonType::class,
-    ],
-    [
-        'column' => 'geometry_collection',
-        'postgresType' => GeometryType::class,
-        'mySqlType' => GeometryCollectionType::class,
-    ],
+    ['point', GeometryType::class, PointType::class],
+    ['point_geography', GeographyType::class, PointType::class],
+    ['line_string', GeometryType::class, LineStringType::class],
+    ['multi_point', GeometryType::class, MultiPointType::class],
+    ['polygon', GeometryType::class, PolygonType::class],
+    ['multi_line_string', GeometryType::class, MultiLineStringType::class],
+    ['multi_polygon', GeometryType::class, MultiPolygonType::class],
+    ['geometry_collection', GeometryType::class, GeometryCollectionType::class],
 ];
 
 it('uses custom Doctrine types for spatial columns', function ($column, $postgresType, $mySqlType): void {

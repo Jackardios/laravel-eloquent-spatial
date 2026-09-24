@@ -2,10 +2,10 @@
 
 namespace Jackardios\EloquentSpatial\Tests;
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Jackardios\EloquentSpatial\EloquentSpatial;
 use Jackardios\EloquentSpatial\EloquentSpatialServiceProvider;
+use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\MultiLineString;
@@ -21,14 +21,23 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        $this->resetGeometryClasses();
+        $this->resetEloquentSpatial();
+    }
 
-        // @phpstan-ignore-next-line
-        if (version_compare(Application::VERSION, '11.0.0', '>=')) {
-            $this->loadMigrationsFrom(__DIR__.'/database/migrations-laravel->=11');
-        } else {
-            $this->loadMigrationsFrom(__DIR__.'/database/migrations-laravel-<=10');
-        }
+    protected function tearDown(): void
+    {
+        Geometry::flushMacros();
+
+        parent::tearDown();
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(
+            version_compare($this->app->version(), '11.0.0', '>=')
+                ? __DIR__.'/database/migrations'
+                : __DIR__.'/database/migrations-laravel-10'
+        );
     }
 
     /**
@@ -41,7 +50,7 @@ class TestCase extends Orchestra
         ];
     }
 
-    protected function resetGeometryClasses(): void
+    protected function resetEloquentSpatial(): void
     {
         EloquentSpatial::useGeometryCollection(GeometryCollection::class);
         EloquentSpatial::useLineString(LineString::class);
@@ -50,5 +59,6 @@ class TestCase extends Orchestra
         EloquentSpatial::useMultiPolygon(MultiPolygon::class);
         EloquentSpatial::usePoint(Point::class);
         EloquentSpatial::usePolygon(Polygon::class);
+        EloquentSpatial::setDefaultSrid(0);
     }
 }

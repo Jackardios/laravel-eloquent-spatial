@@ -18,8 +18,8 @@ class TestExtendedPlaceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->streetName,
-            'address' => $this->faker->address,
+            'name' => $this->faker->streetName(),
+            'address' => $this->faker->address(),
         ];
     }
 }
