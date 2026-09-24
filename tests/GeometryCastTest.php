@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
 use Jackardios\EloquentSpatial\AxisOrder;
 use Jackardios\EloquentSpatial\Enums\Srid;
@@ -23,8 +24,8 @@ it('updates a model record', function (): void {
 
     $testPlace->update(['point' => $point2]);
 
-    expect($testPlace->point)->not->toEqual($point);
     expect($testPlace->point)->toEqual($point2);
+    expect($testPlace->fresh()?->point)->toEqual($point2);
 });
 
 it('updates a model record with expression', function (): void {
@@ -33,9 +34,10 @@ it('updates a model record with expression', function (): void {
     $testPlace = TestPlace::factory()->create(['point' => $point]);
     $pointFromAttributes = $testPlace->getAttributes()['point'];
 
-    expect(function () use ($testPlace, $pointFromAttributes): void {
-        $testPlace->update(['point' => $pointFromAttributes]);
-    })->not->toThrow(InvalidArgumentException::class);
+    $testPlace->update(['point' => $pointFromAttributes]);
+
+    expect($pointFromAttributes)->toBeInstanceOf(Expression::class);
+    expect($testPlace->fresh()?->point)->toEqual($point);
 });
 
 it('updates a model record with null geometry', function (): void {
@@ -46,6 +48,7 @@ it('updates a model record with null geometry', function (): void {
     $testPlace->update(['point' => null]);
 
     expect($testPlace->point)->toBeNull();
+    expect($testPlace->fresh()?->point)->toBeNull();
 });
 
 it('gets original geometry field', function (): void {
@@ -191,29 +194,33 @@ it('checks a model record is not dirty after update to same value before save', 
     expect($testPlace->isDirty())->toBeFalse();
 });
 
-it('handles casting geometry columns with raw expressions', function (string $expression): void {
+it('handles casting geometry columns with raw expressions', function (string $expression, int $srid): void {
     // Arrange
     /** @var TestPlace $testPlace */
     $testPlace = TestPlace::factory()->create(['point' => DB::raw($expression)]);
+    $expected = new Point(1.5, -2.5, $srid);
 
     // Act & Assert
-    expect(function () use ($testPlace): void {
-        // Trigger 'point' attribute to cast raw expression to a `Point` object
-        $testPlace->originalIsEquivalent('point');
-    })->not->toThrow(Exception::class);
+    // Laravel keeps returning the assigned expression until the model is reloaded.
+    expect($testPlace->point)->toBeInstanceOf(Expression::class);
+    expect($testPlace->getOriginal('point'))->toEqual($expected);
+    expect($testPlace->originalIsEquivalent('point'))->toBeTrue();
+
+    // Without 'axis-order=long-lat', MySQL 8 reads raw WKT in SRID 4326 as latitude first.
+    $stored = isMySql8OrAbove() && $srid === 4326 ? new Point(-2.5, 1.5, 4326) : $expected;
+    expect($testPlace->fresh()?->point)->toEqual($stored);
 })->with([
-    'without SRID' => "ST_GeomFromText('POINT(0 0)')",
-    'with SRID' => "ST_GeomFromText('POINT(0 0)', 4326)",
+    'without SRID' => ["ST_GeomFromText('POINT(1.5 -2.5)')", 0],
+    'with SRID' => ["ST_GeomFromText('POINT(1.5 -2.5)', 4326)", 4326],
 ]);
 
 it('handles casting geometry columns with raw expressions with axis order', function (): void {
     // Arrange
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['point' => DB::raw("ST_GeomFromText('POINT(0 0)', 4326, 'axis-order=long-lat')")]);
+    $testPlace = TestPlace::factory()->create(['point' => DB::raw("ST_GeomFromText('POINT(1.5 -2.5)', 4326, 'axis-order=long-lat')")]);
+    $expected = new Point(1.5, -2.5, 4326);
 
     // Act & Assert
-    expect(function () use ($testPlace): void {
-        // Trigger 'point' attribute to cast raw expression to a `Point` object
-        $testPlace->originalIsEquivalent('point');
-    })->not->toThrow(Exception::class);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+    expect($testPlace->getOriginal('point'))->toEqual($expected);
+    expect($testPlace->fresh()?->point)->toEqual($expected);
+})->skip(fn () => DB::connection()->getDriverName() !== 'mysql' || ! AxisOrder::supported(DB::connection()), 'MySQL 8+ only');

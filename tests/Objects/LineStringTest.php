@@ -17,7 +17,7 @@ it('creates a model record with line string', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
+    $testPlace = TestPlace::factory()->create(['line_string' => $lineString])->fresh();
 
     expect($testPlace->line_string)->toBeInstanceOf(LineString::class);
     expect($testPlace->line_string)->toEqual($lineString);
@@ -30,7 +30,7 @@ it('creates a model record with line string with SRID integer', function (): voi
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
+    $testPlace = TestPlace::factory()->create(['line_string' => $lineString])->fresh();
 
     expect($testPlace->line_string->srid)->toBe(Srid::WGS84->value);
 });
@@ -42,7 +42,7 @@ it('creates a model record with line string with SRID enum', function (): void {
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['line_string' => $lineString]);
+    $testPlace = TestPlace::factory()->create(['line_string' => $lineString])->fresh();
 
     expect($testPlace->line_string->srid)->toBe(Srid::WGS84->value);
 });

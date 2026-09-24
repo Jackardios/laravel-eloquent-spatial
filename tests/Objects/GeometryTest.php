@@ -121,7 +121,7 @@ it('creates a model record with geometry (point)', function (): void {
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $point]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $point])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(Point::class);
@@ -134,7 +134,7 @@ it('creates a model record with geometry (line string)', function (): void {
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $lineString]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $lineString])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(LineString::class);
@@ -147,7 +147,7 @@ it('creates a model record with geometry (multi point)', function (): void {
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $multiPoint]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $multiPoint])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(MultiPoint::class);
@@ -160,7 +160,7 @@ it('creates a model record with geometry (multi line string)', function (): void
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $multiLineString]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $multiLineString])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(MultiLineString::class);
@@ -173,7 +173,7 @@ it('creates a model record with geometry (polygon)', function (): void {
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $polygon]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $polygon])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(Polygon::class);
@@ -186,7 +186,7 @@ it('creates a model record with geometry (multi polygon)', function (): void {
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $multiPolygon]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $multiPolygon])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(MultiPolygon::class);
@@ -199,7 +199,7 @@ it('creates a model record with geometry (geometry collection)', function (): vo
 
     // Act
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry' => $geometryCollection]);
+    $testPlace = TestPlace::factory()->create(['geometry' => $geometryCollection])->fresh();
 
     // Assert
     expect($testPlace->geometry)->toBeInstanceOf(GeometryCollection::class);

@@ -12,7 +12,7 @@ it('creates a model record with point', function (): void {
     $point = new Point(180, 0);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['point' => $point]);
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
 
     expect($testPlace->point)->toBeInstanceOf(Point::class);
     expect($testPlace->point)->toEqual($point);
@@ -22,7 +22,7 @@ it('creates a model record with point with SRID integer', function (): void {
     $point = new Point(180, 0, Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['point' => $point]);
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
 
     expect($testPlace->point->srid)->toBe(Srid::WGS84->value);
 });
@@ -31,7 +31,7 @@ it('creates a model record with point with SRID enum', function (): void {
     $point = new Point(180, 0, Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['point' => $point]);
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
 
     expect($testPlace->point->srid)->toBe(Srid::WGS84->value);
 });

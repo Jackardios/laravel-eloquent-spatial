@@ -19,7 +19,7 @@ it('creates a model record with multi line string', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
+    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString])->fresh();
 
     expect($testPlace->multi_line_string)->toBeInstanceOf(MultiLineString::class);
     expect($testPlace->multi_line_string)->toEqual($multiLineString);
@@ -34,7 +34,7 @@ it('creates a model record with multi line string with SRID integer', function (
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
+    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString])->fresh();
 
     expect($testPlace->multi_line_string->srid)->toBe(Srid::WGS84->value);
 });
@@ -48,7 +48,7 @@ it('creates a model record with multi line string with SRID enum', function (): 
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
+    $testPlace = TestPlace::factory()->create(['multi_line_string' => $multiLineString])->fresh();
 
     expect($testPlace->multi_line_string->srid)->toBe(Srid::WGS84->value);
 });

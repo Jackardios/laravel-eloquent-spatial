@@ -16,7 +16,7 @@ it('creates a model record with multi point', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint]);
+    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint])->fresh();
 
     expect($testPlace->multi_point)->toBeInstanceOf(MultiPoint::class);
     expect($testPlace->multi_point)->toEqual($multiPoint);
@@ -28,7 +28,7 @@ it('creates a model record with multi point with SRID integer', function (): voi
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint]);
+    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint])->fresh();
 
     expect($testPlace->multi_point->srid)->toBe(Srid::WGS84->value);
 });
@@ -39,7 +39,7 @@ it('creates a model record with multi point with SRID enum', function (): void {
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint]);
+    $testPlace = TestPlace::factory()->create(['multi_point' => $multiPoint])->fresh();
 
     expect($testPlace->multi_point->srid)->toBe(Srid::WGS84->value);
 });

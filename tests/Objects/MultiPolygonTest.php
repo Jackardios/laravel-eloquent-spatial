@@ -25,7 +25,7 @@ it('creates a model record with multi polygon', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
+    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon])->fresh();
 
     expect($testPlace->multi_polygon)->toBeInstanceOf(MultiPolygon::class);
     expect($testPlace->multi_polygon)->toEqual($multiPolygon);
@@ -45,7 +45,7 @@ it('creates a model record with multi polygon with SRID integer', function (): v
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
+    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon])->fresh();
 
     expect($testPlace->multi_polygon->srid)->toBe(Srid::WGS84->value);
 });
@@ -64,7 +64,7 @@ it('creates a model record with multi polygon with SRID enum', function (): void
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
+    $testPlace = TestPlace::factory()->create(['multi_polygon' => $multiPolygon])->fresh();
 
     expect($testPlace->multi_polygon->srid)->toBe(Srid::WGS84->value);
 });

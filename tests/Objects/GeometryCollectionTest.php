@@ -26,7 +26,7 @@ it('creates a model record with geometry collection', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection]);
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection])->fresh();
 
     expect($testPlace->geometry_collection)->toBeInstanceOf(GeometryCollection::class);
     expect($testPlace->geometry_collection)->toEqual($geometryCollection);
@@ -47,7 +47,7 @@ it('creates a model record with geometry collection with SRID integer', function
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection]);
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection])->fresh();
 
     expect($testPlace->geometry_collection->srid)->toBe(Srid::WGS84->value);
 });
@@ -67,7 +67,7 @@ it('creates a model record with geometry collection with SRID enum', function ()
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection]);
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $geometryCollection])->fresh();
 
     expect($testPlace->geometry_collection->srid)->toBe(Srid::WGS84->value);
 });
@@ -755,7 +755,7 @@ it('creates and persists deeply nested geometry collection', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry_collection' => $outerCollection]);
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $outerCollection])->fresh();
 
     expect($testPlace->geometry_collection)->toBeInstanceOf(GeometryCollection::class);
 
@@ -764,7 +764,8 @@ it('creates and persists deeply nested geometry collection', function (): void {
     expect($nested)->toBeInstanceOf(GeometryCollection::class);
     expect($nested[0])->toBeInstanceOf(Point::class);
     expect($nested[1])->toBeInstanceOf(LineString::class);
-});
+    expect($testPlace->geometry_collection)->toEqual($outerCollection);
+})->skip(fn () => isMariaDb(), 'MariaDB does not support nested geometry collections.');
 
 it('preserves SRID through nested geometry collection roundtrip', function (): void {
     $collection = new GeometryCollection([
@@ -797,7 +798,7 @@ it('handles geometry collection with all geometry types', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['geometry_collection' => $collection]);
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $collection])->fresh();
 
     expect($testPlace->geometry_collection[0])->toBeInstanceOf(Point::class);
     expect($testPlace->geometry_collection[1])->toBeInstanceOf(LineString::class);

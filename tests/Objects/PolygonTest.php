@@ -22,7 +22,7 @@ it('creates a model record with polygon', function (): void {
     ]);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['polygon' => $polygon]);
+    $testPlace = TestPlace::factory()->create(['polygon' => $polygon])->fresh();
 
     expect($testPlace->polygon)->toBeInstanceOf(Polygon::class);
     expect($testPlace->polygon)->toEqual($polygon);
@@ -40,7 +40,7 @@ it('creates a model record with polygon with SRID integer', function (): void {
     ], Srid::WGS84->value);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['polygon' => $polygon]);
+    $testPlace = TestPlace::factory()->create(['polygon' => $polygon])->fresh();
 
     expect($testPlace->polygon->srid)->toBe(Srid::WGS84->value);
 });
@@ -57,7 +57,7 @@ it('creates a model record with polygon with SRID enum', function (): void {
     ], Srid::WGS84);
 
     /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create(['polygon' => $polygon]);
+    $testPlace = TestPlace::factory()->create(['polygon' => $polygon])->fresh();
 
     expect($testPlace->polygon->srid)->toBe(Srid::WGS84->value);
 });

@@ -1,7 +1,7 @@
 <?php
 
+use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
-use Jackardios\EloquentSpatial\AxisOrder;
 use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Objects\LineString;
@@ -17,8 +17,9 @@ it('calculates distance', function (): void {
         ->withDistance('point', new Point(1, 1, Srid::WGS84->value))
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance)->toBe(156897.79947260793);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->point)->toEqual(new Point(0, 0, Srid::WGS84->value));
+    expect($testPlaceWithDistance->distance)->toEqualWithDelta(156897.79947260793, 0.001);
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('calculates distance - without axis-order', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -28,8 +29,9 @@ it('calculates distance - without axis-order', function (): void {
         ->withDistance('point', new Point(1, 1, Srid::WGS84->value))
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance)->toBe(1.4142135623730951);
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->point)->toEqual(new Point(0, 0, Srid::WGS84->value));
+    expect($testPlaceWithDistance->distance)->toEqualWithDelta(M_SQRT2, 1e-9);
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('calculates distance with alias', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -39,8 +41,8 @@ it('calculates distance with alias', function (): void {
         ->withDistance('point', new Point(1, 1, Srid::WGS84->value), 'distance_in_meters')
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance_in_meters)->toBe(156897.79947260793);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->distance_in_meters)->toEqualWithDelta(156897.79947260793, 0.001);
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('calculates distance with alias - without axis-order', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -50,8 +52,8 @@ it('calculates distance with alias - without axis-order', function (): void {
         ->withDistance('point', new Point(1, 1, Srid::WGS84->value), 'distance_in_meters')
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance_in_meters)->toBe(1.4142135623730951);
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->distance_in_meters)->toEqualWithDelta(M_SQRT2, 1e-9);
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('filters by distance', function (): void {
     $pointWithinDistance = new Point(0, 0, Srid::WGS84->value);
@@ -66,7 +68,7 @@ it('filters by distance', function (): void {
 
     expect($testPlacesWithinDistance)->toHaveCount(1);
     expect($testPlacesWithinDistance[0]->point)->toEqual($pointWithinDistance);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('filters by distance - without axis-order', function (): void {
     $pointWithinDistance = new Point(0, 0, Srid::WGS84->value);
@@ -81,32 +83,34 @@ it('filters by distance - without axis-order', function (): void {
 
     expect($testPlacesWithinDistance)->toHaveCount(1);
     expect($testPlacesWithinDistance[0]->point)->toEqual($pointWithinDistance);
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('orders by distance ASC', function (): void {
-    $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
+    // Inserted farthest first, so the natural order is the opposite of the expected one.
+    $farthestTestPlace = TestPlace::factory()->create(['point' => new Point(3, 3, Srid::WGS84->value)]);
     $fartherTestPlace = TestPlace::factory()->create(['point' => new Point(2, 2, Srid::WGS84->value)]);
+    $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
 
-    /** @var TestPlace[] $testPlacesOrderedByDistance */
-    $testPlacesOrderedByDistance = TestPlace::query()
+    $ids = TestPlace::query()
         ->orderByDistance('point', new Point(0, 0, Srid::WGS84->value))
-        ->get();
+        ->pluck('id')
+        ->all();
 
-    expect($testPlacesOrderedByDistance[0]->id)->toBe($closerTestPlace->id);
-    expect($testPlacesOrderedByDistance[1]->id)->toBe($fartherTestPlace->id);
+    expect($ids)->toBe([$closerTestPlace->id, $fartherTestPlace->id, $farthestTestPlace->id]);
 });
 
 it('orders by distance DESC', function (): void {
+    // Inserted nearest first, so the natural order is the opposite of the expected one.
     $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
     $fartherTestPlace = TestPlace::factory()->create(['point' => new Point(2, 2, Srid::WGS84->value)]);
+    $farthestTestPlace = TestPlace::factory()->create(['point' => new Point(3, 3, Srid::WGS84->value)]);
 
-    /** @var TestPlace[] $testPlacesOrderedByDistance */
-    $testPlacesOrderedByDistance = TestPlace::query()
+    $ids = TestPlace::query()
         ->orderByDistance('point', new Point(0, 0, Srid::WGS84->value), 'desc')
-        ->get();
+        ->pluck('id')
+        ->all();
 
-    expect($testPlacesOrderedByDistance[1]->id)->toBe($closerTestPlace->id);
-    expect($testPlacesOrderedByDistance[0]->id)->toBe($fartherTestPlace->id);
+    expect($ids)->toBe([$farthestTestPlace->id, $fartherTestPlace->id, $closerTestPlace->id]);
 });
 
 it('calculates distance sphere', function (): void {
@@ -117,8 +121,8 @@ it('calculates distance sphere', function (): void {
         ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value))
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance)->toBe(157249.59776850493);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->distance)->toEqualWithDelta(157249.59776850493, 0.001);
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('calculates distance sphere - without axis-order', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -128,9 +132,10 @@ it('calculates distance sphere - without axis-order', function (): void {
         ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value))
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance)->toBeOnPostgres(157249.59776851);
-    expect($testPlaceWithDistance->distance)->toBeOnMysql(157249.0357231545);
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+    // MariaDB and MySQL 5.7 use a slightly different earth radius than PostGIS.
+    $expected = DB::connection() instanceof PostgresConnection ? 157249.59776851 : 157249.0357231545;
+    expect($testPlaceWithDistance->distance)->toEqualWithDelta($expected, 0.001);
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('calculates distance sphere with alias', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -140,8 +145,8 @@ it('calculates distance sphere with alias', function (): void {
         ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value), 'distance_in_meters')
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance_in_meters)->toBe(157249.59776850493);
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+    expect($testPlaceWithDistance->distance_in_meters)->toEqualWithDelta(157249.59776850493, 0.001);
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('calculates distance sphere with alias - without axis-order', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
@@ -151,9 +156,10 @@ it('calculates distance sphere with alias - without axis-order', function (): vo
         ->withDistanceSphere('point', new Point(1, 1, Srid::WGS84->value), 'distance_in_meters')
         ->firstOrFail();
 
-    expect($testPlaceWithDistance->distance_in_meters)->toBeOnPostgres(157249.59776851);
-    expect($testPlaceWithDistance->distance_in_meters)->toBeOnMysql(157249.0357231545);
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+    // MariaDB and MySQL 5.7 use a slightly different earth radius than PostGIS.
+    $expected = DB::connection() instanceof PostgresConnection ? 157249.59776851 : 157249.0357231545;
+    expect($testPlaceWithDistance->distance_in_meters)->toEqualWithDelta($expected, 0.001);
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('filters distance sphere', function (): void {
     $pointWithinDistance = new Point(0, 0, Srid::WGS84->value);
@@ -171,29 +177,31 @@ it('filters distance sphere', function (): void {
 });
 
 it('orders by distance sphere ASC', function (): void {
-    $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
+    // Inserted farthest first, so the natural order is the opposite of the expected one.
+    $farthestTestPlace = TestPlace::factory()->create(['point' => new Point(3, 3, Srid::WGS84->value)]);
     $fartherTestPlace = TestPlace::factory()->create(['point' => new Point(2, 2, Srid::WGS84->value)]);
+    $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
 
-    /** @var TestPlace[] $testPlacesOrderedByDistance */
-    $testPlacesOrderedByDistance = TestPlace::query()
+    $ids = TestPlace::query()
         ->orderByDistanceSphere('point', new Point(0, 0, Srid::WGS84->value))
-        ->get();
+        ->pluck('id')
+        ->all();
 
-    expect($testPlacesOrderedByDistance[0]->id)->toBe($closerTestPlace->id);
-    expect($testPlacesOrderedByDistance[1]->id)->toBe($fartherTestPlace->id);
+    expect($ids)->toBe([$closerTestPlace->id, $fartherTestPlace->id, $farthestTestPlace->id]);
 });
 
 it('orders by distance sphere DESC', function (): void {
+    // Inserted nearest first, so the natural order is the opposite of the expected one.
     $closerTestPlace = TestPlace::factory()->create(['point' => new Point(1, 1, Srid::WGS84->value)]);
     $fartherTestPlace = TestPlace::factory()->create(['point' => new Point(2, 2, Srid::WGS84->value)]);
+    $farthestTestPlace = TestPlace::factory()->create(['point' => new Point(3, 3, Srid::WGS84->value)]);
 
-    /** @var TestPlace[] $testPlacesOrderedByDistance */
-    $testPlacesOrderedByDistance = TestPlace::query()
+    $ids = TestPlace::query()
         ->orderByDistanceSphere('point', new Point(0, 0, Srid::WGS84->value), 'desc')
-        ->get();
+        ->pluck('id')
+        ->all();
 
-    expect($testPlacesOrderedByDistance[1]->id)->toBe($closerTestPlace->id);
-    expect($testPlacesOrderedByDistance[0]->id)->toBe($fartherTestPlace->id);
+    expect($ids)->toBe([$farthestTestPlace->id, $fartherTestPlace->id, $closerTestPlace->id]);
 });
 
 it('filters by within', function (): void {
@@ -357,20 +365,27 @@ it('filters by equals', function (): void {
     expect($testPlaces[0]->point)->toEqual($point1);
 });
 
-it('filters by SRID', function (): void {
-    $point1 = new Point(0, 0, Srid::WGS84->value);
-    $point2 = new Point(50, 50, 0);
-    TestPlace::factory()->create(['point' => $point1]);
-    TestPlace::factory()->create(['point' => $point2]);
+it('filters by SRID', function (string $operator, int $value, array $expectedSrids): void {
+    TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
+    TestPlace::factory()->create(['point' => new Point(50, 50, 0)]);
 
-    /** @var TestPlace[] $testPlaces */
-    $testPlaces = TestPlace::query()
-        ->whereSrid('point', '=', Srid::WGS84->value)
-        ->get();
+    $srids = TestPlace::query()
+        ->whereSrid('point', $operator, $value)
+        ->orderBy('id')
+        ->get()
+        ->map(fn (TestPlace $testPlace): int => $testPlace->point->srid)
+        ->all();
 
-    expect($testPlaces)->toHaveCount(1);
-    expect($testPlaces[0]->point)->toEqual($point1);
-});
+    expect($srids)->toBe($expectedSrids);
+})->with([
+    '=' => ['=', Srid::WGS84->value, [Srid::WGS84->value]],
+    '!=' => ['!=', Srid::WGS84->value, [0]],
+    '<>' => ['<>', 0, [Srid::WGS84->value]],
+    '>' => ['>', 0, [Srid::WGS84->value]],
+    '<' => ['<', Srid::WGS84->value, [0]],
+    '>=' => ['>=', 0, [Srid::WGS84->value, 0]],
+    '<=' => ['<=', 0, [0]],
+]);
 
 it('calculates geometry centroid', function (): void {
     // Arrange
@@ -430,20 +445,25 @@ it('uses spatial function with column that contains table name', function (): vo
 
 it('uses spatial function with expression', function (): void {
     $polygon = Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}');
-    TestPlace::factory()->create([
+    $inside = TestPlace::factory()->create([
         'polygon' => $polygon,
         'longitude' => 0,
         'latitude' => 0,
     ]);
+    TestPlace::factory()->create([
+        'polygon' => $polygon,
+        'longitude' => 5,
+        'latitude' => 5,
+    ]);
     $expression = DB::raw((new GeometryExpression('POINT(longitude, latitude)'))->normalize(DB::connection()));
     $expression2 = DB::raw((new GeometryExpression('polygon'))->normalize(DB::connection()));
 
-    /** @var TestPlace $testPlaceWithDistance */
-    $testPlaceWithDistance = TestPlace::query()
+    $ids = TestPlace::query()
         ->whereWithin($expression, $expression2)
-        ->firstOrFail();
+        ->pluck('id')
+        ->all();
 
-    expect($testPlaceWithDistance)->not()->toBeNull();
+    expect($ids)->toBe([$inside->id]);
 });
 
 it('toExpressionString can handle a Expression input', function (): void {
