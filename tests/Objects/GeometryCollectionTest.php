@@ -767,6 +767,19 @@ it('creates and persists deeply nested geometry collection', function (): void {
     expect($testPlace->geometry_collection)->toEqual($outerCollection);
 })->skip(fn () => isMariaDb(), 'MariaDB does not support nested geometry collections.');
 
+it('stores a nested geometry collection as NULL on MariaDB', function (): void {
+    $collection = new GeometryCollection([
+        new GeometryCollection([new Point(1.0, 2.0)]),
+        new Point(3.0, 4.0),
+    ]);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['geometry_collection' => $collection])->fresh();
+
+    // Documented in the README; a MariaDB release that supports them makes this test fail.
+    expect($testPlace->geometry_collection)->toBeNull();
+})->skip(fn () => ! isMariaDb(), 'Only MariaDB drops nested geometry collections.');
+
 it('preserves SRID through nested geometry collection roundtrip', function (): void {
     $collection = new GeometryCollection([
         new GeometryCollection([

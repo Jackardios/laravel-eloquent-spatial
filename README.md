@@ -13,8 +13,8 @@ Laravel package for working with spatial data types and functions in Eloquent.
 
 ## Requirements
 
-- PHP 8.1+
-- Laravel 10.x / 11.x / 12.x
+- PHP 8.1+ (Laravel 13 requires PHP 8.3+)
+- Laravel 10.x / 11.x / 12.x / 13.x
 
 ## Installation
 
@@ -49,6 +49,13 @@ return new class extends Migration
         Schema::dropIfExists('places');
     }
 };
+```
+
+On Laravel 10, which has no `subtype` argument, use the type-specific column methods. On PostgreSQL, `isGeometry()` creates a `geometry` column instead of `geography`:
+
+```php
+$table->point('location')->isGeometry()->nullable();
+$table->polygon('area')->isGeometry()->nullable();
 ```
 
 ### 2. Set Up Your Model
@@ -349,6 +356,15 @@ class CustomPoint extends Point
 
 // Register in service provider
 EloquentSpatial::usePoint(CustomPoint::class);
+```
+
+## Database Limitations
+
+- **MariaDB** does not support nested geometry collections: `ST_GeomFromText()` returns `NULL` for them, so such a value is saved as `NULL`.
+- **MySQL 8** reads WKT with a geographic SRID such as 4326 as latitude first. The package adds `'axis-order=long-lat'` to the SQL it generates. If you assign a raw expression yourself, add it too:
+
+```php
+$place->location = DB::raw("ST_GeomFromText('POINT(2.2945 48.8584)', 4326, 'axis-order=long-lat')");
 ```
 
 ## API Reference

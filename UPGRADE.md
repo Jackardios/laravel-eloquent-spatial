@@ -1,5 +1,30 @@
 # Upgrade Guide
 
+## Upgrading from v4.0 to v4.1
+
+v4.1 adds Laravel 13 support and contains no breaking changes.
+
+### Requirements
+
+- PHP 8.1+ (Laravel 13 itself requires PHP 8.3+)
+- Laravel 10.x, 11.x, 12.x or 13.x
+
+### Steps
+
+1. Update the package:
+
+```bash
+composer update jackardios/laravel-eloquent-spatial
+```
+
+2. If you upgrade Laravel to 13 in the same step, require both together:
+
+```bash
+composer require laravel/framework:^13.0 jackardios/laravel-eloquent-spatial:^4.1 --with-all-dependencies
+```
+
+3. Only if your code treats `EloquentSpatialServiceProvider` as a `DatabaseServiceProvider` (for example `instanceof` checks or `$app->getProviders(DatabaseServiceProvider::class)`): the provider now extends `Illuminate\Support\ServiceProvider`. Laravel's own `DatabaseServiceProvider` still registers the database services.
+
 ## Upgrading from v3.x to v4.0
 
 This major release introduces a namespace change and several improvements to the library.
@@ -83,7 +108,7 @@ $point = new Point(0, 100);  // Throws: "Latitude must be between -90 and 90"
 **Action required:** If your application stores coordinates outside valid geographic ranges, you must fix the data before upgrading. Run a database query to identify invalid coordinates:
 
 ```sql
--- MySQL/MariaDB
+-- MySQL, MariaDB and PostGIS
 SELECT * FROM your_table
 WHERE ST_X(location) < -180
    OR ST_X(location) > 180
@@ -141,7 +166,7 @@ Place::whereOverlaps('area', $polygon)->get();
 
 ### Bug Fixes
 
-- **WKB parsing safety**: `Geometry::fromWkb()` now validates binary data before extracting SRID, preventing errors with malformed WKB input
+- **WKB parsing safety**: `Geometry::fromWkb()` throws `InvalidArgumentException` when the input is too short to contain an SRID. PHP emits an `unpack()` warning first, which Laravel converts to an `ErrorException`
 - **Exception handling**: `Factory::parse()` now properly propagates exceptions from the geoPHP library instead of masking them
 - **BoundingBox validation**: Fixed error message typo in latitude constraint validation
 - **SQL escaping**: WKT strings are now escaped when building SQL expressions to prevent issues with special characters
@@ -180,11 +205,6 @@ php artisan config:clear
 
 **Coordinate validation errors:**
 
-If you have existing data with invalid coordinates, you can temporarily bypass validation by not using the `Point` constructor directly. Instead, use `fromWkt()` or `fromWkb()` which parse existing data without validation:
+All ways of creating a `Point` validate coordinates, including `fromWkt()`, `fromWkb()`, `fromJson()` and `fromArray()`. This also applies to values read from the database: loading a model whose column holds an out-of-range point throws `InvalidArgumentException`.
 
-```php
-// These methods don't validate coordinates
-$point = Point::fromWkt('POINT(200 100)');
-```
-
-However, this is not recommended for new data. Fix your data to use valid geographic coordinates.
+Find and fix such rows before upgrading, for example with the query from [Coordinate Validation](#2-coordinate-validation-breaking). On MySQL 8, a column with a geographic SRID such as 4326 cannot hold out-of-range points in the first place.
