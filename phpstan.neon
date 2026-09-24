@@ -8,16 +8,21 @@ parameters:
     - src/Factory.php
     - src/EloquentSpatialServiceProvider.php
     - tests/DoctrineTypesTest.php
+    - tests/database
   ignoreErrors:
     -
-      message: '#Call to an undefined method Illuminate\\Database\\Schema\\Blueprint\:\:.+\(\)#'
-      path: 'tests/database/migrations-laravel-<=10/*.php'
-    -
-      message: '#Undefined variable: \$this#'
+      message: '#(Undefined variable: \$this|toBeInstanceOf\(\) expects class-string)#'
       path: tests/Expectations.php
     -
       message: '#Call to an undefined method Pest\\Expectation\<.+\>\:\:toBe(InstanceOf)?On(Postgres|Mysql)\(\)#'
       path: tests/*.php
+    -
+      # Laravel 13 types raw SQL parameters as literal-string; these expressions are built from wrapped identifiers and generated WKT.
+      message: '#expects .*literal-string#'
+      paths:
+        - src/Traits/HasSpatial.php
+        - src/Objects/Geometry.php
+        - tests/*.php
     -
       identifier: missingType.generics
     -
@@ -26,3 +31,5 @@ parameters:
       identifier: varTag.nativeType
 
   level: max
+  # The analysed stack differs between the lowest (Laravel 10) and highest (Laravel 13) supported versions.
+  reportUnmatchedIgnoredErrors: false

@@ -84,23 +84,18 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         }
 
         $longitudes = [];
-        $bottom = $top = null;
+        $latitudes = [];
 
         foreach ($points as $point) {
-            [$longitude, $latitude] = $point->getCoordinates();
-            $longitudes[] = $longitude;
-
-            if (! isset($bottom) || $latitude < $bottom) {
-                $bottom = $latitude;
-            }
-            if (! isset($top) || $latitude > $top) {
-                $top = $latitude;
-            }
+            [$longitudes[], $latitudes[]] = $point->getCoordinates();
         }
 
-        if (empty($longitudes) || ! isset($bottom) || ! isset($top)) {
+        if ($latitudes === []) {
             throw new InvalidArgumentException('cannot create bounding box from empty points');
         }
+
+        $bottom = min($latitudes);
+        $top = max($latitudes);
 
         [$left, $right] = self::findShortestLongitudeArc($longitudes);
 
