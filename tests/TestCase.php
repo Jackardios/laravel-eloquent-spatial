@@ -2,6 +2,7 @@
 
 namespace Jackardios\EloquentSpatial\Tests;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\ServiceProvider;
 use Jackardios\EloquentSpatial\EloquentSpatial;
 use Jackardios\EloquentSpatial\EloquentSpatialServiceProvider;
@@ -31,13 +32,17 @@ class TestCase extends Orchestra
         parent::tearDown();
     }
 
-    protected function defineDatabaseMigrations(): void
+    /**
+     * Runs once per process, after RefreshDatabase has refreshed the database.
+     */
+    protected function defineDatabaseMigrationsAfterDatabaseRefreshed(): void
     {
-        $this->loadMigrationsFrom(
-            version_compare($this->app->version(), '11.0.0', '>=')
+        $this->app->make(Kernel::class)->call('migrate', [
+            '--path' => version_compare($this->app->version(), '11.0.0', '>=')
                 ? __DIR__.'/database/migrations'
-                : __DIR__.'/database/migrations-laravel-10'
-        );
+                : __DIR__.'/database/migrations-laravel-10',
+            '--realpath' => true,
+        ]);
     }
 
     /**
