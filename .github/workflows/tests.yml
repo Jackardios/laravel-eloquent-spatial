@@ -1,0 +1,259 @@
+name: Tests
+
+on:
+    push:
+        branches:
+            - master
+            - '*.x'
+    pull_request:
+    workflow_dispatch:
+    schedule:
+        # Weekly, to catch breaking releases of dependencies.
+        -   cron: '0 5 * * 1'
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+    # Composer >= 2.9 refuses to install releases with security advisories, which blocks every
+    # Laravel 10 and 11 release and the lowest allowed versions. The dependencies are audited in static.yml.
+    COMPOSER_NO_BLOCKING: 1
+    # Fail on deprecations triggered while the tests run instead of only logging them.
+    TESTBENCH_CONVERT_DEPRECATIONS_TO_EXCEPTIONS: true
+
+jobs:
+    tests:
+        name: PHP ${{ matrix.target.php }} - Laravel ${{ matrix.target.laravel }}${{ matrix.target.lowest && ' lowest' || '' }} - ${{ matrix.db }}
+
+        runs-on: ubuntu-latest
+
+        timeout-minutes: 15
+
+        strategy:
+            fail-fast: false
+            matrix:
+                db: [ 'mysql:8.0', 'mariadb:10.11', 'postgis/postgis:16-3.4' ]
+                target:
+                    -   { laravel: '10.*', testbench: '^8.0', php: '8.1', lowest: true }
+                    -   { laravel: '10.*', testbench: '^8.0', php: '8.1' }
+                    -   { laravel: '10.*', testbench: '^8.0', php: '8.2' }
+                    -   { laravel: '10.*', testbench: '^8.0', php: '8.3' }
+                    -   { laravel: '11.*', testbench: '^9.0', php: '8.2', lowest: true }
+                    -   { laravel: '11.*', testbench: '^9.0', php: '8.2' }
+                    -   { laravel: '11.*', testbench: '^9.0', php: '8.3' }
+                    -   { laravel: '11.*', testbench: '^9.0', php: '8.4' }
+                    -   { laravel: '12.*', testbench: '^10.0', php: '8.2', lowest: true }
+                    -   { laravel: '12.*', testbench: '^10.0', php: '8.2' }
+                    -   { laravel: '12.*', testbench: '^10.0', php: '8.3' }
+                    -   { laravel: '12.*', testbench: '^10.0', php: '8.4' }
+                    -   { laravel: '12.*', testbench: '^10.0', php: '8.5' }
+                    -   { laravel: '13.*', testbench: '^11.0', php: '8.3', lowest: true }
+                    -   { laravel: '13.*', testbench: '^11.0', php: '8.3' }
+                    -   { laravel: '13.*', testbench: '^11.0', php: '8.4' }
+                    -   { laravel: '13.*', testbench: '^11.0', php: '8.5' }
+                include:
+                    # Further database versions, on the newest stack only.
+                    -   { db: 'mysql:5.7', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'mysql:8.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'mariadb:11.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'postgis/postgis:12-3.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'postgis/postgis:13-3.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'postgis/postgis:14-3.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'postgis/postgis:15-3.4', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+                    -   { db: 'postgis/postgis:17-3.5', target: { laravel: '13.*', testbench: '^11.0', php: '8.4' } }
+
+        services:
+            db:
+                image: ${{ matrix.db }}
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                    MYSQL_DATABASE: laravel_eloquent_spatial_test
+                    MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
+                    MARIADB_DATABASE: laravel_eloquent_spatial_test
+                    POSTGRES_DB: laravel_eloquent_spatial_test
+                    POSTGRES_USER: root
+                    POSTGRES_HOST_AUTH_METHOD: trust
+                ports:
+                    - ${{ startsWith(matrix.db, 'postgis') && '5432' || '3306' }}
+                options: >-
+                    ${{ startsWith(matrix.db, 'postgis') && '--health-cmd=pg_isready' || (startsWith(matrix.db, 'mariadb') && '--health-cmd="healthcheck.sh --connect --innodb_initialized"' || '--health-cmd="mysqladmin ping"') }}
+                    --health-interval=10s --health-timeout=5s --health-retries=10
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v7
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.target.php }}
+                    extensions: pdo_mysql, pdo_pgsql
+                    coverage: none
+
+            -   name: Install dependencies
+                env:
+                    LOWEST: ${{ matrix.target.lowest && 'true' || 'false' }}
+                run: |
+                    if [[ "$LOWEST" == true ]]; then
+                        # Their lowest versions require newer Laravel releases (larastan 2.9.7 needs 10.28,
+                        # pest-plugin-laravel 2.0 needs 10.4). The tests use neither; PHPStan runs separately.
+                        composer remove --dev larastan/larastan pestphp/pest-plugin-laravel --no-interaction --no-update
+                    fi
+                    composer require "laravel/framework:${{ matrix.target.laravel }}" "orchestra/testbench:${{ matrix.target.testbench }}" --no-interaction --no-update
+                    composer update --prefer-dist --no-interaction ${{ matrix.target.lowest && '--prefer-lowest' || '--prefer-stable' }}
+
+            -   name: Configure the database connection
+                env:
+                    DB_IMAGE: ${{ matrix.db }}
+                    LARAVEL: ${{ matrix.target.laravel }}
+                    PG_PORT: ${{ job.services.db.ports['5432'] }}
+                    MY_PORT: ${{ job.services.db.ports['3306'] }}
+                run: |
+                    {
+                        if [[ "$DB_IMAGE" == postgis* ]]; then
+                            echo "DB_CONNECTION=pgsql"
+                            echo "DB_PORT=$PG_PORT"
+                        elif [[ "$DB_IMAGE" == mariadb* && "$LARAVEL" != "10.*" ]]; then
+                            # Laravel 10 has no mariadb driver and connects with the mysql one.
+                            echo "DB_CONNECTION=mariadb"
+                            echo "DB_PORT=$MY_PORT"
+                        else
+                            echo "DB_CONNECTION=mysql"
+                            echo "DB_PORT=$MY_PORT"
+                            # MySQL 5.7 does not know the utf8mb4_0900_ai_ci default of Laravel 11+.
+                            echo "DB_COLLATION=utf8mb4_unicode_ci"
+                        fi
+                    } >> "$GITHUB_ENV"
+
+            -   name: Execute tests
+                run: vendor/bin/pest
+
+    isolation:
+        name: Parallel, random order - ${{ matrix.db }}
+
+        runs-on: ubuntu-latest
+
+        timeout-minutes: 15
+
+        strategy:
+            fail-fast: false
+            matrix:
+                db: [ 'mysql:8.0', 'mariadb:10.11', 'postgis/postgis:16-3.4' ]
+
+        services:
+            db:
+                image: ${{ matrix.db }}
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                    MYSQL_DATABASE: laravel_eloquent_spatial_test
+                    MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
+                    MARIADB_DATABASE: laravel_eloquent_spatial_test
+                    POSTGRES_DB: laravel_eloquent_spatial_test
+                    POSTGRES_USER: root
+                    POSTGRES_HOST_AUTH_METHOD: trust
+                ports:
+                    - ${{ startsWith(matrix.db, 'postgis') && '5432' || '3306' }}
+                options: >-
+                    ${{ startsWith(matrix.db, 'postgis') && '--health-cmd=pg_isready' || (startsWith(matrix.db, 'mariadb') && '--health-cmd="healthcheck.sh --connect --innodb_initialized"' || '--health-cmd="mysqladmin ping"') }}
+                    --health-interval=10s --health-timeout=5s --health-retries=10
+
+        env:
+            DB_CONNECTION: ${{ startsWith(matrix.db, 'postgis') && 'pgsql' || (startsWith(matrix.db, 'mariadb') && 'mariadb' || 'mysql') }}
+            # Exists on MySQL 5.7+ and MariaDB, ignored by PostgreSQL. An empty value would break MariaDB.
+            DB_COLLATION: utf8mb4_unicode_ci
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v7
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 8.4
+                    extensions: pdo_mysql, pdo_pgsql
+                    coverage: none
+
+            -   name: Install dependencies
+                run: composer update --prefer-dist --no-interaction
+
+            -   name: Execute tests in parallel
+                env:
+                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
+                    LARAVEL_PARALLEL_TESTING: 1
+                run: vendor/bin/pest --parallel --processes=4
+
+            -   name: Execute tests in random order
+                env:
+                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
+                run: |
+                    for _ in 1 2 3; do
+                        seed=$RANDOM
+                        echo "::group::Random order seed $seed"
+                        vendor/bin/pest --order-by=random --random-order-seed=$seed
+                        echo "::endgroup::"
+                    done
+
+    experimental:
+        name: Experimental - ${{ matrix.name }}
+
+        runs-on: ${{ matrix.os }}
+
+        timeout-minutes: 20
+
+        # These jobs report problems early; they don't block a merge.
+        continue-on-error: true
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    -   name: PHP 8.6 (development)
+                        os: ubuntu-latest
+                        php: '8.6'
+                    -   name: Windows
+                        os: windows-latest
+                        php: '8.4'
+
+        env:
+            DB_CONNECTION: mysql
+            DB_PORT: 3306
+            DB_COLLATION: utf8mb4_unicode_ci
+            # Pest 4 itself triggers deprecations on PHP 8.6, so only display them there.
+            TESTBENCH_CONVERT_DEPRECATIONS_TO_EXCEPTIONS: ${{ matrix.php != '8.6' }}
+
+        steps:
+            # Composer installs the package from an archive with LF line endings; check out the same way.
+            -   name: Check out with LF line endings on Windows
+                if: runner.os == 'Windows'
+                run: |
+                    git config --global core.autocrlf false
+                    git config --global core.eol lf
+
+            -   name: Checkout code
+                uses: actions/checkout@v7
+
+            -   name: Setup MySQL
+                uses: shogo82148/actions-setup-mysql@v1
+                with:
+                    mysql-version: '8.0'
+
+            # Long options: PowerShell, the default shell on Windows, splits "-h127.0.0.1" into "-h127" ".0.0.1".
+            -   name: Create the test database
+                run: mysql --user=root --host=127.0.0.1 --execute="CREATE DATABASE laravel_eloquent_spatial_test"
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php }}
+                    extensions: fileinfo, pdo_mysql
+                    coverage: none
+
+            -   name: Install dependencies
+                run: composer update --prefer-dist --no-interaction ${{ matrix.php == '8.6' && '--ignore-platform-req=php+' || '' }}
+
+            -   name: Execute tests
+                run: php vendor/bin/pest --display-deprecations

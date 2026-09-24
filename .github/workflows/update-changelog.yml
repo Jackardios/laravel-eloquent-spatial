@@ -8,21 +8,48 @@ jobs:
     update:
         runs-on: ubuntu-latest
 
+        timeout-minutes: 10
+
+        permissions:
+            contents: write
+
         steps:
+            # The release branch (master or a maintenance branch such as 4.x), not always master.
             -   name: Checkout code
-                uses: actions/checkout@v2
+                uses: actions/checkout@v7
                 with:
-                    ref: master
+                    ref: ${{ github.event.release.target_commitish }}
+                    fetch-depth: 0
+
+            # A release whose notes were already written into CHANGELOG.md is left alone.
+            -   name: Check for an existing changelog section
+                id: existing
+                run: |
+                    if grep -qE "^## v?${TAG#v}( |$)" CHANGELOG.md; then
+                        echo "found=true" >> "$GITHUB_OUTPUT"
+                    fi
+                env:
+                    TAG: ${{ github.event.release.tag_name }}
+
+            -   name: Extract the release date from the tag
+                if: steps.existing.outputs.found != 'true'
+                id: release_date
+                run: echo "date=$(git log -1 --date=short --format=%ad "$TAG")" >> "$GITHUB_OUTPUT"
+                env:
+                    TAG: ${{ github.event.release.tag_name }}
 
             -   name: Update Changelog
+                if: steps.existing.outputs.found != 'true'
                 uses: stefanzweifel/changelog-updater-action@v1
                 with:
-                    latest-version: ${{ github.event.release.name }}
+                    release-date: ${{ steps.release_date.outputs.date }}
+                    latest-version: ${{ github.event.release.tag_name }}
                     release-notes: ${{ github.event.release.body }}
 
             -   name: Commit updated CHANGELOG
-                uses: stefanzweifel/git-auto-commit-action@v4
+                if: steps.existing.outputs.found != 'true'
+                uses: stefanzweifel/git-auto-commit-action@v7
                 with:
-                    branch: master
+                    branch: ${{ github.event.release.target_commitish }}
                     commit_message: Update CHANGELOG
                     file_pattern: CHANGELOG.md

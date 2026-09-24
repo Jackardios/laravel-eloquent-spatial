@@ -1,0 +1,131 @@
+name: Coverage and mutation testing
+
+on:
+    push:
+        branches:
+            - master
+            - '*.x'
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+    coverage:
+        name: ${{ matrix.suite == 'mutate' && 'Mutation testing' || 'Coverage' }} - ${{ matrix.db }}
+
+        runs-on: ubuntu-latest
+
+        timeout-minutes: 30
+
+        strategy:
+            fail-fast: false
+            matrix:
+                db: [ 'mysql:8.0', 'mariadb:10.11', 'postgis/postgis:16-3.4' ]
+                suite: [ coverage, mutate ]
+
+        services:
+            db:
+                image: ${{ matrix.db }}
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                    MYSQL_DATABASE: laravel_eloquent_spatial_test
+                    MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
+                    MARIADB_DATABASE: laravel_eloquent_spatial_test
+                    POSTGRES_DB: laravel_eloquent_spatial_test
+                    POSTGRES_USER: root
+                    POSTGRES_HOST_AUTH_METHOD: trust
+                ports:
+                    - ${{ startsWith(matrix.db, 'postgis') && '5432' || '3306' }}
+                options: >-
+                    ${{ startsWith(matrix.db, 'postgis') && '--health-cmd=pg_isready' || (startsWith(matrix.db, 'mariadb') && '--health-cmd="healthcheck.sh --connect --innodb_initialized"' || '--health-cmd="mysqladmin ping"') }}
+                    --health-interval=10s --health-timeout=5s --health-retries=10
+
+        env:
+            DB_CONNECTION: ${{ startsWith(matrix.db, 'postgis') && 'pgsql' || (startsWith(matrix.db, 'mariadb') && 'mariadb' || 'mysql') }}
+            # Exists on MySQL 5.7+ and MariaDB, ignored by PostgreSQL. An empty value would break MariaDB.
+            DB_COLLATION: utf8mb4_unicode_ci
+            LARAVEL_PARALLEL_TESTING: 1
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v7
+
+            # PHP 8.5, so the code that only matters on PHP 8.5 is covered and mutated too.
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 8.5
+                    extensions: pdo_mysql, pdo_pgsql
+                    coverage: pcov
+
+            -   name: Install dependencies
+                run: composer update --prefer-dist --no-interaction
+
+            -   name: Collect coverage
+                if: matrix.suite == 'coverage'
+                env:
+                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
+                run: |
+                    mkdir -p build
+                    vendor/bin/pest --parallel --processes=4 --coverage-php "build/${{ matrix.db == 'mysql:8.0' && 'mysql' || (matrix.db == 'mariadb:10.11' && 'mariadb' || 'pgsql') }}.cov"
+
+            -   name: Upload coverage
+                if: matrix.suite == 'coverage'
+                uses: actions/upload-artifact@v7
+                with:
+                    name: coverage-${{ strategy.job-index }}
+                    path: build/*.cov
+                    if-no-files-found: error
+
+            # Each database runs a different subset of the code, so no single run can reach 100%.
+            # Escaped mutants fail the job; uncovered ones are checked by the coverage job.
+            -   name: Run mutation testing
+                if: matrix.suite == 'mutate'
+                env:
+                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
+                run: |
+                    set -o pipefail
+                    vendor/bin/pest --mutate --everything --parallel --processes=4 --no-cache | tee build-mutate.txt
+                    if grep -q 'UNTESTED' build-mutate.txt; then
+                        echo "::error::Escaped mutants found, see the output above."
+                        exit 1
+                    fi
+
+    merge:
+        name: Coverage - all databases
+
+        needs: coverage
+
+        runs-on: ubuntu-latest
+
+        timeout-minutes: 10
+
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v7
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 8.5
+                    coverage: none
+
+            # The merge needs the same php-code-coverage version that wrote the files.
+            -   name: Install dependencies
+                run: composer update --prefer-dist --no-interaction
+
+            -   name: Download coverage
+                uses: actions/download-artifact@v8
+                with:
+                    pattern: coverage-*
+                    path: build
+                    merge-multiple: true
+
+            -   name: Merge coverage and require 100% of lines
+                run: php .github/scripts/merge-coverage.php build/clover.xml build/*.cov
