@@ -332,6 +332,63 @@ it('throws exception for longitude below minimum', function (): void {
     })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
 });
 
+it('rejects coordinates that are not finite', function (float $longitude, float $latitude, int $srid): void {
+    expect(fn () => new Point($longitude, $latitude, $srid))
+        ->toThrow(InvalidArgumentException::class, 'Coordinates must be finite numbers');
+})->with([
+    'NaN longitude' => [NAN, 0.0],
+    'NaN latitude' => [0.0, NAN],
+    'infinite longitude' => [INF, 0.0],
+    'negative infinite latitude' => [0.0, -INF],
+])->with(['SRID 0' => [0], 'SRID 4326' => [4326], 'SRID 3857' => [3857]]);
+
+it('validates the longitude and latitude ranges of SRID 0 and 4326', function (int|Srid $srid): void {
+    expect(fn () => new Point(180.1, 0.0, $srid))->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180')
+        ->and(fn () => new Point(0.0, 90.1, $srid))->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
+})->with(['SRID 0' => [0], 'SRID 4326' => [4326], 'Srid::WGS84' => [Srid::WGS84]]);
+
+it('does not validate the ranges of other SRIDs', function (int|Srid $srid): void {
+    $point = new Point(-20037508.34, 20037508.34, $srid);
+
+    expect($point->longitude)->toBe(-20037508.34)
+        ->and($point->latitude)->toBe(20037508.34);
+})->with(['SRID 3857' => [3857], 'Srid::WEB_MERCATOR' => [Srid::WEB_MERCATOR], 'SRID 32633' => [32633]]);
+
+it('validates the ranges of the default SRID', function (): void {
+    EloquentSpatial::setDefaultSrid(Srid::WEB_MERCATOR);
+    $projected = new Point(-20037508.34, 20037508.34);
+
+    EloquentSpatial::setDefaultSrid(Srid::WGS84);
+
+    expect($projected->srid)->toBe(3857)
+        ->and(fn () => new Point(180.1, 0.0))->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
+});
+
+it('stores and reads a point outside the longitude and latitude ranges in a projected SRID', function (): void {
+    $point = new Point(-20037508.34, 20037508.34, Srid::WEB_MERCATOR);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
+
+    expect($testPlace->point)->toEqual($point);
+});
+
+it('reads a point outside the longitude and latitude ranges in a projected SRID', function (Closure $read): void {
+    expect($read())->toEqual(new Point(-20037508.34, 20037508.34, Srid::WEB_MERCATOR));
+})->with([
+    'WKT' => fn () => Point::fromWkt('POINT(-20037508.34 20037508.34)', Srid::WEB_MERCATOR),
+    'GeoJSON' => fn () => Point::fromJson('{"type":"Point","coordinates":[-20037508.34,20037508.34]}', Srid::WEB_MERCATOR),
+    'WKB' => fn () => Point::fromWkb((new Point(-20037508.34, 20037508.34, Srid::WEB_MERCATOR))->toWkb()),
+]);
+
+it('validates the ranges of points read in SRID 4326', function (Closure $read): void {
+    expect($read)->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
+})->with([
+    'WKT' => fn () => Point::fromWkt('POINT(-20037508.34 0)', Srid::WGS84),
+    'GeoJSON' => fn () => Point::fromJson('{"type":"Point","coordinates":[-20037508.34,0]}', Srid::WGS84),
+    'WKB' => fn () => Point::fromWkb(pack('V', 4326).substr((new Point(-20037508.34, 0, Srid::WEB_MERCATOR))->toWkb(), 4)),
+]);
+
 it('allows boundary coordinates', function (): void {
     $point1 = new Point(180.0, 90.0);
     $point2 = new Point(-180.0, -90.0);

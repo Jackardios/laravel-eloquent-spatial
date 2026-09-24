@@ -59,6 +59,27 @@ it('throws exception when top less than the bottom', function () {
     })->toThrow(InvalidBoundingBoxPoints::class);
 });
 
+it('rejects points outside the longitude and latitude ranges', function (Point $leftBottom, Point $rightTop, string $message): void {
+    expect(fn () => new BoundingBox($leftBottom, $rightTop))->toThrow(InvalidBoundingBoxPoints::class, $message);
+})->with([
+    'left' => [new Point(-180.1, 0, 3857), new Point(10, 10), 'Bounding box longitudes must be between -180 and 180'],
+    'right' => [new Point(0, 0), new Point(180.1, 10, 3857), 'Bounding box longitudes must be between -180 and 180'],
+    'bottom' => [new Point(0, -90.1, 3857), new Point(10, 10), 'Bounding box latitudes must be between -90 and 90'],
+    'top' => [new Point(0, 0), new Point(10, 90.1, 3857), 'Bounding box latitudes must be between -90 and 90'],
+]);
+
+it('rejects projected points', function (): void {
+    $points = [new Point(-20037508.34, -1000000, 3857), new Point(20037508.34, 1000000, 3857)];
+
+    expect(fn () => BoundingBox::fromPoints($points))->toThrow(InvalidBoundingBoxPoints::class, 'Bounding box longitudes must be between -180 and 180');
+});
+
+it('accepts the whole longitude and latitude ranges', function (): void {
+    $bbox = new BoundingBox(new Point(-180, -90, 3857), new Point(180, 90, 3857));
+
+    expect($bbox->toArray())->toBe(['left' => -180.0, 'bottom' => -90.0, 'right' => 180.0, 'top' => 90.0]);
+});
+
 it('can create bounding box from points collection', function () {
     $bbox = BoundingBox::fromPoints(collect([
         new Point(-30.618423, 40.751244),

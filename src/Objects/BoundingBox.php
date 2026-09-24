@@ -37,8 +37,24 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
 
     protected function validatePoints(Point $leftBottom, Point $rightTop): void
     {
+        self::validateRanges($leftBottom);
+        self::validateRanges($rightTop);
+
         if ($rightTop->latitude <= $leftBottom->latitude) {
             throw new InvalidBoundingBoxPoints('The latitude of the bottom point must be less than the latitude of the top point');
+        }
+    }
+
+    /**
+     * The point can have a projected SRID, which Point does not validate, but a bounding box is always in degrees.
+     */
+    protected static function validateRanges(Point $point): void
+    {
+        if ($point->longitude < -180 || $point->longitude > 180) {
+            throw new InvalidBoundingBoxPoints("Bounding box longitudes must be between -180 and 180, got: {$point->longitude}");
+        }
+        if ($point->latitude < -90 || $point->latitude > 90) {
+            throw new InvalidBoundingBoxPoints("Bounding box latitudes must be between -90 and 90, got: {$point->latitude}");
         }
     }
 
@@ -85,6 +101,7 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         $latitudes = [];
 
         foreach ($points as $point) {
+            self::validateRanges($point);
             [$longitudes[], $latitudes[]] = $point->getCoordinates();
         }
 
