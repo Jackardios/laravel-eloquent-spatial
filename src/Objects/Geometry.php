@@ -52,6 +52,8 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
 
     public function toWkb(): string
     {
+        Factory::loadGeoPhp();
+
         $geoPHPGeometry = geoPHP::load($this->toJson());
 
         $sridInBinary = pack('L', $this->srid);
