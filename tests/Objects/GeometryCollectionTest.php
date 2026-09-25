@@ -687,28 +687,6 @@ it('throws exception when storing a record with regular GeometryCollection inste
     })->toThrow(InvalidArgumentException::class);
 });
 
-it('throws exception when storing a record with extended GeometryCollection instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::useGeometryCollection(ExtendedGeometryCollection::class);
-    $geometryCollection = new ExtendedGeometryCollection([
-        new Polygon([
-            new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($geometryCollection): void {
-        TestPlace::factory()->create(['geometry_collection' => $geometryCollection]);
-    })->toThrow(InvalidArgumentException::class);
-});
-
 // Edge case tests for nested GeometryCollections
 
 it('creates deeply nested geometry collection', function (): void {

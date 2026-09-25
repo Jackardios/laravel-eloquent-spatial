@@ -330,22 +330,3 @@ it('throws exception when storing a record with regular Polygon instead of the e
         TestExtendedPlace::factory()->create(['polygon' => $polygon]);
     })->toThrow(InvalidArgumentException::class);
 });
-
-it('throws exception when storing a record with extended Polygon instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::usePolygon(Polygon::class);
-    $polygon = new ExtendedPolygon([
-        new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($polygon): void {
-        TestPlace::factory()->create(['polygon' => $polygon]);
-    })->toThrow(InvalidArgumentException::class);
-});

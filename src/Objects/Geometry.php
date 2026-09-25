@@ -133,7 +133,8 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
     public function toArray(): array
     {
         return [
-            'type' => class_basename(static::class),
+            // A geometry class that is not one of the types keeps its own name.
+            'type' => Helper::geometryType($this) ?? class_basename(static::class),
             'coordinates' => $this->getCoordinates(),
         ];
     }
@@ -143,9 +144,8 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
      */
     public function toFeatureCollectionJson(): string
     {
-        if (static::class === GeometryCollection::class) {
-            /** @var GeometryCollection $this */
-            $geometries = $this->geometries;
+        if ($this instanceof GeometryCollection && Helper::geometryType($this) === 'GeometryCollection') {
+            $geometries = $this->getGeometries();
         } else {
             $geometries = collect([$this]);
         }

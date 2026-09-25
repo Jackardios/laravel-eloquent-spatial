@@ -106,13 +106,19 @@ class GeometryCast implements CastsAttributes, ComparesCastableAttributes
             && $first->toWkt() === $second->toWkt();
     }
 
+    /**
+     * A subclass is accepted, such as the class registered with EloquentSpatial::usePoint() for a Point cast, as long
+     * as it is the same type: a Polygon is also a MultiLineString, but cannot be stored as one.
+     */
     private function isCorrectGeometryType(mixed $value): bool
     {
-        if ($this->className === Geometry::class && $value instanceof Geometry) {
-            return true;
+        if (! $value instanceof $this->className) {
+            return false;
         }
 
-        return $value instanceof $this->className && get_class($value) === $this->className;
+        $type = Helper::geometryType($this->className);
+
+        return $type === null || Helper::geometryType($value) === $type;
     }
 
     /**

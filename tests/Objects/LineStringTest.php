@@ -242,17 +242,3 @@ it('throws exception when storing a record with regular LineString instead of th
         TestExtendedPlace::factory()->create(['line_string' => $lineString]);
     })->toThrow(InvalidArgumentException::class);
 });
-
-it('throws exception when storing a record with extended LineString instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::useLineString(LineString::class);
-    $lineString = new ExtendedLineString([
-        new Point(180, 0),
-        new Point(179, 1),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($lineString): void {
-        TestPlace::factory()->create(['line_string' => $lineString]);
-    })->toThrow(InvalidArgumentException::class);
-});

@@ -276,19 +276,3 @@ it('throws exception when storing a record with regular MultiLineString instead 
         TestExtendedPlace::factory()->create(['multi_line_string' => $multiLineString]);
     })->toThrow(InvalidArgumentException::class);
 });
-
-it('throws exception when storing a record with extended MultiLineString instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::useMultiLineString(MultiLineString::class);
-    $multiLineString = new ExtendedMultiLineString([
-        new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-        ]),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($multiLineString): void {
-        TestPlace::factory()->create(['multi_line_string' => $multiLineString]);
-    })->toThrow(InvalidArgumentException::class);
-});

@@ -75,12 +75,13 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function toArray(): array
     {
-        if ($this->isExtended()) {
+        // MultiPoint, LineString and the other subclasses have coordinates instead of geometries.
+        if (Helper::geometryType($this) !== 'GeometryCollection') {
             return parent::toArray();
         }
 
         return [
-            'type' => class_basename(static::class),
+            'type' => 'GeometryCollection',
             'geometries' => $this->geometries->map(static function (Geometry $geometry): array {
                 return $geometry->toArray();
             }),
@@ -181,13 +182,5 @@ class GeometryCollection extends Geometry implements ArrayAccess
                 );
             }
         }
-    }
-
-    /**
-     * Checks whether the class is used directly or via a sub-class.
-     */
-    private function isExtended(): bool
-    {
-        return static::class !== self::class;
     }
 }

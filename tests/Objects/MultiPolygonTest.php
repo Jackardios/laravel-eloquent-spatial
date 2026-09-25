@@ -367,24 +367,3 @@ it('throws exception when storing a record with regular MultiPolygon instead of 
         TestExtendedPlace::factory()->create(['multi_polygon' => $multiPolygon]);
     })->toThrow(InvalidArgumentException::class);
 });
-
-it('throws exception when storing a record with extended MultiPolygon instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::useMultiPolygon(MultiPolygon::class);
-    $multiPolygon = new ExtendedMultiPolygon([
-        new Polygon([
-            new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($multiPolygon): void {
-        TestPlace::factory()->create(['multi_polygon' => $multiPolygon]);
-    })->toThrow(InvalidArgumentException::class);
-});

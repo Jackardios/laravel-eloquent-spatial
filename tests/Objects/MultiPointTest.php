@@ -222,16 +222,3 @@ it('throws exception when storing a record with regular MultiPoint instead of th
         TestExtendedPlace::factory()->create(['multi_point' => $multiPoint]);
     })->toThrow(InvalidArgumentException::class);
 });
-
-it('throws exception when storing a record with extended MultiPoint instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::useMultiPoint(MultiPoint::class);
-    $multiPoint = new ExtendedMultiPoint([
-        new Point(180, 0),
-    ], 4326);
-
-    // Act & Assert
-    expect(function () use ($multiPoint): void {
-        TestPlace::factory()->create(['multi_point' => $multiPoint]);
-    })->toThrow(InvalidArgumentException::class);
-});

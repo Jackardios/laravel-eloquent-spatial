@@ -228,17 +228,6 @@ it('throws exception when storing a record with regular Point instead of the ext
     })->toThrow(InvalidArgumentException::class);
 });
 
-it('throws exception when storing a record with extended Point instead of the regular one', function (): void {
-    // Arrange
-    EloquentSpatial::usePoint(Point::class);
-    $point = new ExtendedPoint(180, 0, 4326);
-
-    // Act & Assert
-    expect(function () use ($point): void {
-        TestPlace::factory()->create(['point' => $point]);
-    })->toThrow(InvalidArgumentException::class);
-});
-
 // Edge case tests for boundary coordinates
 
 it('creates point at maximum longitude boundary', function (): void {
