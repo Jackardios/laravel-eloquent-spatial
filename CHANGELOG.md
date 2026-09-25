@@ -10,6 +10,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 ### Fixed
 
 - The dirty checks no longer read the WKT of a changed geometry back with brick/geo. Saving a model with a changed 1000-point geometry was 8 times slower than in 4.x.
+- `toWkt()` is about 1.5 times faster, and saving a model with a changed geometry is as fast as in 4.x again.
 
 ## v5.0.0 - 2026-09-25
 

@@ -59,11 +59,17 @@ class Point extends Geometry
     }
 
     /**
-     * The shortest number that reads back as the same float. A string cast would round to the "precision" setting,
-     * 14 digits by default.
+     * The shortest number that reads back as the same float. A string cast rounds to the "precision" setting, 14 digits
+     * by default, so it is used only when it reads back as the same float, which is faster than var_export().
      */
     private static function formatCoordinate(float $coordinate): string
     {
+        $number = (string) $coordinate;
+
+        if ((float) $number === $coordinate) {
+            return $number;
+        }
+
         $number = var_export($coordinate, true);
 
         return str_ends_with($number, '.0') ? substr($number, 0, -2) : $number;
