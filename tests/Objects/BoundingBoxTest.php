@@ -412,14 +412,52 @@ it('can create bounding box from LineString via GeometryCollection inheritance',
     ]);
 });
 
-it('throws exception when creating bounding box from single point without padding', function () {
-    // Single point without padding creates same top/bottom, which violates constraint
-    $point = new Point(10, 20);
+it('creates a bounding box without height from a single point or a horizontal line', function (array $expected, Point ...$points) {
+    expect(BoundingBox::fromPoints(array_values($points))->toArray())->toBe($expected);
+})->with([
+    'single point' => [['left' => 10.0, 'bottom' => 20.0, 'right' => 10.0, 'top' => 20.0], new Point(10, 20)],
+    'horizontal line' => [['left' => 10.0, 'bottom' => 20.0, 'right' => 30.0, 'top' => 20.0], new Point(10, 20), new Point(30, 20)],
+]);
 
-    expect(function () use ($point) {
-        BoundingBox::fromGeometry($point);
-    })->toThrow(InvalidBoundingBoxPoints::class);
+it('accepts the same top and bottom', function () {
+    $bbox = BoundingBox::fromArray(['left' => 1, 'bottom' => 2, 'right' => 3, 'top' => 2]);
+
+    expect($bbox->toArray())->toBe(['left' => 1.0, 'bottom' => 2.0, 'right' => 3.0, 'top' => 2.0]);
 });
+
+it('stores and reads a bounding box without height', function (string $attribute) {
+    $bbox = BoundingBox::fromPoints([new Point(10, 20), new Point(30, 20)]);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create([$attribute => $bbox])->fresh();
+
+    expect($testPlace->{$attribute}?->toArray())->toBe($bbox->toArray());
+})->with(['bounding_box', 'bounding_box_json']);
+
+it('covers the whole longitude range when the padding is at least 360 degrees', function (float $minPadding) {
+    $bbox = BoundingBox::fromPoints([new Point(10, 20)], $minPadding);
+
+    expect($bbox->toArray())->toBe(['left' => -180.0, 'bottom' => -90.0, 'right' => 180.0, 'top' => 90.0]);
+})->with(['360' => [360.0], '400' => [400.0], '1e300' => [1.0E300]]);
+
+it('pads up to just under 360 degrees across the antimeridian', function () {
+    $bbox = BoundingBox::fromPoints([new Point(10, 20)], 359);
+
+    expect($bbox->toArray())->toBe(['left' => -169.5, 'bottom' => -90.0, 'right' => -170.5, 'top' => 90.0])
+        ->and($bbox->crossesAntimeridian())->toBeTrue();
+});
+
+it('keeps a padded longitude of exactly 180 degrees', function () {
+    $bbox = BoundingBox::fromPoints([new Point(170, 0), new Point(170, 1)], 20);
+
+    expect($bbox->toArray())->toBe(['left' => 160.0, 'bottom' => -9.5, 'right' => 180.0, 'top' => 10.5])
+        ->and($bbox->crossesAntimeridian())->toBeFalse();
+});
+
+it('rejects a padding that is not finite', function (float $minPadding) {
+    expect(fn () => BoundingBox::fromPoints([new Point(0, 0)], $minPadding))
+        ->toThrow(InvalidArgumentException::class, 'minPadding must be non-negative and finite');
+})->with(['NaN' => [NAN], 'infinity' => [INF]]);
 
 it('can create bounding box from single point with padding', function () {
     $point = new Point(10, 20);

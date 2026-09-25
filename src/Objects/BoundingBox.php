@@ -40,8 +40,9 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         self::validateRanges($leftBottom);
         self::validateRanges($rightTop);
 
-        if ($rightTop->latitude <= $leftBottom->latitude) {
-            throw new InvalidBoundingBoxPoints('The latitude of the bottom point must be less than the latitude of the top point');
+        // A box of a single point or a horizontal line has the same top and bottom.
+        if ($rightTop->latitude < $leftBottom->latitude) {
+            throw new InvalidBoundingBoxPoints('The latitude of the bottom point must not be greater than the latitude of the top point');
         }
     }
 
@@ -93,8 +94,8 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
      */
     public static function fromPoints(array|Collection $points, float $minPadding = 0): self
     {
-        if ($minPadding < 0) {
-            throw new InvalidArgumentException('minPadding must be non-negative');
+        if (! ($minPadding >= 0) || is_infinite($minPadding)) {
+            throw new InvalidArgumentException('minPadding must be non-negative and finite');
         }
 
         $longitudes = [];
@@ -120,9 +121,14 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
             : $right - $left;
 
         if ($lonSpan < $minPadding) {
-            $halfPadding = ($minPadding - $lonSpan) / 2;
-            $left = self::normalizeLongitude($left - $halfPadding);
-            $right = self::normalizeLongitude($right + $halfPadding);
+            if ($minPadding >= 360.0) {
+                $left = -180.0;
+                $right = 180.0;
+            } else {
+                $halfPadding = ($minPadding - $lonSpan) / 2;
+                $left = self::normalizeLongitude($left - $halfPadding);
+                $right = self::normalizeLongitude($right + $halfPadding);
+            }
         }
 
         $latPadding = $top - $bottom;
@@ -172,14 +178,13 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
 
     protected static function normalizeLongitude(float $longitude): float
     {
-        while ($longitude > 180.0) {
-            $longitude -= 360.0;
-        }
-        while ($longitude < -180.0) {
-            $longitude += 360.0;
+        if ($longitude >= -180.0 && $longitude <= 180.0) {
+            return $longitude;
         }
 
-        return $longitude;
+        $longitude = fmod($longitude + 180.0, 360.0);
+
+        return ($longitude < 0 ? $longitude + 360.0 : $longitude) - 180.0;
     }
 
     /**
