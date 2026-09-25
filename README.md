@@ -7,14 +7,18 @@ Laravel package for working with spatial data types and functions in Eloquent.
 
 ## Supported Databases
 
-- MySQL 5.7 / 8.x
-- MariaDB 10.x
-- PostgreSQL 12+ with PostGIS 3.4+
+- MySQL 5.7 / 8.0 / 8.4
+- MariaDB 10.11 / 11.4
+- PostgreSQL 12–17 with PostGIS 3.4+
+
+These are the versions that the tests run on.
 
 ## Requirements
 
-- PHP 8.1+ (Laravel 13 requires PHP 8.3+)
-- Laravel 10.x / 11.x / 12.x / 13.x
+- PHP 8.3+
+- Laravel 12.18+ / 13.x
+
+For PHP 8.1 or 8.2 and Laravel 10 or 11, use version 4.x.
 
 ## Installation
 
@@ -51,12 +55,7 @@ return new class extends Migration
 };
 ```
 
-On Laravel 10, which has no `subtype` argument, use the type-specific column methods. On PostgreSQL, `isGeometry()` creates a `geometry` column instead of `geography`:
-
-```php
-$table->point('location')->isGeometry()->nullable();
-$table->polygon('area')->isGeometry()->nullable();
-```
+To restrict a column to one SRID, pass it to the column, for example `$table->geometry('location', subtype: 'point', srid: 4326)`. MySQL 8 then rejects geometries with a different SRID.
 
 ### 2. Set Up Your Model
 
@@ -146,18 +145,21 @@ use Jackardios\EloquentSpatial\Objects\Point;
 // From constructor
 $point = new Point(longitude: 2.2945, latitude: 48.8584, srid: 4326);
 
-// From WKT
+// From WKT, or from EWKT with its SRID
 $point = Point::fromWkt('POINT(2.2945 48.8584)', srid: 4326);
+$point = Point::fromWkt('SRID=4326;POINT(2.2945 48.8584)');
 
-// From GeoJSON
+// From a GeoJSON geometry, Feature or FeatureCollection
 $point = Point::fromJson('{"type":"Point","coordinates":[2.2945,48.8584]}');
 
 // From array
 $point = Point::fromArray(['type' => 'Point', 'coordinates' => [2.2945, 48.8584]]);
 
-// From WKB
+// From WKB as MySQL stores it, from WKB or EWKB, or from hex EWKB as PostGIS returns it
 $point = Point::fromWkb($binaryData);
 ```
+
+Each method reads only its own format: `fromWkt()` does not accept GeoJSON, and `fromJson()` does not accept WKT. Z and M coordinates are read and dropped. `Factory::parse()` detects which of these formats a string is in.
 
 ### Available Geometry Types
 
@@ -174,7 +176,7 @@ $point = Point::fromWkb($binaryData);
 
 ### Coordinate Validation
 
-The `Point` class validates coordinates automatically:
+The `Point` class validates coordinates automatically. With SRID 0 (the default) or 4326, the coordinates are degrees:
 
 ```php
 // Valid coordinates
@@ -184,6 +186,15 @@ $point = new Point(-180, -90);  // OK
 // Invalid coordinates throw InvalidArgumentException
 $point = new Point(200, 0);     // Error: Longitude must be between -180 and 180
 $point = new Point(0, 100);     // Error: Latitude must be between -90 and 90
+```
+
+Other SRIDs have their own units, so their ranges are not checked. With any SRID, the coordinates must be finite:
+
+```php
+use Jackardios\EloquentSpatial\Enums\Srid;
+
+$point = new Point(-8238310.24, 4970071.58, Srid::WEB_MERCATOR); // OK, metres
+$point = new Point(NAN, 0);     // Error: Coordinates must be finite numbers
 ```
 
 ## Spatial Query Scopes
@@ -218,6 +229,8 @@ $closestPlaces = Place::query()
     ->limit(10)
     ->get();
 ```
+
+The operator must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and the direction `asc` or `desc` in any case. Anything else throws `InvalidArgumentException`, because these arguments are written into the SQL. The alias of `withDistance()` and `withDistanceSphere()` is quoted as a column name.
 
 ### Spatial Relationship Queries
 
@@ -257,6 +270,7 @@ Place::query()
 The `BoundingBox` class represents rectangular geographic bounds:
 
 ```php
+use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
 use Jackardios\EloquentSpatial\Objects\Point;
 
@@ -269,16 +283,16 @@ $bbox = new BoundingBox(
 // Create from geometry
 $bbox = BoundingBox::fromGeometry($polygon);
 
-// Create from points with padding
+// Create from points with padding; a single point gives a box of zero size without padding
 $bbox = BoundingBox::fromPoints($pointsArray, minPadding: 0.01);
 
-// Access bounds
+// Access bounds (copies of the corners)
 $bbox->getLeftBottom();  // Bottom-left Point
 $bbox->getRightTop();    // Top-right Point
 
-// Convert to geometry
+// Convert to geometry, optionally with an SRID
 $polygon = $bbox->toPolygon();
-$geometry = $bbox->toGeometry(); // Returns MultiPolygon if crosses antimeridian
+$geometry = $bbox->toGeometry(Srid::WGS84); // Returns MultiPolygon if crosses antimeridian
 
 // Check if crosses antimeridian (dateline)
 $bbox->crossesAntimeridian(); // true/false
@@ -301,11 +315,16 @@ class Region extends Model
         // Store as geometry column
         'bounds' => BoundingBox::class,
 
+        // Or as a geometry column with SRID 4326
+        'bounds' => BoundingBox::class . ':geometry,4326',
+
         // Or store as JSON
         'bounds' => BoundingBox::class . ':json',
     ];
 }
 ```
+
+The geometry is stored with the default SRID unless the cast names one. On MySQL 8, a column with an SRID accepts only geometries with that SRID.
 
 ## SRID Support
 
@@ -358,7 +377,17 @@ class CustomPoint extends Point
 EloquentSpatial::usePoint(CustomPoint::class);
 ```
 
-## Database Limitations
+Parsed and database values are then created as `CustomPoint`. A `Point::class` cast accepts it, and GeoJSON and WKB write it as a `Point`.
+
+### Long-running processes (Octane, queue workers)
+
+The classes registered with `EloquentSpatial::use*()`, the default SRID and macros are static, so they are shared by all requests that a process handles. Set them once in the `boot()` method of a service provider, never per request.
+
+## Dirty Checks
+
+The geometry and bounding box casts compare values themselves, so models detect changes correctly without the `HasSpatial` trait. A change of only the SRID or only the geometry type, such as a `Point` replaced by a `MultiPoint` with the same coordinates, is saved.
+
+## Limitations
 
 - **MariaDB** does not support nested geometry collections: `ST_GeomFromText()` returns `NULL` for them, so such a value is saved as `NULL`.
 - **MySQL 8** reads WKT with a geographic SRID such as 4326 as latitude first. The package adds `'axis-order=long-lat'` to the SQL it generates. If you assign a raw expression yourself, add it too:
@@ -366,6 +395,8 @@ EloquentSpatial::usePoint(CustomPoint::class);
 ```php
 $place->location = DB::raw("ST_GeomFromText('POINT(2.2945 48.8584)', 4326, 'axis-order=long-lat')");
 ```
+
+- **Geometries nested more than 64 levels deep** are not read. Such values throw `InvalidArgumentException`, because reading them could crash PHP.
 
 ## API Reference
 

@@ -5,6 +5,43 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
+## Unreleased (5.0.0)
+
+See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every change.
+
+### Changed
+
+- Requires PHP 8.3+ and Laravel 12.18+ or 13.x.
+- WKT, WKB and GeoJSON are read with brick/geo instead of geoPHP, which is unmaintained and emits deprecations on PHP 8.5. WKB is written by the package.
+- `fromWkt()`, `fromJson()` and `fromWkb()` read only their own format. `Factory::parse()` detects WKT, EWKT, GeoJSON, WKB, EWKB and hex WKB or EWKB, and no longer reads KML, GPX, GeoRSS or geohashes.
+- `fromWkt()` and `Factory::parse()` read the SRID of EWKT, and `Factory::parse()` reads the SRID of EWKB and MySQL WKB. The geometries inside a parsed geometry have its SRID.
+- `Point` checks the longitude and latitude ranges only for SRID 0 and 4326.
+- `toWkt()` writes coordinates without rounding them to the `precision` setting.
+- A `BoundingBox` can have zero height, and `getLeftBottom()` and `getRightTop()` return copies.
+- Dirty checks are done by the casts (`ComparesCastableAttributes`) instead of `HasSpatial::originalIsEquivalent()`.
+- Geometry casts accept subclasses of the same geometry type. Subclasses are written to GeoJSON and WKB as their geometry type.
+- `GeometryCollection` stays a list and stays valid when it is changed as an array. A missing offset throws `OutOfBoundsException`.
+- `toFeatureCollectionJson()` writes `"properties":{}`, and `GeometryCollection::toArray()` returns the geometries as an array.
+
+### Added
+
+- An SRID option for the bounding box cast in the geometry format, `BoundingBox::class.':geometry,4326'`, and an optional SRID for `BoundingBox::toPolygon()` and `toGeometry()`.
+
+### Fixed
+
+- **Security:** the operators, order directions and aliases of the distance and SRID scopes are no longer written into the SQL unchecked, which allowed SQL injection.
+- `NAN` and `INF` coordinates are rejected.
+- `BoundingBox::fromPoints()` no longer loops forever for an infinite or very large padding, and returns the whole longitude range for a padding of 360 or more.
+- Deeply nested geometries and invalid WKB no longer crash PHP or allocate large amounts of memory; nesting is limited to 64 levels.
+- A bounding box wider than 180 degrees stored as a geometry is read back correctly, and an unchanged bounding box is no longer written on every save.
+- A change of only the SRID or the geometry type is saved.
+- `toSqlExpression()` accepts only WKT characters instead of escaping the WKT with `addslashes()`.
+- Hex WKB with the MySQL SRID prefix is read with the right coordinates.
+
+### Removed
+
+- The service provider, the Doctrine DBAL types, `HasSpatial::originalIsEquivalent()`, `Factory::loadGeoPhp()` and the `phayes/geophp` dependency.
+
 ## Unreleased (4.1.0)
 
 ### Added

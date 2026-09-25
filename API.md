@@ -19,27 +19,33 @@ All geometry classes are in the `Jackardios\EloquentSpatial\Objects` namespace.
 ### Coordinate Validation
 
 The `Point` constructor validates coordinates:
-- Longitude: -180 to 180
-- Latitude: -90 to 90
+- Both must be finite numbers (not `NAN` or `INF`)
+- With SRID 0 or 4326, the coordinates are degrees:
+  - Longitude: -180 to 180
+  - Latitude: -90 to 90
 
 Invalid coordinates throw `InvalidArgumentException`.
 
 ### Static Factory Methods
 
-Geometry classes can be created using these static methods:
+Geometry classes can be created using these static methods. Each accepts only its own format, and throws `InvalidArgumentException` for invalid input or a geometry of another class:
 
 * `fromArray(array $geometry, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) array
-* `fromJson(string $geoJson, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) string
-* `fromWkt(string $wkt, int|Srid|null $srid = null)` - Creates from a [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
-* `fromWkb(string $wkb)` - Creates from a [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary) (SRID is extracted from WKB)
+* `fromJson(string $geoJson, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) geometry, Feature, or FeatureCollection (its only geometry, or a `GeometryCollection` of its geometries)
+* `fromWkt(string $wkt, int|Srid|null $srid = null)` - Creates from [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry), or EWKT such as `SRID=4326;POINT(1 2)`. Without `$srid`, the SRID is read from EWKT, and is the default SRID for WKT
+* `fromWkb(string $wkb)` - Creates from [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary) as MySQL stores it (a 4-byte SRID followed by WKB), WKB, or EWKB, binary or hex. The SRID is read from the MySQL format and EWKB, and is 0 for WKB
+
+Z and M coordinates are dropped. Geometries nested more than 64 levels deep are not read.
+
+`Jackardios\EloquentSpatial\Factory::parse(string $value)` detects which of these formats a string is in, and reads the SRID from EWKT, EWKB and the MySQL format.
 
 ## Geometry Instance Methods
 
 * `toArray()` - Serializes to a GeoJSON associative array
 * `toJson()` - Serializes to a GeoJSON string
 * `toFeatureCollectionJson()` - Serializes to a GeoJSON FeatureCollection string
-* `toWkt()` - Serializes to WKT string
-* `toWkb()` - Serializes to WKB binary (includes SRID)
+* `toWkt()` - Serializes to WKT string, with every coordinate as the shortest number that reads back as the same float
+* `toWkb()` - Serializes to WKB as MySQL stores it: the SRID as a little-endian 32-bit integer, followed by little-endian WKB
 * `getCoordinates()` - Returns the coordinates array
 * `toSqlExpression(ConnectionInterface $connection)` - Converts to SQL expression for database queries
 * `toBoundingBox(float $minPadding = 0)` - Creates a BoundingBox from the geometry
@@ -75,6 +81,15 @@ echo $geometryCollection->getGeometries()[1]->latitude; // 0
 echo $geometryCollection[1]->latitude; // 0
 ```
 
+The collection stays a list and stays valid:
+
+* Reading an offset that does not exist throws `OutOfBoundsException`.
+* `$collection[] = $geometry`, or an offset after the last geometry, appends the geometry.
+* `unset($collection[$offset])` moves the following geometries down by one.
+* A geometry of the wrong type, or an `unset()` that would leave too few geometries, throws `InvalidArgumentException` and leaves the collection unchanged.
+
+The constructor copies the given array or collection, so later changes to it do not change the geometry.
+
 ## BoundingBox
 
 The `BoundingBox` class represents rectangular geographic bounds with support for antimeridian crossing.
@@ -85,21 +100,23 @@ The `BoundingBox` class represents rectangular geographic bounds with support fo
 new BoundingBox(Point $leftBottom, Point $rightTop)
 ```
 
-**Validation:** The latitude of `$leftBottom` must be less than the latitude of `$rightTop`. Longitude can wrap around the antimeridian.
+**Validation:** Longitudes must be between -180 and 180 and latitudes between -90 and 90, whatever the SRID of the points. The latitude of `$leftBottom` must not be greater than the latitude of `$rightTop`, so a box can have zero height or width. Longitude can wrap around the antimeridian.
+
+The box keeps copies of the points, so later changes to them do not change the box.
 
 ### Static Factory Methods
 
 * `fromGeometry(Geometry $geometry, float $minPadding = 0)` - Creates from any geometry
-* `fromPoints(array|Collection $points, float $minPadding = 0)` - Creates from a collection of points
+* `fromPoints(array|Collection $points, float $minPadding = 0)` - Creates from a collection of points. `$minPadding` must be finite and not negative; a padding of 360 or more gives the whole longitude range
 * `fromArray(array $array)` - Creates from associative array with keys: `left`, `bottom`, `right`, `top`
 
 ### Instance Methods
 
-* `getLeftBottom()` - Returns the bottom-left corner Point
-* `getRightTop()` - Returns the top-right corner Point
+* `getLeftBottom()` - Returns a copy of the bottom-left corner Point
+* `getRightTop()` - Returns a copy of the top-right corner Point
 * `crossesAntimeridian()` - Returns `true` if the box crosses the 180°/-180° longitude line
-* `toPolygon()` - Converts to Polygon (throws if crosses antimeridian)
-* `toGeometry()` - Converts to Polygon or MultiPolygon (handles antimeridian)
+* `toPolygon(int|Srid|null $srid = null)` - Converts to Polygon (throws if crosses antimeridian), with the given or the default SRID
+* `toGeometry(int|Srid|null $srid = null)` - Converts to Polygon or MultiPolygon (handles antimeridian), with the given or the default SRID
 * `toArray()` - Returns `['left' => float, 'bottom' => float, 'right' => float, 'top' => float]`
 * `toJson()` - Serializes to JSON string
 
@@ -109,13 +126,18 @@ new BoundingBox(Point $leftBottom, Point $rightTop)
 
 ```php
 protected $casts = [
-    // Store as geometry column (Polygon/MultiPolygon)
+    // Store as geometry column (Polygon/MultiPolygon) with the default SRID
     'bounds' => BoundingBox::class,
+
+    // Store as geometry column with SRID 4326
+    'bounds' => BoundingBox::class . ':geometry,4326',
 
     // Store as JSON column
     'bounds' => BoundingBox::class . ':json',
 ];
 ```
+
+A box stored as a geometry is read back from the corners of the polygon or polygons that `toGeometry()` writes, so a box wider than 180° reads back unchanged.
 
 ### Example
 
@@ -174,6 +196,8 @@ class Place extends Model
     use HasSpatial;
 }
 ```
+
+The `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid` must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`. The `$direction` of `orderByDistance` and `orderByDistanceSphere` must be `asc` or `desc`, in any case. Other values throw `InvalidArgumentException`. Aliases are quoted as column names.
 
 ### Table of Contents
 
