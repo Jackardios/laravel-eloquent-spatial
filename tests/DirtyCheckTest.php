@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Jackardios\EloquentSpatial\GeometryCast;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\LineString;
@@ -142,6 +143,26 @@ it('detects geometry changes on models without the HasSpatial trait', function (
 
     $place->setAttribute('point', new Point(1, 2, 3857));
     expect($place->isDirty('point'))->toBeTrue();
+});
+
+it('saves a geometry set on an empty column', function (): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['point' => null])->fresh();
+
+    $testPlace->point = new Point(1, 2);
+
+    expect($testPlace->isDirty('point'))->toBeTrue();
+
+    $testPlace->save();
+
+    expect($testPlace->fresh()?->point)->toEqual(new Point(1, 2));
+});
+
+it('treats two empty stored values as equal', function (): void {
+    $cast = new GeometryCast(Point::class);
+
+    expect($cast->compare(new TestPlace, 'point', null, ''))->toBeTrue()
+        ->and($cast->compare(new TestPlace, 'point', null, (new Point(1, 2))->toWkb()))->toBeFalse();
 });
 
 it('treats an unreadable stored value as changed', function (string $attribute, mixed $value): void {
