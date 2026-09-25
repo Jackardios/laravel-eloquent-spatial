@@ -96,3 +96,38 @@ it('reads null and empty values as null', function (string $format, ?string $val
     'json null' => [BoundingBoxCast::FORMAT_JSON, null],
     'json empty' => [BoundingBoxCast::FORMAT_JSON, ''],
 ]);
+
+it('reads back the bounding box that was stored', function (BoundingBox $bbox, string $attribute): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create([$attribute => $bbox])->fresh();
+
+    expect($testPlace->{$attribute}?->toArray())->toBe($bbox->toArray());
+})->with([
+    'narrow' => [fn () => BoundingBox::fromArray(['left' => -30.5, 'bottom' => -12.25, 'right' => 91.5, 'top' => 40.75])],
+    'wider than 180 degrees' => [fn () => BoundingBox::fromArray(['left' => -170.0, 'bottom' => -10.0, 'right' => 170.0, 'top' => 10.0])],
+    'the whole world' => [fn () => BoundingBox::fromArray(['left' => -180.0, 'bottom' => -90.0, 'right' => 180.0, 'top' => 90.0])],
+    'across the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 170.0, 'bottom' => -10.0, 'right' => -170.0, 'top' => 10.0])],
+    'across the antimeridian and wider than 180 degrees' => [fn () => BoundingBox::fromArray(['left' => 10.0, 'bottom' => -10.0, 'right' => -10.0, 'top' => 10.0])],
+    'from the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 180.0, 'bottom' => -10.0, 'right' => -170.0, 'top' => 10.0])],
+    'to the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 170.0, 'bottom' => -10.0, 'right' => -180.0, 'top' => 10.0])],
+])->with(['bounding_box', 'bounding_box_json']);
+
+it('reads the envelope of a polygon that it did not write', function (): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create([
+        'bounding_box' => DB::raw("ST_GeomFromText('POLYGON((-170 0,170 -10,0 20,-170 0))')"),
+    ]);
+
+    expect($testPlace->fresh()?->bounding_box?->toArray())
+        ->toBe(['left' => -170.0, 'bottom' => -10.0, 'right' => 170.0, 'top' => 20.0]);
+});
+
+it('reads a multi polygon that it did not write as the smallest box around it', function (): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create([
+        'bounding_box' => DB::raw("ST_GeomFromText('MULTIPOLYGON(((170 0,175 0,175 5,170 0)),((-175 0,-170 0,-170 5,-175 0)))')"),
+    ]);
+
+    expect($testPlace->fresh()?->bounding_box?->toArray())
+        ->toBe(['left' => 170.0, 'bottom' => 0.0, 'right' => -170.0, 'top' => 5.0]);
+});

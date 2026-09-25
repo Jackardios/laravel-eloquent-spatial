@@ -12,6 +12,7 @@ use InvalidArgumentException;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\MultiPolygon;
+use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 use JsonException;
 use Throwable;
@@ -85,15 +86,60 @@ class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
         }
     }
 
+    /**
+     * Reads the corners of the Polygon or MultiPolygon that BoundingBox::toGeometry() writes.
+     *
+     * BoundingBox::fromGeometry() is not used for them: it takes the shortest longitude arc, so it would read a box
+     * wider than 180 degrees as the rest of the world.
+     */
     private function geometryToBoundingBox(Geometry $geometry): BoundingBox
     {
-        if ($geometry instanceof Polygon || $geometry instanceof MultiPolygon) {
+        if ($geometry instanceof Polygon) {
+            // A polygon cannot cross the antimeridian, so its extent is the box.
+            [$left, $bottom, $right, $top] = $this->extent($geometry);
+
+            return new BoundingBox(new Point($left, $bottom), new Point($right, $top));
+        }
+
+        if ($geometry instanceof MultiPolygon) {
+            $polygons = $geometry->getGeometries()->values()->all();
+
+            if (count($polygons) === 2) {
+                // A box across the antimeridian is written as its eastern part up to 180 and its western part from -180.
+                [$left, $eastBottom, $eastRight, $eastTop] = $this->extent($polygons[0]);
+                [$westLeft, $westBottom, $right, $westTop] = $this->extent($polygons[1]);
+
+                if ($eastRight === 180.0 && $westLeft === -180.0) {
+                    return new BoundingBox(
+                        new Point($left, min($eastBottom, $westBottom)),
+                        new Point($right, max($eastTop, $westTop)),
+                    );
+                }
+            }
+
             return $geometry->toBoundingBox();
         }
 
         throw new InvalidArgumentException(
             sprintf('Expected Polygon or MultiPolygon, %s given.', $geometry::class)
         );
+    }
+
+    /**
+     * @return array{float, float, float, float} The left, bottom, right and top.
+     */
+    private function extent(Polygon $polygon): array
+    {
+        [$left, $bottom, $right, $top] = [INF, INF, -INF, -INF];
+
+        foreach ($polygon->getPoints() as $point) {
+            $left = min($left, $point->longitude);
+            $bottom = min($bottom, $point->latitude);
+            $right = max($right, $point->longitude);
+            $top = max($top, $point->latitude);
+        }
+
+        return [$left, $bottom, $right, $top];
     }
 
     /**
