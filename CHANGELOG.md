@@ -5,7 +5,11 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
-## Unreleased (4.1.0)
+## v4.1.0 - 2026-09-25
+
+### Security
+
+- The `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid`, the `$direction` of `orderByDistance` and `orderByDistanceSphere`, and the `$alias` of `withDistance` and `withDistanceSphere` were written into the SQL unchecked, which allowed SQL injection when these values came from user input. Operators other than `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and directions other than `asc` and `desc`, now throw `InvalidArgumentException`, and the alias is quoted as a column name.
 
 ### Added
 

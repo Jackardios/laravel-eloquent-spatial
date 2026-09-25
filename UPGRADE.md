@@ -2,7 +2,7 @@
 
 ## Upgrading from v4.0 to v4.1
 
-v4.1 adds Laravel 13 support and contains no breaking changes.
+v4.1 adds Laravel 13 support and fixes an SQL injection. Code that passes valid values is not affected.
 
 ### Requirements
 
@@ -23,7 +23,9 @@ composer update jackardios/laravel-eloquent-spatial
 composer require laravel/framework:^13.0 jackardios/laravel-eloquent-spatial:^4.1 --with-all-dependencies
 ```
 
-3. Only if your code treats `EloquentSpatialServiceProvider` as a `DatabaseServiceProvider` (for example `instanceof` checks or `$app->getProviders(DatabaseServiceProvider::class)`): the provider now extends `Illuminate\Support\ServiceProvider`. Laravel's own `DatabaseServiceProvider` still registers the database services.
+3. The distance and SRID scopes now reject values that could change the SQL. `whereDistance`, `whereDistanceSphere` and `whereSrid` accept only the operators `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and `orderByDistance` and `orderByDistanceSphere` only the directions `asc` and `desc`, in any case. Other values throw `InvalidArgumentException`. The alias of `withDistance` and `withDistanceSphere` is quoted as a column name, so an alias such as `'distance'` works as before, but an alias that contains SQL no longer does.
+
+4. Only if your code treats `EloquentSpatialServiceProvider` as a `DatabaseServiceProvider` (for example `instanceof` checks or `$app->getProviders(DatabaseServiceProvider::class)`): the provider now extends `Illuminate\Support\ServiceProvider`. Laravel's own `DatabaseServiceProvider` still registers the database services.
 
 ## Upgrading from v3.x to v4.0
 

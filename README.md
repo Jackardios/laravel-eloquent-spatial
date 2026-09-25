@@ -219,6 +219,8 @@ $closestPlaces = Place::query()
     ->get();
 ```
 
+The operator must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and the direction `asc` or `desc` in any case. Anything else throws `InvalidArgumentException`, because these arguments are written into the SQL. The alias of `withDistance()` and `withDistanceSphere()` is quoted as a column name.
+
 ### Spatial Relationship Queries
 
 ```php
