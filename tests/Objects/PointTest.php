@@ -389,6 +389,28 @@ it('validates the ranges of points read in SRID 4326', function (Closure $read):
     'WKB' => fn () => Point::fromWkb(pack('V', 4326).substr((new Point(-20037508.34, 0, Srid::WEB_MERCATOR))->toWkb(), 4)),
 ]);
 
+it('writes coordinates to WKT without losing precision', function (float $longitude, float $latitude, string $expectedWkt): void {
+    expect((new Point($longitude, $latitude))->toWkt())->toBe($expectedWkt);
+})->with([
+    'integers' => [180.0, -0.0, 'POINT(180 -0)'],
+    'more than 14 digits' => [123.45678901234567, 0.1 + 0.2, 'POINT(123.45678901234567 0.30000000000000004)'],
+    'close to the range' => [-179.99999999999997, 89.99999999999999, 'POINT(-179.99999999999997 89.99999999999999)'],
+    'small numbers' => [1.0E-7, -2.5E-10, 'POINT(1.0E-7 -2.5E-10)'],
+]);
+
+it('stores coordinates without losing precision', function (float $longitude, float $latitude, int $srid): void {
+    $point = new Point($longitude, $latitude, $srid);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
+
+    expect($testPlace->point)->toEqual($point);
+})->with([
+    'more than 14 digits' => [123.45678901234567, 0.1 + 0.2],
+    'close to the range' => [-179.99999999999997, 89.99999999999999],
+    'small numbers' => [1.0E-7, -2.5E-10],
+])->with(['SRID 0' => [0], 'SRID 4326' => [4326]]);
+
 it('allows boundary coordinates', function (): void {
     $point1 = new Point(180.0, 90.0);
     $point2 = new Point(-180.0, -90.0);

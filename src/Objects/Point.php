@@ -55,7 +55,18 @@ class Point extends Geometry
 
     public function getWktData(): string
     {
-        return "{$this->longitude} {$this->latitude}";
+        return self::formatCoordinate($this->longitude).' '.self::formatCoordinate($this->latitude);
+    }
+
+    /**
+     * The shortest number that reads back as the same float. A string cast would round to the "precision" setting,
+     * 14 digits by default.
+     */
+    private static function formatCoordinate(float $coordinate): string
+    {
+        $number = var_export($coordinate, true);
+
+        return str_ends_with($number, '.0') ? substr($number, 0, -2) : $number;
     }
 
     /**
