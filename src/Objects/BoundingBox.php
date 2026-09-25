@@ -11,8 +11,10 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\BoundingBoxCast;
+use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
 use Jackardios\EloquentSpatial\Exceptions\InvalidGeometry;
+use Jackardios\EloquentSpatial\Helper;
 use JsonException;
 use JsonSerializable;
 use Stringable;
@@ -189,9 +191,11 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
     }
 
     /**
+     * @param  int|Srid|null  $srid  The SRID of the polygon, or null for the default SRID.
+     *
      * @throws InvalidArgumentException
      */
-    public function toPolygon(): Polygon
+    public function toPolygon(int|Srid|null $srid = null): Polygon
     {
         if ($this->crossesAntimeridian()) {
             throw new InvalidArgumentException(
@@ -199,22 +203,27 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
             );
         }
 
-        return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude);
+        return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude, Helper::getSrid($srid));
     }
 
-    public function toGeometry(): Polygon|MultiPolygon
+    /**
+     * @param  int|Srid|null  $srid  The SRID of the geometry, or null for the default SRID.
+     */
+    public function toGeometry(int|Srid|null $srid = null): Polygon|MultiPolygon
     {
+        $srid = Helper::getSrid($srid);
+
         if (! $this->crossesAntimeridian()) {
-            return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude);
+            return $this->createPolygon($this->leftBottom->longitude, $this->rightTop->longitude, $srid);
         }
 
         return new MultiPolygon([
-            $this->createPolygon($this->leftBottom->longitude, 180.0),
-            $this->createPolygon(-180.0, $this->rightTop->longitude),
-        ]);
+            $this->createPolygon($this->leftBottom->longitude, 180.0, $srid),
+            $this->createPolygon(-180.0, $this->rightTop->longitude, $srid),
+        ], $srid);
     }
 
-    protected function createPolygon(float $left, float $right): Polygon
+    protected function createPolygon(float $left, float $right, int $srid): Polygon
     {
         $bottom = $this->leftBottom->latitude;
         $top = $this->rightTop->latitude;
@@ -222,13 +231,13 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
         // Counter-clockwise winding order (GeoJSON RFC 7946)
         return new Polygon([
             new LineString([
-                new Point($left, $bottom),
-                new Point($right, $bottom),
-                new Point($right, $top),
-                new Point($left, $top),
-                new Point($left, $bottom),
-            ]),
-        ]);
+                new Point($left, $bottom, $srid),
+                new Point($right, $bottom, $srid),
+                new Point($right, $top, $srid),
+                new Point($left, $top, $srid),
+                new Point($left, $bottom, $srid),
+            ], $srid),
+        ], $srid);
     }
 
     /**
@@ -293,12 +302,22 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
     }
 
     /**
+     * The arguments are the format, "geometry" (the default) or "json", and for the geometry format an optional SRID,
+     * for example BoundingBox::class.':geometry,4326'.
+     *
      * @param  array<string>  $arguments
+     *
+     * @throws InvalidArgumentException
      */
     public static function castUsing(array $arguments): CastsAttributes
     {
         $format = $arguments[0] ?? BoundingBoxCast::FORMAT_GEOMETRY;
+        $srid = $arguments[1] ?? null;
 
-        return new BoundingBoxCast($format);
+        if ($srid !== null && ! ctype_digit($srid)) {
+            throw new InvalidArgumentException(sprintf('Invalid SRID "%s".', $srid));
+        }
+
+        return new BoundingBoxCast($format, $srid === null ? null : (int) $srid);
     }
 }

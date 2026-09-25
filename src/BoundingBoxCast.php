@@ -9,6 +9,7 @@ use Illuminate\Contracts\Database\Eloquent\ComparesCastableAttributes;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\MultiPolygon;
@@ -25,7 +26,14 @@ class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
 
     private string $format;
 
-    public function __construct(string $format = self::FORMAT_GEOMETRY)
+    private ?int $srid;
+
+    /**
+     * @param  int|Srid|null  $srid  The SRID to store the geometry format with, or null for the default SRID.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(string $format = self::FORMAT_GEOMETRY, int|Srid|null $srid = null)
     {
         if (! in_array($format, [self::FORMAT_GEOMETRY, self::FORMAT_JSON], true)) {
             throw new InvalidArgumentException(
@@ -33,7 +41,12 @@ class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
             );
         }
 
+        if ($srid !== null && $format !== self::FORMAT_GEOMETRY) {
+            throw new InvalidArgumentException('An SRID can be given only for the geometry format.');
+        }
+
         $this->format = $format;
+        $this->srid = $srid === null ? null : Helper::getSrid($srid);
     }
 
     /**
@@ -176,7 +189,7 @@ class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
             return $value->toJson();
         }
 
-        return $value->toGeometry()->toSqlExpression($model->getConnection());
+        return $value->toGeometry($this->srid)->toSqlExpression($model->getConnection());
     }
 
     /**

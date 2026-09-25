@@ -27,6 +27,7 @@ use Jackardios\EloquentSpatial\Traits\HasSpatial;
  * @property GeometryCollection $geometry_collection
  * @property BoundingBox $bounding_box
  * @property BoundingBox $bounding_box_json
+ * @property BoundingBox $bounding_box_4326
  * @property float|null $distance
  * @property float|null $distance_in_meters
  * @property Point|null $centroid
@@ -51,6 +52,7 @@ class TestPlace extends Model
         'point_with_line_string_cast',
         'bounding_box',
         'bounding_box_json',
+        'bounding_box_4326',
     ];
 
     protected $casts = [
@@ -65,6 +67,7 @@ class TestPlace extends Model
         'point_with_line_string_cast' => LineString::class,
         'bounding_box' => BoundingBox::class,
         'bounding_box_json' => BoundingBox::class.':json',
+        'bounding_box_4326' => BoundingBox::class.':geometry,4326',
         'distance' => 'float',
         'distance_in_meters' => 'float',
     ];

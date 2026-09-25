@@ -24,6 +24,7 @@ class CreateTestPlacesTable extends Migration
             $table->geometry('point_with_line_string_cast', subtype: 'point')->nullable();
             $table->geometry('bounding_box', subtype: 'geometry')->nullable();
             $table->json('bounding_box_json')->nullable();
+            $table->geometry('bounding_box_4326', subtype: 'geometry', srid: 4326)->nullable();
             $table->decimal('longitude')->nullable();
             $table->decimal('latitude')->nullable();
         });

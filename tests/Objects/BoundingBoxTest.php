@@ -1,5 +1,7 @@
 <?php
 
+use Jackardios\EloquentSpatial\EloquentSpatial;
+use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Exceptions\InvalidBoundingBoxPoints;
 use Jackardios\EloquentSpatial\Exceptions\InvalidGeometry;
 use Jackardios\EloquentSpatial\Objects\BoundingBox;
@@ -647,4 +649,28 @@ it('is not changed through its points', function () {
     $bbox->getRightTop()->longitude = 0;
 
     expect($bbox->toArray())->toBe(['left' => 10.0, 'bottom' => 20.0, 'right' => 30.0, 'top' => 40.0]);
+});
+
+it('creates its geometry with the given SRID', function (BoundingBox $bbox): void {
+    $geometry = $bbox->toGeometry(Srid::WGS84);
+
+    expect($geometry->srid)->toBe(4326)
+        ->and($geometry->getPoints()->every(fn (Point $point): bool => $point->srid === 4326))->toBeTrue();
+})->with([
+    'polygon' => [fn () => BoundingBox::fromArray(['left' => 10, 'bottom' => 20, 'right' => 30, 'top' => 40])],
+    'multi polygon' => [fn () => BoundingBox::fromArray(['left' => 170, 'bottom' => 20, 'right' => -170, 'top' => 40])],
+]);
+
+it('creates its polygon with the given SRID', function (): void {
+    $polygon = BoundingBox::fromArray(['left' => 10, 'bottom' => 20, 'right' => 30, 'top' => 40])->toPolygon(4326);
+
+    expect($polygon->srid)->toBe(4326)
+        ->and($polygon[0]->srid)->toBe(4326)
+        ->and($polygon[0][0]->srid)->toBe(4326);
+});
+
+it('creates its geometry with the default SRID', function (): void {
+    EloquentSpatial::setDefaultSrid(Srid::WGS84);
+
+    expect(BoundingBox::fromArray(['left' => 10, 'bottom' => 20, 'right' => 30, 'top' => 40])->toGeometry()->srid)->toBe(4326);
 });

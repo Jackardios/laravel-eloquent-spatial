@@ -131,3 +131,30 @@ it('reads a multi polygon that it did not write as the smallest box around it', 
     expect($testPlace->fresh()?->bounding_box?->toArray())
         ->toBe(['left' => 170.0, 'bottom' => 0.0, 'right' => -170.0, 'top' => 5.0]);
 });
+
+it('stores the geometry format with the SRID of the cast', function (BoundingBox $bbox): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['bounding_box_4326' => $bbox]);
+
+    $srid = DB::scalar('SELECT ST_SRID(bounding_box_4326) FROM test_places WHERE id = ?', [$testPlace->id]);
+
+    expect($srid)->toEqual(4326)
+        ->and($testPlace->fresh()?->bounding_box_4326?->toArray())->toBe($bbox->toArray());
+})->with([
+    'narrow' => [fn () => castedBoundingBox()],
+    'across the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 170, 'bottom' => -10, 'right' => -170, 'top' => 10])],
+]);
+
+it('takes the SRID from the cast arguments', function (): void {
+    $stored = BoundingBox::castUsing(['geometry', '4326'])->set(new TestPlace, 'bounding_box_4326', castedBoundingBox(), []);
+
+    expect($stored)->toEqual(castedBoundingBox()->toGeometry(4326)->toSqlExpression((new TestPlace)->getConnection()));
+});
+
+it('rejects an invalid SRID argument', function (string $format, string $srid, string $message): void {
+    expect(fn () => BoundingBox::castUsing([$format, $srid]))->toThrow(InvalidArgumentException::class, $message);
+})->with([
+    'not a number' => ['geometry', 'wgs84', 'Invalid SRID "wgs84".'],
+    'negative' => ['geometry', '-1', 'Invalid SRID "-1".'],
+    'with the json format' => ['json', '4326', 'An SRID can be given only for the geometry format.'],
+]);
