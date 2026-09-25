@@ -57,54 +57,47 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         return pack('V', $this->srid).Wkb::write($this);
     }
 
+    /**
+     * Reads the WKB that MySQL stores (a 4-byte SRID followed by WKB), or WKB or EWKB, binary or hex.
+     *
+     * The SRID is read from the MySQL format or EWKB, and is 0 otherwise.
+     *
+     * @throws InvalidArgumentException
+     */
     public static function fromWkb(string $wkb): static
     {
-        if (ctype_xdigit($wkb)) {
-            $geometry = Factory::parse($wkb);
-        } else {
-            $sridBinary = substr($wkb, 0, 4);
-            /** @var array{1: int}|false $unpackedSrid */
-            $unpackedSrid = unpack('L', $sridBinary);
-
-            if ($unpackedSrid === false) {
-                throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
-            }
-
-            $geometry = Factory::parseWithSrid(substr($wkb, 4), $unpackedSrid[1]);
-        }
-
-        if (! ($geometry instanceof static)) {
-            throw new InvalidArgumentException(
-                sprintf('Expected %s, %s given.', static::class, $geometry::class)
-            );
-        }
-
-        return $geometry;
+        return self::expectInstance(Factory::parseWkb($wkb));
     }
 
     /**
+     * Reads WKT or EWKT.
+     *
+     * @param  int|Srid|null  $srid  The SRID, or null for the SRID of the EWKT or the default SRID.
+     *
      * @throws InvalidArgumentException
      */
     public static function fromWkt(string $wkt, int|Srid|null $srid = null): static
     {
-        $geometry = Factory::parseWithSrid($wkt, Helper::getSrid($srid));
+        return self::expectInstance(Factory::parseWkt($wkt, $srid === null ? null : Helper::getSrid($srid), Helper::getSrid()));
+    }
 
-        if (! ($geometry instanceof static)) {
-            throw new InvalidArgumentException(
-                sprintf('Expected %s, %s given.', static::class, $geometry::class)
-            );
-        }
-
-        return $geometry;
+    /**
+     * Reads a GeoJSON geometry, a Feature, or a FeatureCollection as its only geometry or as a GeometryCollection.
+     *
+     * @param  int|Srid|null  $srid  The SRID, or null for the default SRID.
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function fromJson(string $geoJson, int|Srid|null $srid = null): static
+    {
+        return self::expectInstance(Factory::parseJson($geoJson, Helper::getSrid($srid)));
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public static function fromJson(string $geoJson, int|Srid|null $srid = null): static
+    private static function expectInstance(Geometry $geometry): static
     {
-        $geometry = Factory::parseWithSrid($geoJson, Helper::getSrid($srid));
-
         if (! ($geometry instanceof static)) {
             throw new InvalidArgumentException(
                 sprintf('Expected %s, %s given.', static::class, $geometry::class)

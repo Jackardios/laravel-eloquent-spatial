@@ -15,7 +15,7 @@ use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
 /**
- * Writes 2D little-endian WKB (ISO/OGC).
+ * Writes 2D little-endian WKB, and checks the structure of WKB before it is read.
  *
  * @internal
  */
@@ -36,6 +36,115 @@ final class Wkb
             $geometry instanceof GeometryCollection => self::collection(7, $geometry),
             default => throw new InvalidArgumentException(sprintf('Cannot write %s as WKB.', $geometry::class)),
         };
+    }
+
+    /**
+     * Checks the byte orders, types, lengths and nesting depth of WKB or EWKB without reading the coordinates.
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function validate(string $wkb, int $maxDepth): void
+    {
+        $offset = 0;
+
+        self::validateGeometry($wkb, $offset, 1, $maxDepth);
+
+        if ($offset !== strlen($wkb)) {
+            throw new InvalidArgumentException('Invalid spatial value: unexpected data after the WKB geometry.');
+        }
+    }
+
+    public static function tooDeep(int $maxDepth): InvalidArgumentException
+    {
+        return new InvalidArgumentException(
+            sprintf('Invalid spatial value: geometries nested deeper than %d levels are not supported.', $maxDepth)
+        );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function validateGeometry(string $wkb, int &$offset, int $depth, int $maxDepth): void
+    {
+        if ($depth > $maxDepth) {
+            throw self::tooDeep($maxDepth);
+        }
+
+        $byteOrder = ord(self::take($wkb, $offset, 1));
+
+        if ($byteOrder > 1) {
+            throw new InvalidArgumentException("Invalid spatial value: invalid WKB byte order {$byteOrder}.");
+        }
+
+        $format = $byteOrder === self::LITTLE_ENDIAN ? 'V' : 'N';
+        $header = self::readInteger($wkb, $offset, $format);
+
+        if ($header < 4000) {
+            // ISO WKB: 1000 is added to the type for Z, 2000 for M and 3000 for both.
+            $type = $header % 1000;
+            $dimensions = 2 + [0, 1, 1, 2][intdiv($header, 1000)];
+        } else {
+            // EWKB: flags in the high bits.
+            $type = $header & 0x0FFFFFFF;
+            $dimensions = 2 + ($header & 0x80000000 ? 1 : 0) + ($header & 0x40000000 ? 1 : 0);
+
+            if ($header & 0x20000000) {
+                self::take($wkb, $offset, 4);
+            }
+        }
+
+        $pointLength = 8 * $dimensions;
+
+        // Every iteration consumes bytes or throws at the end of the WKB, so a huge count cannot loop for long.
+        switch ($type) {
+            case 1:
+                self::take($wkb, $offset, $pointLength);
+                break;
+            case 2:
+                self::take($wkb, $offset, $pointLength * self::readInteger($wkb, $offset, $format));
+                break;
+            case 3:
+                for ($rings = self::readInteger($wkb, $offset, $format); $rings > 0; $rings--) {
+                    self::take($wkb, $offset, $pointLength * self::readInteger($wkb, $offset, $format));
+                }
+                break;
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                for ($geometries = self::readInteger($wkb, $offset, $format); $geometries > 0; $geometries--) {
+                    self::validateGeometry($wkb, $offset, $depth + 1, $maxDepth);
+                }
+                break;
+            default:
+                throw new InvalidArgumentException("Invalid spatial value: unsupported WKB geometry type {$type}.");
+        }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function readInteger(string $wkb, int &$offset, string $format): int
+    {
+        /** @var array{1: int} $integer */
+        $integer = unpack($format, self::take($wkb, $offset, 4));
+
+        return $integer[1];
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function take(string $wkb, int &$offset, int $length): string
+    {
+        if ($length > strlen($wkb) - $offset) {
+            throw new InvalidArgumentException('Invalid spatial value: unexpected end of the WKB.');
+        }
+
+        $bytes = substr($wkb, $offset, $length);
+        $offset += $length;
+
+        return $bytes;
     }
 
     private static function header(int $type): string

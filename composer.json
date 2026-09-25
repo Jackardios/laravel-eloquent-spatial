@@ -13,8 +13,8 @@
         "php": "^8.3",
         "ext-json": "*",
         "ext-pdo": "*",
-        "laravel/framework": "^12.18|^13.0",
-        "phayes/geophp": "^1.2"
+        "brick/geo": "^0.13.1",
+        "laravel/framework": "^12.18|^13.0"
     },
     "require-dev": {
         "larastan/larastan": "^3.1",
