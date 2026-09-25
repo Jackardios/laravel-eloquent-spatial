@@ -5,6 +5,12 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
+## v5.0.1 - Unreleased
+
+### Fixed
+
+- The dirty checks no longer read the WKT of a changed geometry back with brick/geo. Saving a model with a changed 1000-point geometry was 8 times slower than in 4.x.
+
 ## v5.0.0 - 2026-09-25
 
 See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every change.

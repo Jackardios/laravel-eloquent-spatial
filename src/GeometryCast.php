@@ -90,20 +90,35 @@ class GeometryCast implements CastsAttributes, ComparesCastableAttributes
     public function compare($model, string $key, mixed $firstValue, mixed $secondValue): bool
     {
         try {
-            $first = $this->get($model, $key, $firstValue, []);
-            $second = $this->get($model, $key, $secondValue, []);
+            return $this->comparableValue($model, $firstValue) === $this->comparableValue($model, $secondValue);
         } catch (Throwable) {
             // An unreadable value is treated as changed, so that it is saved rather than kept.
             return false;
         }
+    }
 
-        if ($first === null || $second === null) {
-            return $first === $second;
+    /**
+     * The WKT and SRID. The WKT of an expression is compared as it is, without reading it: set() writes it with
+     * toWkt(), and a value that differs only in its formatting is at worst saved again.
+     *
+     * @param  string|ExpressionContract|null  $value
+     * @return array{string, int}|null
+     */
+    private function comparableValue(Model $model, mixed $value): ?array
+    {
+        if (! $value) {
+            return null;
         }
 
-        return $first::class === $second::class
-            && $first->srid === $second->srid
-            && $first->toWkt() === $second->toWkt();
+        if ($value instanceof ExpressionContract) {
+            ['wkt' => $wkt, 'srid' => $srid] = $this->extractValuesFromExpression($value, $model->getConnection());
+
+            return [$wkt, $srid];
+        }
+
+        $geometry = $this->className::fromWkb($value);
+
+        return [$geometry->toWkt(), $geometry->srid];
     }
 
     /**
