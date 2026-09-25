@@ -200,6 +200,10 @@ jobs:
                     -   name: Windows
                         os: windows-latest
                         php: '8.4'
+                    -   name: Laravel next (development)
+                        os: ubuntu-latest
+                        php: '8.5'
+                        laravel-next: true
 
         env:
             DB_CONNECTION: mysql
@@ -234,6 +238,15 @@ jobs:
                     php-version: ${{ matrix.php }}
                     extensions: fileinfo, pdo_mysql
                     coverage: none
+
+            # The framework's main branch is aliased to a 13.x version so that the "^13.0" constraint accepts it.
+            -   name: Require the development version of Laravel
+                if: matrix.laravel-next
+                run: |
+                    composer config minimum-stability dev
+                    composer config prefer-stable true
+                    composer require "laravel/framework:dev-master as 13.99.0" --no-interaction --no-update
+                    composer require --dev "orchestra/testbench:12.x-dev" "pestphp/pest:^5.0" "pestphp/pest-plugin-laravel:^5.0" --no-interaction --no-update
 
             -   name: Install dependencies
                 run: composer update --prefer-dist --no-interaction ${{ matrix.php == '8.6' && '--ignore-platform-req=php+' || '' }}
