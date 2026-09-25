@@ -184,7 +184,13 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
 
     public function toSqlExpression(ConnectionInterface $connection): ExpressionContract
     {
-        $wkt = addslashes($this->toWkt());
+        $wkt = $this->toWkt();
+
+        // The WKT is written into the SQL. Escaping would depend on the database, so only the characters that WKT
+        // consists of are accepted, which cannot end the string literal.
+        if (preg_match('/^[A-Za-z0-9 .,()+\-]*$/', $wkt) !== 1) {
+            throw new InvalidArgumentException(sprintf('Invalid WKT from %s::toWkt(): %s', static::class, $wkt));
+        }
 
         if (! AxisOrder::supported($connection)) {
             return DB::raw((new GeometryExpression("ST_GeomFromText('{$wkt}', {$this->srid})"))->normalize($connection));

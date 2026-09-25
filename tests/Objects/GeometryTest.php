@@ -253,3 +253,35 @@ it('throws exception when parsing incomplete WKT', function (): void {
         Point::fromWkt('POINT(');
     })->toThrow(InvalidArgumentException::class);
 });
+
+it('does not write WKT with other characters into SQL', function (string $wkt): void {
+    $point = new class($wkt) extends Point
+    {
+        public function __construct(private readonly string $wkt)
+        {
+            parent::__construct(0, 0);
+        }
+
+        public function toWkt(): string
+        {
+            return $this->wkt;
+        }
+    };
+
+    expect(fn () => $point->toSqlExpression(DB::connection()))
+        ->toThrow(InvalidArgumentException::class, 'Invalid WKT from '.$point::class.'::toWkt(): '.$wkt);
+})->with([
+    'a quote' => ["POINT(0 0)', 0) OR 1=1 --"],
+    'a backslash' => ['POINT(0 0)\\'],
+    'a semicolon' => ['POINT(0 0);'],
+]);
+
+it('writes WKT with every character that geometries use into SQL', function (): void {
+    $point = new Point(-1.0E-7, 2.5E+20, 3857);
+
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['point' => $point])->fresh();
+
+    expect($point->toWkt())->toBe('POINT(-1.0E-7 2.5E+20)')
+        ->and($testPlace->point)->toEqual($point);
+});
