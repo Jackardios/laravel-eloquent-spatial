@@ -6,11 +6,9 @@ namespace Jackardios\EloquentSpatial;
 
 use Brick\Geo\Geometry as BrickGeometry;
 use Brick\Geo\GeometryCollection as BrickGeometryCollection;
-use Brick\Geo\Io\EwkbReader;
 use Brick\Geo\Io\EwktReader;
 use Brick\Geo\Io\GeoJson\Feature;
 use Brick\Geo\Io\GeoJsonReader;
-use Brick\Geo\Io\WkbReader;
 use Brick\Geo\LineString as BrickLineString;
 use Brick\Geo\MultiLineString as BrickMultiLineString;
 use Brick\Geo\MultiPoint as BrickMultiPoint;
@@ -134,56 +132,45 @@ class Factory
             $wkb = $binary;
         }
 
-        // The format that the value most likely has is read first: PostGIS returns hex EWKB, MySQL returns
-        // binary. The other format is tried only if the value cannot be read at all.
-        $readers = [
-            static fn (): BrickGeometry => self::readMySqlWkb($wkb),
-            static fn (): BrickGeometry => self::readEwkb($wkb),
-        ];
-
-        if ($isHex) {
-            $readers = array_reverse($readers);
-        }
-
+        // The format that the value most likely has is tried first: PostGIS returns hex EWKB, MySQL returns binary.
+        // The other format is tried only if the structure of the value does not match, not if its values are invalid.
         try {
-            $geometry = self::read($readers[0]);
+            [$wkb, $srid] = self::validateWkb($wkb, hasSridPrefix: ! $isHex);
         } catch (InvalidArgumentException $exception) {
             try {
-                $geometry = self::read($readers[1]);
+                [$wkb, $srid] = self::validateWkb($wkb, hasSridPrefix: $isHex);
             } catch (InvalidArgumentException) {
                 throw $exception;
             }
         }
 
-        return self::create($geometry, $geometry->srid());
+        return Wkb::read($wkb, $srid);
     }
 
     /**
+     * @param  bool  $hasSridPrefix  Whether the value is in the MySQL format, a 4-byte SRID followed by WKB.
+     * @return array{string, int|null} The WKB or EWKB, and the SRID of the MySQL format.
+     *
      * @throws InvalidArgumentException
      */
-    private static function readMySqlWkb(string $wkb): BrickGeometry
+    private static function validateWkb(string $value, bool $hasSridPrefix): array
     {
-        if (strlen($wkb) < 4) {
-            throw new InvalidArgumentException('Invalid spatial value: the WKB is too short.');
+        $srid = null;
+
+        if ($hasSridPrefix) {
+            if (strlen($value) < 4) {
+                throw new InvalidArgumentException('Invalid spatial value: the WKB is too short.');
+            }
+
+            /** @var array{1: int} $unpacked */
+            $unpacked = unpack('V', $value);
+            $srid = $unpacked[1];
+            $value = substr($value, 4);
         }
 
-        /** @var array{1: int} $srid */
-        $srid = unpack('V', $wkb);
-        $wkb = substr($wkb, 4);
+        Wkb::validate($value, self::MAX_DEPTH);
 
-        Wkb::validate($wkb, self::MAX_DEPTH);
-
-        return (new WkbReader)->read($wkb, $srid[1]);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    private static function readEwkb(string $ewkb): BrickGeometry
-    {
-        Wkb::validate($ewkb, self::MAX_DEPTH);
-
-        return (new EwkbReader)->read($ewkb);
+        return [$value, $srid];
     }
 
     /**
@@ -198,10 +185,8 @@ class Factory
     {
         try {
             return $read();
-        } catch (InvalidArgumentException $exception) {
-            throw $exception;
         } catch (Throwable $exception) {
-            // Besides its own exceptions, brick/geo throws a TypeError, for example for GeoJSON coordinates that are strings.
+            // Besides its own GeometryException, brick/geo throws a TypeError, for example for GeoJSON coordinates that are strings.
             throw new InvalidArgumentException('Invalid spatial value: '.$exception->getMessage(), 0, $exception);
         }
     }

@@ -2,7 +2,7 @@
 
 ## Upgrading from v4.x to v5.0
 
-v5.0 replaces the unmaintained geoPHP library with [brick/geo](https://github.com/brick/geo), drops old Laravel and PHP versions, and fixes bugs whose fixes change behaviour. Most applications need only the steps below. The sections after them list every change that code or tests may notice.
+v5.0 replaces the unmaintained geoPHP library with [brick/geo](https://github.com/brick/geo) and its own WKB reader, drops old Laravel and PHP versions, and fixes bugs whose fixes change behaviour. Most applications need only the steps below. The sections after them list every change that code or tests may notice.
 
 ### Requirements
 
@@ -45,7 +45,7 @@ Other values that v5 rejects to protect the application:
 
 ### Parsing
 
-`fromWkt()`, `fromJson()`, `fromWkb()` and `Factory::parse()` now read with brick/geo instead of geoPHP.
+`fromWkt()`, `fromJson()` and `Factory::parse()` now read WKT and GeoJSON with brick/geo instead of geoPHP, and WKB with the package's own reader.
 
 **Each method reads only its format.** In v4, every method detected the format itself.
 

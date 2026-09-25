@@ -12,7 +12,7 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 ### Changed
 
 - Requires PHP 8.3+ and Laravel 12.18+ or 13.x.
-- WKT, WKB and GeoJSON are read with brick/geo instead of geoPHP, which is unmaintained and emits deprecations on PHP 8.5. WKB is written by the package.
+- WKT and GeoJSON are read with brick/geo instead of geoPHP, which is unmaintained and emits deprecations on PHP 8.5. WKB is read and written by the package; reading geometries from the database is faster than in 4.x.
 - `fromWkt()`, `fromJson()` and `fromWkb()` read only their own format. `Factory::parse()` detects WKT, EWKT, GeoJSON, WKB, EWKB and hex WKB or EWKB, and no longer reads KML, GPX, GeoRSS or geohashes.
 - `fromWkt()` and `Factory::parse()` read the SRID of EWKT, and `Factory::parse()` reads the SRID of EWKB and MySQL WKB. The geometries inside a parsed geometry have its SRID.
 - `Point` checks the longitude and latitude ranges only for SRID 0 and 4326.

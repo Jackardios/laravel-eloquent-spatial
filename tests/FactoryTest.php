@@ -1,5 +1,11 @@
 <?php
 
+use Brick\Geo\Io\EwkbReader;
+use Brick\Geo\Io\EwkbWriter;
+use Brick\Geo\Io\EwktReader;
+use Brick\Geo\Io\Internal\WkbByteOrder;
+use Brick\Geo\Io\WkbReader;
+use Brick\Geo\Io\WkbWriter;
 use Jackardios\EloquentSpatial\EloquentSpatial;
 use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Factory;
@@ -57,6 +63,59 @@ it('reads WKB in every supported encoding', function (string $wkb, Point $expect
     'EWKB as uppercase hex' => [strtoupper(bin2hex(ewkbPoint(4326, 1.5, 2.5))), new Point(1.5, 2.5, 4326)],
 ]);
 
+it('reads WKB like brick/geo', function (string $wkt, WkbByteOrder $byteOrder, string $encoding, bool $hex): void {
+    $brickGeometry = (new EwktReader)->read($wkt);
+
+    $writer = $encoding === 'EWKB' ? new EwkbWriter : new WkbWriter;
+    $writer->setByteOrder($byteOrder);
+    $wkb = ($encoding === 'MySQL' ? pack('V', 4326) : '').$writer->write($brickGeometry);
+
+    // brick/geo reads the MySQL format as WKB with a separate SRID.
+    $read = $encoding === 'MySQL'
+        ? (new WkbReader)->read(substr($wkb, 4), 4326)
+        : (new EwkbReader)->read($wkb);
+
+    expect(Geometry::fromWkb($hex ? bin2hex($wkb) : $wkb))->toEqual(Geometry::fromWkt($read->asText(), $read->srid()));
+})->with([
+    'Point' => 'SRID=4326;POINT(1.5 -2.25)',
+    'Point Z' => 'SRID=4326;POINT Z(1 2 3)',
+    'Point M' => 'SRID=4326;POINT M(1 2 4)',
+    'Point ZM' => 'SRID=4326;POINT ZM(1 2 3 4)',
+    'LineString' => 'SRID=4326;LINESTRING(0 0, 1.1 -1.1, 2 2)',
+    'LineString ZM' => 'SRID=4326;LINESTRING ZM(0 0 1 2, 1.1 -1.1 3 4)',
+    'Polygon with a hole' => 'SRID=4326;POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 3 2, 3 3, 2 2))',
+    'Polygon Z' => 'SRID=4326;POLYGON Z((0 0 1, 1 0 2, 1 1 3, 0 0 1))',
+    'MultiPoint' => 'SRID=4326;MULTIPOINT((1 2), (3 4))',
+    'MultiPoint M' => 'SRID=4326;MULTIPOINT M((1 2 5), (3 4 6))',
+    'MultiLineString' => 'SRID=4326;MULTILINESTRING((1 2, 3 4), (5 6, 7 8))',
+    'MultiPolygon' => 'SRID=4326;MULTIPOLYGON(((0 0, 1 0, 1 1, 0 0)), ((5 5, 6 5, 6 6, 5 5)))',
+    'MultiPolygon Z' => 'SRID=4326;MULTIPOLYGON Z(((0 0 1, 1 0 1, 1 1 1, 0 0 1)))',
+    'GeometryCollection' => 'SRID=4326;GEOMETRYCOLLECTION(POINT(1 2), LINESTRING(1 2, 3 4), GEOMETRYCOLLECTION(POINT(5 6)))',
+    'empty GeometryCollection' => 'SRID=4326;GEOMETRYCOLLECTION EMPTY',
+])->with([
+    'little-endian' => [WkbByteOrder::LittleEndian],
+    'big-endian' => [WkbByteOrder::BigEndian],
+])->with([
+    'WKB' => ['WKB'],
+    'EWKB' => ['EWKB'],
+    'MySQL' => ['MySQL'],
+])->with([
+    'binary' => [false],
+    'hex' => [true],
+]);
+
+it('reads WKB whose geometries have different byte orders', function (): void {
+    $wkb = pack('CVV', 1, 7, 2).bigEndianPointWkb(1, 2).pack('CNN', 0, 4, 1).littleEndianPointWkb(3, 4);
+
+    expect(GeometryCollection::fromWkb($wkb))
+        ->toEqual(new GeometryCollection([new Point(1, 2), new MultiPoint([new Point(3, 4)])]));
+});
+
+it('does not read another format when the values are invalid', function (): void {
+    expect(fn () => Point::fromWkb(pack('V', 4326).littleEndianPointWkb(200, 0)))
+        ->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180, got: 200');
+});
+
 it('drops Z and M coordinates from WKB', function (string $wkb): void {
     expect(Point::fromWkb($wkb))->toEqual(new Point(1.5, 2.5, 0));
 })->with([
@@ -77,8 +136,10 @@ it('rejects invalid WKB', function (string $wkb, string $message): void {
     'hex of odd length' => ['0101000', 'Invalid spatial value: the hex WKB has an odd length.'],
     'a Triangle' => [pack('V', 0).pack('CVVV', 1, 17, 1, 4).pack('e*', 0, 0, 1, 0, 0, 1, 0, 0), 'Invalid spatial value: unsupported WKB geometry type 17.'],
     'a CircularString' => [pack('V', 0).pack('CVV', 1, 8, 3).pack('e*', 0, 0, 1, 1, 2, 0), 'Invalid spatial value: unsupported WKB geometry type 8.'],
+    'a LineString in a MultiPoint' => [pack('V', 0).pack('CVVCVV', 1, 4, 1, 1, 2, 2).pack('e*', 0, 0, 1, 1), 'Invalid spatial value: expected Point in the WKB, got LineString.'],
+    'a Polygon in a MultiLineString' => [pack('V', 0).pack('CVVCVVV', 1, 5, 1, 1, 3, 1, 4).pack('e*', 0, 0, 1, 0, 1, 1, 0, 0), 'Invalid spatial value: expected LineString in the WKB, got Polygon.'],
     // PostGIS writes an empty point as NaN coordinates.
-    'an empty point' => [pack('V', 0).pack('CVee', 1, 1, NAN, NAN), 'is NaN, this is not allowed.'],
+    'an empty point' => [pack('V', 0).pack('CVee', 1, 1, NAN, NAN), 'Invalid spatial value: empty points are not supported.'],
 ]);
 
 // WKT
