@@ -496,8 +496,10 @@ it('provides getters for corner points', function () {
     $rightTop = new Point(91, 40);
     $bbox = new BoundingBox($leftBottom, $rightTop);
 
-    expect($bbox->getLeftBottom())->toBe($leftBottom);
-    expect($bbox->getRightTop())->toBe($rightTop);
+    expect($bbox->getLeftBottom())->toEqual($leftBottom);
+    expect($bbox->getLeftBottom())->not->toBe($leftBottom);
+    expect($bbox->getRightTop())->toEqual($rightTop);
+    expect($bbox->getRightTop())->not->toBe($rightTop);
 });
 
 it('clamps latitude to valid range when applying padding near poles', function () {
@@ -632,4 +634,17 @@ it('serializes bounding box from array with json cast', function () {
         'right' => 91.0,
         'top' => 40.0,
     ]);
+});
+
+it('is not changed through its points', function () {
+    $leftBottom = new Point(10, 20);
+    $rightTop = new Point(30, 40);
+    $bbox = new BoundingBox($leftBottom, $rightTop);
+
+    $leftBottom->latitude = 50;
+    $rightTop->longitude = 0;
+    $bbox->getLeftBottom()->latitude = 50;
+    $bbox->getRightTop()->longitude = 0;
+
+    expect($bbox->toArray())->toBe(['left' => 10.0, 'bottom' => 20.0, 'right' => 30.0, 'top' => 40.0]);
 });

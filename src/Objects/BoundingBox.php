@@ -26,8 +26,9 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
     public function __construct(Point $leftBottom, Point $rightTop)
     {
         $this->validatePoints($leftBottom, $rightTop);
-        $this->leftBottom = $leftBottom;
-        $this->rightTop = $rightTop;
+        // Points are mutable, so copies are kept and returned, and a change to a point cannot bypass the validation.
+        $this->leftBottom = clone $leftBottom;
+        $this->rightTop = clone $rightTop;
     }
 
     public function __toString(): string
@@ -61,12 +62,12 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
 
     public function getLeftBottom(): Point
     {
-        return $this->leftBottom;
+        return clone $this->leftBottom;
     }
 
     public function getRightTop(): Point
     {
-        return $this->rightTop;
+        return clone $this->rightTop;
     }
 
     public function crossesAntimeridian(): bool
