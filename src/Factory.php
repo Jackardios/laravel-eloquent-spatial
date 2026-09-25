@@ -18,7 +18,9 @@ use Brick\Geo\Polygon as BrickPolygon;
 use Closure;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
 use Throwable;
 
 class Factory
@@ -206,6 +208,8 @@ class Factory
         for ($offset = strcspn($wkt, '()'); $offset < $length; $offset += 1 + strcspn($wkt, '()', $offset + 1)) {
             $depth += $wkt[$offset] === '(' ? 1 : -1;
 
+            // PHPStan does not widen $depth over the iterations of this loop.
+            // @phpstan-ignore greater.alwaysFalse
             if ($depth > self::MAX_DEPTH + 2) {
                 throw Wkb::tooDeep(self::MAX_DEPTH);
             }
@@ -219,37 +223,27 @@ class Factory
      */
     private static function create(BrickGeometry $geometry, int $srid, int $depth = 1): Geometry
     {
-        if ($depth > self::MAX_DEPTH) {
-            throw Wkb::tooDeep(self::MAX_DEPTH);
-        }
-
         $type = $geometry->geometryType();
 
         // The type is checked too, because some brick/geo classes extend others, such as Triangle extends Polygon.
         return match (true) {
             $geometry instanceof BrickPoint && $type === 'Point' => self::createPoint($geometry, $srid),
-            $geometry instanceof BrickLineString && $type === 'LineString' => new EloquentSpatial::$lineString(
-                array_map(static fn (BrickPoint $point): Point => self::createPoint($point, $srid), $geometry->points()),
-                $srid,
-            ),
-            $geometry instanceof BrickPolygon && $type === 'Polygon' => new EloquentSpatial::$polygon(
-                array_map(static fn (BrickLineString $ring): Geometry => self::create($ring, $srid, $depth), $geometry->rings()),
-                $srid,
-            ),
+            $geometry instanceof BrickLineString && $type === 'LineString' => self::createLineString($geometry, $srid),
+            $geometry instanceof BrickPolygon && $type === 'Polygon' => self::createPolygon($geometry, $srid),
             $geometry instanceof BrickMultiPoint && $type === 'MultiPoint' => new EloquentSpatial::$multiPoint(
-                self::createAll($geometry, $srid, $depth),
+                self::createChildren($geometry->geometries(), $depth, static fn (BrickPoint $point): Point => self::createPoint($point, $srid)),
                 $srid,
             ),
             $geometry instanceof BrickMultiLineString && $type === 'MultiLineString' => new EloquentSpatial::$multiLineString(
-                self::createAll($geometry, $srid, $depth),
+                self::createChildren($geometry->geometries(), $depth, static fn (BrickLineString $lineString): LineString => self::createLineString($lineString, $srid)),
                 $srid,
             ),
             $geometry instanceof BrickMultiPolygon && $type === 'MultiPolygon' => new EloquentSpatial::$multiPolygon(
-                self::createAll($geometry, $srid, $depth),
+                self::createChildren($geometry->geometries(), $depth, static fn (BrickPolygon $polygon): Polygon => self::createPolygon($polygon, $srid)),
                 $srid,
             ),
             $geometry instanceof BrickGeometryCollection && $type === 'GeometryCollection' => new EloquentSpatial::$geometryCollection(
-                self::createAll($geometry, $srid, $depth),
+                self::createChildren($geometry->geometries(), $depth, static fn (BrickGeometry $child): Geometry => self::create($child, $srid, $depth + 1)),
                 $srid,
             ),
             default => throw new InvalidArgumentException("Invalid spatial value: {$type} geometries are not supported."),
@@ -257,16 +251,45 @@ class Factory
     }
 
     /**
-     * @param  BrickGeometryCollection<BrickGeometry>  $collection
-     * @return list<Geometry>
+     * The geometries in a collection are one level deeper, as in WKB, where each of them has its own header.
+     *
+     * @template TBrickGeometry of BrickGeometry
+     * @template TGeometry of Geometry
+     *
+     * @param  list<TBrickGeometry>  $children
+     * @param  Closure(TBrickGeometry): TGeometry  $create
+     * @return list<TGeometry>
      *
      * @throws InvalidArgumentException
      */
-    private static function createAll(BrickGeometryCollection $collection, int $srid, int $depth): array
+    private static function createChildren(array $children, int $depth, Closure $create): array
     {
-        return array_map(
-            static fn (BrickGeometry $geometry): Geometry => self::create($geometry, $srid, $depth + 1),
-            array_values($collection->geometries()),
+        if ($children !== [] && $depth >= self::MAX_DEPTH) {
+            throw Wkb::tooDeep(self::MAX_DEPTH);
+        }
+
+        return array_map($create, $children);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function createLineString(BrickLineString $lineString, int $srid): LineString
+    {
+        return new EloquentSpatial::$lineString(
+            array_map(static fn (BrickPoint $point): Point => self::createPoint($point, $srid), $lineString->points()),
+            $srid,
+        );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function createPolygon(BrickPolygon $polygon, int $srid): Polygon
+    {
+        return new EloquentSpatial::$polygon(
+            array_map(static fn (BrickLineString $ring): LineString => self::createLineString($ring, $srid), $polygon->rings()),
+            $srid,
         );
     }
 

@@ -265,6 +265,27 @@ it('reads geometries nested up to the maximum depth', function (Closure $read): 
     'GeoJSON' => fn (int $collections): Geometry => Geometry::fromJson(nestedCollectionJson($collections)),
 ]);
 
+it('reads an empty collection at the maximum depth', function (string $value): void {
+    expect(Factory::parse($value))->toBeInstanceOf(GeometryCollection::class);
+})->with([
+    'WKT' => fn (): string => str_repeat('GEOMETRYCOLLECTION(', 63).'GEOMETRYCOLLECTION EMPTY'.str_repeat(')', 63),
+    'WKB' => fn (): string => str_repeat(pack('CVV', 1, 7, 1), 63).pack('CVV', 1, 7, 0),
+    'GeoJSON' => fn (): string => str_repeat('{"type":"GeometryCollection","geometries":[', 63)
+        .'{"type":"GeometryCollection","geometries":[]}'
+        .str_repeat(']}', 63),
+]);
+
+it('counts the geometries of a multi geometry as one level deeper', function (string $value): void {
+    expect(fn () => Factory::parse($value))
+        ->toThrow(InvalidArgumentException::class, 'geometries nested deeper than 64 levels are not supported');
+})->with([
+    'WKT' => fn (): string => str_repeat('GEOMETRYCOLLECTION(', 63).'MULTIPOINT((1 2))'.str_repeat(')', 63),
+    'WKB' => fn (): string => pack('V', 0).str_repeat(pack('CVV', 1, 7, 1), 63).pack('CVV', 1, 4, 1).littleEndianPointWkb(1, 2),
+    'GeoJSON' => fn (): string => str_repeat('{"type":"GeometryCollection","geometries":[', 63)
+        .'{"type":"MultiPoint","coordinates":[[1,2]]}'
+        .str_repeat(']}', 63),
+]);
+
 it('rejects geometries nested deeper than the maximum depth', function (Closure $read, int $collections): void {
     expect(fn () => $read($collections))->toThrow(InvalidArgumentException::class, 'Invalid spatial value');
 })->with([
