@@ -23,7 +23,7 @@ composer update jackardios/laravel-eloquent-spatial
 composer require laravel/framework:^13.0 jackardios/laravel-eloquent-spatial:^4.1 --with-all-dependencies
 ```
 
-3. The distance and SRID scopes now reject values that could change the SQL. `whereDistance`, `whereDistanceSphere` and `whereSrid` accept only the operators `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and `orderByDistance` and `orderByDistanceSphere` only the directions `asc` and `desc`, in any case. Other values throw `InvalidArgumentException`. The alias of `withDistance` and `withDistanceSphere` is quoted as a column name, so an alias such as `'distance'` works as before, but an alias that contains SQL no longer does.
+3. The distance and SRID scopes now reject values that could change the SQL. `whereDistance`, `whereDistanceSphere` and `whereSrid` accept only the operators `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and `orderByDistance` and `orderByDistanceSphere` only the directions `asc` and `desc`, in any case. Other values throw `InvalidArgumentException`. The alias of `withDistance` and `withDistanceSphere` is quoted as a column name, so an alias such as `'distance'` works as before, but an alias that contains SQL no longer does. On PostgreSQL, an alias with capital letters keeps them: the alias `'myDistance'` is now the attribute `myDistance`, where v4.0 returned `mydistance`.
 
 4. Only if your code treats `EloquentSpatialServiceProvider` as a `DatabaseServiceProvider` (for example `instanceof` checks or `$app->getProviders(DatabaseServiceProvider::class)`): the provider now extends `Illuminate\Support\ServiceProvider`. Laravel's own `DatabaseServiceProvider` still registers the database services.
 
