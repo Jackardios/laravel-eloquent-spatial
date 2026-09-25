@@ -29,9 +29,7 @@ composer require jackardios/laravel-eloquent-spatial:^5.0
 
 ### Security fixes
 
-In v4, the `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid`, the `$direction` of `orderByDistance` and `orderByDistanceSphere`, and the `$alias` of `withDistance` and `withDistanceSphere` were written into the SQL unchanged. If these values came from a request, the query could be changed with SQL injection. v4 is not fixed. If you stay on v4, pass only values from a fixed list.
-
-In v5:
+In v4.0 and earlier, the `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid`, the `$direction` of `orderByDistance` and `orderByDistanceSphere`, and the `$alias` of `withDistance` and `withDistanceSphere` were written into the SQL unchanged. If these values came from a request, the query could be changed with SQL injection. This is fixed in v5.0 and in v4.1.0:
 
 - The operator must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`. Anything else throws `InvalidArgumentException`.
 - The direction must be `asc` or `desc`, in any case. Anything else throws `InvalidArgumentException`.

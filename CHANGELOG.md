@@ -29,7 +29,7 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 
 ### Fixed
 
-- **Security:** the operators, order directions and aliases of the distance and SRID scopes are no longer written into the SQL unchecked, which allowed SQL injection.
+- **Security:** the operators, order directions and aliases of the distance and SRID scopes are no longer written into the SQL unchecked, which allowed SQL injection. Also fixed in 4.1.0.
 - `NAN` and `INF` coordinates are rejected.
 - `BoundingBox::fromPoints()` no longer loops forever for an infinite or very large padding, and returns the whole longitude range for a padding of 360 or more.
 - Deeply nested geometries and invalid WKB no longer crash PHP or allocate large amounts of memory; nesting is limited to 64 levels.
@@ -42,7 +42,11 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 
 - The service provider, the Doctrine DBAL types, `HasSpatial::originalIsEquivalent()`, `Factory::loadGeoPhp()` and the `phayes/geophp` dependency.
 
-## Unreleased (4.1.0)
+## v4.1.0 - 2026-09-25
+
+### Security
+
+- The `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid`, the `$direction` of `orderByDistance` and `orderByDistanceSphere`, and the `$alias` of `withDistance` and `withDistanceSphere` were written into the SQL unchecked, which allowed SQL injection when these values came from user input. Operators other than `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and directions other than `asc` and `desc`, now throw `InvalidArgumentException`, and the alias is quoted as a column name.
 
 ### Added
 
