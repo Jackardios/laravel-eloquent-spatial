@@ -73,7 +73,7 @@ it('reads the GeoJSON of an extended class back', function (Geometry $geometry, 
 it('writes the geometries of an extended geometry collection', function (): void {
     $collection = new ExtendedGeometryCollection([new Point(1, 2)]);
 
-    expect($collection->toArray())->toEqual(['type' => 'GeometryCollection', 'geometries' => collect([['type' => 'Point', 'coordinates' => [1.0, 2.0]]])])
+    expect($collection->toArray())->toEqual(['type' => 'GeometryCollection', 'geometries' => [['type' => 'Point', 'coordinates' => [1.0, 2.0]]]])
         ->and($collection->toFeatureCollectionJson())->toBe((new GeometryCollection([new Point(1, 2)]))->toFeatureCollectionJson());
 });
 

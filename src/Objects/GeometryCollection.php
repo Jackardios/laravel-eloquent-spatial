@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Helper;
+use OutOfBoundsException;
 
 class GeometryCollection extends Geometry implements ArrayAccess
 {
@@ -27,11 +28,9 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function __construct(Collection|array $geometries, int|Srid|null $srid = null)
     {
-        if (is_array($geometries)) {
-            $geometries = collect($geometries);
-        }
-
-        $this->geometries = $geometries;
+        // A copy, so that a change to the given collection cannot bypass the validation. The keys are dropped, so
+        // that the coordinates are a list in GeoJSON.
+        $this->geometries = new Collection(array_values(is_array($geometries) ? $geometries : $geometries->all()));
         $this->srid = Helper::getSrid($srid);
 
         $this->validateGeometriesType();
@@ -84,7 +83,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
             'type' => 'GeometryCollection',
             'geometries' => $this->geometries->map(static function (Geometry $geometry): array {
                 return $geometry->toArray();
-            }),
+            })->all(),
         ];
     }
 
@@ -117,39 +116,75 @@ class GeometryCollection extends Geometry implements ArrayAccess
     }
 
     /**
-     * @param  int  $offset
+     * @param  mixed  $offset
      */
     public function offsetExists($offset): bool
     {
-        return isset($this->geometries[$offset]);
+        return is_int($offset) && isset($this->geometries[$offset]);
     }
 
     /**
-     * @param  int  $offset
+     * @param  mixed  $offset
+     *
+     * @throws OutOfBoundsException
      */
     public function offsetGet($offset): Geometry
     {
-        // @phpstan-ignore-next-line
-        return $this->geometries[$offset];
+        $geometry = is_int($offset) ? $this->geometries->get($offset) : null;
+
+        if ($geometry === null) {
+            throw new OutOfBoundsException(sprintf('%s has no geometry at offset %s.', static::class, var_export($offset, true)));
+        }
+
+        return $geometry;
     }
 
     /**
-     * @param  int  $offset
+     * An offset after the last geometry appends the geometry.
+     *
+     * @param  mixed  $offset
      * @param  Geometry  $value
+     *
+     * @throws InvalidArgumentException
+     * @throws OutOfBoundsException
      */
     public function offsetSet($offset, $value): void
     {
+        if (! $value instanceof $this->collectionOf) {
+            throw new InvalidArgumentException(sprintf('%s must be a collection of %s', static::class, $this->collectionOf));
+        }
+
+        if ($offset === null || (is_int($offset) && $offset >= $this->geometries->count())) {
+            $this->geometries->push($value);
+
+            return;
+        }
+
+        if (! is_int($offset) || ! isset($this->geometries[$offset])) {
+            throw new OutOfBoundsException(sprintf('%s has no geometry at offset %s.', static::class, var_export($offset, true)));
+        }
+
         $this->geometries[$offset] = $value;
-        $this->validateGeometriesType();
     }
 
     /**
-     * @param  int  $offset
+     * The geometries after the offset move down by one, as in a list.
+     *
+     * @param  mixed  $offset
+     *
+     * @throws InvalidArgumentException
      */
     public function offsetUnset($offset): void
     {
+        if (! is_int($offset) || ! isset($this->geometries[$offset])) {
+            return;
+        }
+
+        if ($this->geometries->count() - 1 < $this->minimumGeometries) {
+            throw $this->tooFewGeometries();
+        }
+
         $this->geometries->splice($offset, 1);
-        $this->validateGeometriesCount();
     }
 
     /**
@@ -157,17 +192,21 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     protected function validateGeometriesCount(): void
     {
-        $geometriesCount = $this->geometries->count();
-        if ($geometriesCount < $this->minimumGeometries) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    '%s must contain at least %s %s',
-                    static::class,
-                    $this->minimumGeometries,
-                    Str::plural('entries', $geometriesCount)
-                )
-            );
+        if ($this->geometries->count() < $this->minimumGeometries) {
+            throw $this->tooFewGeometries();
         }
+    }
+
+    private function tooFewGeometries(): InvalidArgumentException
+    {
+        return new InvalidArgumentException(
+            sprintf(
+                '%s must contain at least %d %s',
+                static::class,
+                $this->minimumGeometries,
+                Str::plural('entry', $this->minimumGeometries)
+            )
+        );
     }
 
     /**

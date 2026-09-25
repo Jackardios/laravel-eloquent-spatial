@@ -22,6 +22,7 @@ use Jackardios\EloquentSpatial\Helper;
 use Jackardios\EloquentSpatial\Wkb;
 use JsonException;
 use JsonSerializable;
+use stdClass;
 use Stringable;
 
 abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializable, Stringable
@@ -153,7 +154,8 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         $features = $geometries->map(static function (self $geometry): array {
             return [
                 'type' => 'Feature',
-                'properties' => [],
+                // An object, as GeoJSON requires, rather than the empty array [].
+                'properties' => new stdClass,
                 'geometry' => $geometry->toArray(),
             ];
         });

@@ -129,7 +129,7 @@ it('generates multi line string feature collection JSON', function (): void {
 
     $featureCollectionJson = $multiLineString->toFeatureCollectionJson();
 
-    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}}]}';
+    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"MultiLineString","coordinates":[[[180,0],[179,1]]]}}]}';
     expect($featureCollectionJson)->toBe($expectedFeatureCollectionJson);
 });
 

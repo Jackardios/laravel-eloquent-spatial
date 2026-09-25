@@ -5,6 +5,7 @@ use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiPoint;
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 use Jackardios\EloquentSpatial\Tests\TestModels\TestExtendedPlace;
@@ -324,7 +325,7 @@ it('generates geometry collection feature collection JSON', function (): void {
 
     $featureCollectionJson = $geometryCollection->toFeatureCollectionJson();
 
-    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}},{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[180,0]}}]}';
+    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[180,0],[179,1],[178,2],[177,3],[180,0]]]}},{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[180,0]}}]}';
     expect($featureCollectionJson)->toBe($expectedFeatureCollectionJson);
 });
 
@@ -794,4 +795,104 @@ it('handles geometry collection with all geometry types', function (): void {
     expect($testPlace->geometry_collection[0])->toBeInstanceOf(Point::class);
     expect($testPlace->geometry_collection[1])->toBeInstanceOf(LineString::class);
     expect($testPlace->geometry_collection[2])->toBeInstanceOf(Polygon::class);
+});
+
+it('leaves the collection unchanged when a geometry of the wrong type is set', function (): void {
+    $lineString = new LineString([new Point(0, 0), new Point(1, 1)]);
+    $polygon = new Polygon([new LineString([new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 0)])]);
+
+    // @phpstan-ignore-next-line argument.type
+    expect(fn () => $lineString[1] = $polygon)
+        ->toThrow(InvalidArgumentException::class, LineString::class.' must be a collection of '.Point::class);
+    expect($lineString->toWkt())->toBe('LINESTRING(0 0, 1 1)');
+});
+
+it('leaves the collection unchanged when too few geometries would remain', function (): void {
+    $lineString = new LineString([new Point(0, 0), new Point(1, 1)]);
+
+    expect(function () use ($lineString): void {
+        unset($lineString[0]);
+    })->toThrow(InvalidArgumentException::class, LineString::class.' must contain at least 2 entries');
+    expect($lineString->toWkt())->toBe('LINESTRING(0 0, 1 1)');
+});
+
+it('names the minimum number of geometries', function (): void {
+    expect(fn () => new MultiPoint([]))->toThrow(InvalidArgumentException::class, MultiPoint::class.' must contain at least 1 entry')
+        ->and(fn () => new LineString([new Point(0, 0)]))->toThrow(InvalidArgumentException::class, LineString::class.' must contain at least 2 entries');
+});
+
+it('throws for an offset without a geometry', function (mixed $offset): void {
+    $collection = new GeometryCollection([new Point(0, 0)]);
+
+    expect(fn () => $collection[$offset])->toThrow(OutOfBoundsException::class, GeometryCollection::class.' has no geometry at offset');
+})->with(['after the last' => [1], 'negative' => [-1], 'a string' => ['a']]);
+
+it('appends a geometry that is set after the last one', function (?int $offset): void {
+    $collection = new GeometryCollection([new Point(0, 0)]);
+
+    $collection[$offset] = new Point(1, 1);
+
+    expect($collection->getGeometries()->keys()->all())->toBe([0, 1])
+        ->and($collection->toJson())->toBe('{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[0,0]},{"type":"Point","coordinates":[1,1]}]}');
+})->with(['no offset' => [null], 'the next offset' => [1], 'a later offset' => [10]]);
+
+it('replaces a geometry', function (): void {
+    $collection = new GeometryCollection([new Point(0, 0), new Point(1, 1)]);
+
+    $collection[0] = new Point(2, 2);
+
+    expect($collection->toWkt())->toBe('GEOMETRYCOLLECTION(POINT(2 2), POINT(1 1))');
+});
+
+it('rejects an offset that is not a position', function (): void {
+    $collection = new GeometryCollection([new Point(0, 0)]);
+
+    // @phpstan-ignore-next-line offsetAssign.dimType
+    expect(fn () => $collection['a'] = new Point(1, 1))->toThrow(OutOfBoundsException::class);
+    expect(fn () => $collection[-1] = new Point(1, 1))->toThrow(OutOfBoundsException::class);
+    expect($collection->toWkt())->toBe('GEOMETRYCOLLECTION(POINT(0 0))');
+});
+
+it('ignores unsetting an offset without a geometry', function (mixed $offset): void {
+    $collection = new GeometryCollection([new Point(0, 0)]);
+
+    unset($collection[$offset]);
+
+    expect($collection->toWkt())->toBe('GEOMETRYCOLLECTION(POINT(0 0))');
+})->with(['after the last' => [1], 'negative' => [-1], 'a string' => ['a']]);
+
+it('moves the following geometries down when one is unset', function (): void {
+    $collection = new GeometryCollection([new Point(0, 0), new Point(1, 1), new Point(2, 2)]);
+
+    unset($collection[1]);
+
+    expect($collection[1])->toEqual(new Point(2, 2))
+        ->and($collection->getGeometries()->keys()->all())->toBe([0, 1]);
+});
+
+it('keeps its own copy of the given collection', function (): void {
+    $points = collect([new Point(0, 0), new Point(1, 1)]);
+    $lineString = new LineString($points);
+
+    $points->pop();
+
+    expect($lineString->toWkt())->toBe('LINESTRING(0 0, 1 1)');
+});
+
+it('writes the geometries as a list whatever their keys', function (): void {
+    // @phpstan-ignore argument.type
+    $lineString = new LineString([5 => new Point(0, 0), 'a' => new Point(1, 1)]);
+
+    expect($lineString->toJson())->toBe('{"type":"LineString","coordinates":[[0,0],[1,1]]}');
+});
+
+it('returns the geometries as an array', function (): void {
+    $collection = new GeometryCollection([new Point(0, 0)]);
+
+    expect($collection->toArray()['geometries'])->toBe([['type' => 'Point', 'coordinates' => [0.0, 0.0]]]);
+});
+
+it('writes the properties of a feature as an object', function (): void {
+    expect((new Point(0, 0))->toFeatureCollectionJson())
+        ->toBe('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[0,0]}}]}');
 });

@@ -102,7 +102,7 @@ it('generates multi point feature collection JSON', function (): void {
 
     $multiPointFeatureCollectionJson = $multiPoint->toFeatureCollectionJson();
 
-    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"MultiPoint","coordinates":[[180,0]]}}]}';
+    $expectedFeatureCollectionJson = '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"MultiPoint","coordinates":[[180,0]]}}]}';
     expect($multiPointFeatureCollectionJson)->toBe($expectedFeatureCollectionJson);
 });
 
