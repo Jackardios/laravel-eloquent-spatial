@@ -65,7 +65,7 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 
 - PHP 8.5: parsing and `toWkb()` no longer fail with `Class "Point" not found` when the application turns deprecations into exceptions. geoPHP's compile-time deprecations are now silenced while it loads.
 - The service provider no longer extends Laravel's `DatabaseServiceProvider`. Registering it registered the database services a second time and replaced the already-resolved `db` manager.
-- MySQL axis-order support is detected once per database connection instead of for every geometry, and a `MariaDbConnection` (Laravel 11+) no longer opens a connection just for this check.
+- MySQL axis-order support is detected once per database connection instead of for every geometry.
 
 ### Documentation
 
