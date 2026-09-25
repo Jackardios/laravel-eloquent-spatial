@@ -41,6 +41,12 @@ class Factory
      */
     public static function parse(string $value): Geometry
     {
+        // Binary WKB always has a byte order of 0 or 1, which text does not have. The first bytes can look like text:
+        // in the MySQL format they are the SRID, such as "j" for 2154 or "{" for 32635.
+        if (preg_match('/[\x00-\x08]/', $value) === 1) {
+            return self::parseWkb($value);
+        }
+
         if (preg_match('/^\s*\{/', $value) === 1) {
             return self::parseJson($value, 0);
         }

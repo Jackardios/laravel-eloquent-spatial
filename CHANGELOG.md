@@ -11,6 +11,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 - The dirty checks no longer read the WKT of a changed geometry back with brick/geo. Saving a model with a changed 1000-point geometry was 8 times slower than in 4.x.
 - `toWkt()` is about 1.5 times faster, and saving a model with a changed geometry is as fast as in 4.x again.
+- `Factory::parse()` reads WKB in the MySQL format whatever its SRID. For 1686 of the 8500 SRIDs that PostGIS knows, such as 2154, 3395 and the northern UTM zones 32601, 32602 and 32609 to 32635, it tried to read the value as WKT or GeoJSON because the SRID comes first.
 
 ## v5.0.0 - 2026-09-25
 

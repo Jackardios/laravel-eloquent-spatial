@@ -233,6 +233,10 @@ it('detects the format', function (string $value, Point $expected): void {
     'EWKB as hex' => [bin2hex(ewkbPoint(4326, 1, 2)), new Point(1, 2, 4326)],
     'hex that starts with a letter' => [bin2hex(pack('V', 4326).littleEndianPointWkb(1, 2)), new Point(1, 2, 4326)],
     'MySQL' => [pack('V', 4326).littleEndianPointWkb(1, 2), new Point(1, 2, 4326)],
+    // The SRID comes first, and its first byte can be a letter or a brace.
+    'MySQL with SRID 2154' => [pack('V', 2154).littleEndianPointWkb(1, 2), new Point(1, 2, 2154)],
+    'MySQL with SRID 3395' => [pack('V', 3395).littleEndianPointWkb(1, 2), new Point(1, 2, 3395)],
+    'MySQL with SRID 32635' => [pack('V', 32635).littleEndianPointWkb(1, 2), new Point(1, 2, 32635)],
 ]);
 
 it('does not read other formats', function (string $value): void {
