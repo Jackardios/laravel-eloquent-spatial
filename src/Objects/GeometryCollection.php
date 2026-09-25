@@ -120,6 +120,8 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function offsetExists($offset): bool
     {
+        $offset = self::normalizeOffset($offset);
+
         return is_int($offset) && isset($this->geometries[$offset]);
     }
 
@@ -130,6 +132,7 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function offsetGet($offset): Geometry
     {
+        $offset = self::normalizeOffset($offset);
         $geometry = is_int($offset) ? $this->geometries->get($offset) : null;
 
         if ($geometry === null) {
@@ -154,6 +157,8 @@ class GeometryCollection extends Geometry implements ArrayAccess
             throw new InvalidArgumentException(sprintf('%s must be a collection of %s', static::class, $this->collectionOf));
         }
 
+        $offset = self::normalizeOffset($offset);
+
         if ($offset === null || (is_int($offset) && $offset >= $this->geometries->count())) {
             $this->geometries->push($value);
 
@@ -176,6 +181,8 @@ class GeometryCollection extends Geometry implements ArrayAccess
      */
     public function offsetUnset($offset): void
     {
+        $offset = self::normalizeOffset($offset);
+
         if (! is_int($offset) || ! isset($this->geometries[$offset])) {
             return;
         }
@@ -185,6 +192,14 @@ class GeometryCollection extends Geometry implements ArrayAccess
         }
 
         $this->geometries->splice($offset, 1);
+    }
+
+    /**
+     * A string that is an integer, such as "1", is that offset, as for an array. Other strings, such as "01", are not.
+     */
+    private static function normalizeOffset(mixed $offset): mixed
+    {
+        return is_string($offset) && (string) (int) $offset === $offset ? (int) $offset : $offset;
     }
 
     /**

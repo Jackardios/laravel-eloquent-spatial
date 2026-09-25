@@ -83,6 +83,7 @@ echo $geometryCollection[1]->latitude; // 0
 
 The collection stays a list and stays valid:
 
+* An offset is an integer, or a string that is an integer, such as `'1'`, as for an array.
 * Reading an offset that does not exist throws `OutOfBoundsException`.
 * `$collection[] = $geometry`, or an offset after the last geometry, appends the geometry.
 * `unset($collection[$offset])` moves the following geometries down by one.

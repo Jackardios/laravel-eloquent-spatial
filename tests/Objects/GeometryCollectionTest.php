@@ -825,7 +825,29 @@ it('throws for an offset without a geometry', function (mixed $offset): void {
     $collection = new GeometryCollection([new Point(0, 0)]);
 
     expect(fn () => $collection[$offset])->toThrow(OutOfBoundsException::class, GeometryCollection::class.' has no geometry at offset');
-})->with(['after the last' => [1], 'negative' => [-1], 'a string' => ['a']]);
+})->with([
+    'after the last' => [1],
+    'negative' => [-1],
+    'a string' => ['a'],
+    'a string with a leading zero' => ['00'],
+    'a string with a sign' => ['+0'],
+    'a string with a space' => [' 0'],
+    'a decimal string' => ['0.0'],
+]);
+
+it('reads, sets and unsets an offset that is an integer string, as an array does', function (): void {
+    $collection = new GeometryCollection([new Point(0, 0), new Point(1, 1)]);
+
+    expect(isset($collection['1']))->toBeTrue()
+        ->and(isset($collection['2']))->toBeFalse()
+        ->and($collection['1'])->toEqual(new Point(1, 1));
+
+    $collection['0'] = new Point(2, 2);
+    $collection['5'] = new Point(3, 3);
+    unset($collection['1']);
+
+    expect($collection->toWkt())->toBe('GEOMETRYCOLLECTION(POINT(2 2), POINT(3 3))');
+});
 
 it('appends a geometry that is set after the last one', function (?int $offset): void {
     $collection = new GeometryCollection([new Point(0, 0)]);
