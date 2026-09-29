@@ -117,6 +117,7 @@ it('reads back the bounding box that was stored', function (BoundingBox $bbox, s
     'across the antimeridian and wider than 180 degrees' => [fn () => BoundingBox::fromArray(['left' => 10.0, 'bottom' => -10.0, 'right' => -10.0, 'top' => 10.0])],
     'from the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 180.0, 'bottom' => -10.0, 'right' => -170.0, 'top' => 10.0])],
     'to the antimeridian' => [fn () => BoundingBox::fromArray(['left' => 170.0, 'bottom' => -10.0, 'right' => -180.0, 'top' => 10.0])],
+    'without height' => [fn () => BoundingBox::fromArray(['left' => 10.0, 'bottom' => 20.0, 'right' => 30.0, 'top' => 20.0])],
 ])->with(['bounding_box', 'bounding_box_json']);
 
 it('reads the envelope of a polygon that it did not write', function (): void {

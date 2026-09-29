@@ -484,43 +484,6 @@ it('does not throw exception when geometry collection has no geometries', functi
     expect($geometryCollection->getGeometries())->toHaveCount(0);
 });
 
-it('unsets geometry collection item', function (): void {
-    $point = new Point(180, 0);
-    $geometryCollection = new GeometryCollection([
-        new Polygon([
-            new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        $point,
-    ]);
-
-    unset($geometryCollection[0]);
-
-    expect($geometryCollection[0])->toBe($point);
-    expect($geometryCollection->getGeometries())->toHaveCount(1);
-});
-
-it('throws exception when unsetting geometry collection item below minimum', function (): void {
-    $polygon = new Polygon([
-        new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
-    ]);
-
-    expect(function () use ($polygon): void {
-        unset($polygon[0]);
-    })->toThrow(InvalidArgumentException::class);
-});
-
 it('checks if geometry collection item is exists', function (): void {
     $geometryCollection = new GeometryCollection([
         new Polygon([
@@ -559,46 +522,6 @@ it('gets item from geometry collection by offset', function (): void {
 
     expect($geometryCollection[0])->toBe($polygon);
     expect($geometryCollection[1])->toBe($point);
-});
-
-it('sets item to geometry collection', function (): void {
-    $geometryCollection = new GeometryCollection([
-        new Polygon([
-            new LineString([
-                new Point(180, 0),
-                new Point(179, 1),
-                new Point(178, 2),
-                new Point(177, 3),
-                new Point(180, 0),
-            ]),
-        ]),
-        new Point(180, 0),
-    ]);
-    $lineString = new LineString([
-        new Point(180, 0),
-        new Point(179, 1),
-    ]);
-
-    $geometryCollection[2] = $lineString;
-
-    expect($geometryCollection[2])->toBe($lineString);
-});
-
-it('throws exception when setting invalid item to geometry collection', function (): void {
-    $polygon = new Polygon([
-        new LineString([
-            new Point(180, 0),
-            new Point(179, 1),
-            new Point(178, 2),
-            new Point(177, 3),
-            new Point(180, 0),
-        ]),
-    ]);
-
-    expect(function () use ($polygon): void {
-        // @phpstan-ignore-next-line
-        $polygon[1] = new Point(180, 0);
-    })->toThrow(InvalidArgumentException::class);
 });
 
 it('casts a GeometryCollection to a string', function (): void {

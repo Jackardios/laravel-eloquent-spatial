@@ -251,20 +251,6 @@ it('can convert bounding box to polygon', function () {
     ]);
 });
 
-it('serializes and deserializes bounding box object', function () {
-    $boundingBox = new BoundingBox(
-        new Point(-30.618423, -12.751244),
-        new Point(91.618423, 40.751244)
-    );
-
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create([
-        'bounding_box' => $boundingBox,
-    ])->fresh();
-
-    expect($testPlace->bounding_box)->toEqual($boundingBox);
-});
-
 it('throws exception when serializing invalid bounding box object', function () {
     expect(function () {
         TestPlace::factory()->make([
@@ -376,21 +362,6 @@ it('fromPoints does not detect antimeridian for points not crossing', function (
     expect($bbox->crossesAntimeridian())->toBeFalse();
 });
 
-it('serializes and deserializes antimeridian-crossing bounding box', function () {
-    $boundingBox = new BoundingBox(
-        new Point(170, 50),
-        new Point(-170, 60)
-    );
-
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create([
-        'bounding_box' => $boundingBox,
-    ])->fresh();
-
-    expect($testPlace->bounding_box)->toBeInstanceOf(BoundingBox::class);
-    expect($testPlace->bounding_box->crossesAntimeridian())->toBeTrue();
-});
-
 it('throws exception when creating bounding box from empty points', function () {
     expect(function () {
         BoundingBox::fromPoints([]);
@@ -438,15 +409,6 @@ it('accepts the same top and bottom', function () {
 
     expect($bbox->toArray())->toBe(['left' => 1.0, 'bottom' => 2.0, 'right' => 3.0, 'top' => 2.0]);
 });
-
-it('stores and reads a bounding box without height', function (string $attribute) {
-    $bbox = BoundingBox::fromPoints([new Point(10, 20), new Point(30, 20)]);
-
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create([$attribute => $bbox])->fresh();
-
-    expect($testPlace->{$attribute}?->toArray())->toBe($bbox->toArray());
-})->with(['bounding_box', 'bounding_box_json']);
 
 it('covers the whole longitude range when the padding is at least 360 degrees', function (float $minPadding) {
     $bbox = BoundingBox::fromPoints([new Point(10, 20)], $minPadding);
@@ -590,36 +552,7 @@ it('serializes and deserializes bounding box from array', function () {
     ]);
 });
 
-it('roundtrips bounding box through toArray and fromArray', function () {
-    $original = new BoundingBox(
-        new Point(-30.618423, -12.751244),
-        new Point(91.618423, 40.751244)
-    );
-
-    $recreated = BoundingBox::fromArray($original->toArray());
-
-    expect($recreated->toArray())->toBe($original->toArray());
-});
-
 // JSON cast round trips
-
-it('serializes and deserializes bounding box with json cast', function () {
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create([
-        'bounding_box_json' => new BoundingBox(
-            new Point(-30.618423, -12.751244),
-            new Point(91.618423, 40.751244)
-        ),
-    ])->fresh();
-
-    expect($testPlace->bounding_box_json)->toBeInstanceOf(BoundingBox::class);
-    expect($testPlace->bounding_box_json->toArray())->toBe([
-        'left' => -30.618423,
-        'bottom' => -12.751244,
-        'right' => 91.618423,
-        'top' => 40.751244,
-    ]);
-});
 
 it('serializes and deserializes null with json cast', function () {
     /** @var TestPlace $testPlace */

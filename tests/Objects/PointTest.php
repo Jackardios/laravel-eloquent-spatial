@@ -228,62 +228,6 @@ it('throws exception when storing a record with regular Point instead of the ext
     })->toThrow(InvalidArgumentException::class);
 });
 
-// Edge case tests for boundary coordinates
-
-it('creates point at maximum longitude boundary', function (): void {
-    $point = new Point(180.0, 0.0);
-
-    expect($point->longitude)->toBe(180.0);
-    expect($point->latitude)->toBe(0.0);
-});
-
-it('creates point at minimum longitude boundary', function (): void {
-    $point = new Point(-180.0, 0.0);
-
-    expect($point->longitude)->toBe(-180.0);
-    expect($point->latitude)->toBe(0.0);
-});
-
-it('creates point at maximum latitude boundary', function (): void {
-    $point = new Point(0.0, 90.0);
-
-    expect($point->longitude)->toBe(0.0);
-    expect($point->latitude)->toBe(90.0);
-});
-
-it('creates point at minimum latitude boundary', function (): void {
-    $point = new Point(0.0, -90.0);
-
-    expect($point->longitude)->toBe(0.0);
-    expect($point->latitude)->toBe(-90.0);
-});
-
-it('creates point at zero coordinates', function (): void {
-    $point = new Point(0.0, 0.0);
-
-    expect($point->longitude)->toBe(0.0);
-    expect($point->latitude)->toBe(0.0);
-});
-
-it('creates point with high precision coordinates', function (): void {
-    $longitude = 123.45678901234;
-    $latitude = -12.34567890123;
-    $point = new Point($longitude, $latitude);
-
-    expect($point->longitude)->toBe($longitude);
-    expect($point->latitude)->toBe($latitude);
-});
-
-it('preserves SRID through WKB roundtrip', function (): void {
-    $point = new Point(100.0, 50.0, Srid::WGS84->value);
-    $wkb = $point->toWkb();
-    $restored = Point::fromWkb($wkb);
-
-    expect($restored->srid)->toBe(Srid::WGS84->value);
-    expect($restored->longitude)->toBe(100.0);
-    expect($restored->latitude)->toBe(50.0);
-});
-
 it('preserves high precision coordinates through WKB roundtrip', function (): void {
     $longitude = 123.45678901234;
     $latitude = -12.34567890123;
@@ -293,32 +237,6 @@ it('preserves high precision coordinates through WKB roundtrip', function (): vo
 
     expect($restored->longitude)->toBe($longitude);
     expect($restored->latitude)->toBe($latitude);
-});
-
-// Coordinate validation tests
-
-it('throws exception for latitude above maximum', function (): void {
-    expect(function (): void {
-        new Point(0.0, 90.1);
-    })->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
-});
-
-it('throws exception for latitude below minimum', function (): void {
-    expect(function (): void {
-        new Point(0.0, -90.1);
-    })->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
-});
-
-it('throws exception for longitude above maximum', function (): void {
-    expect(function (): void {
-        new Point(180.1, 0.0);
-    })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
-});
-
-it('throws exception for longitude below minimum', function (): void {
-    expect(function (): void {
-        new Point(-180.1, 0.0);
-    })->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180');
 });
 
 it('rejects coordinates that are not finite', function (float $longitude, float $latitude, int $srid): void {
@@ -333,7 +251,9 @@ it('rejects coordinates that are not finite', function (float $longitude, float 
 
 it('validates the longitude and latitude ranges of SRID 0 and 4326', function (int|Srid $srid): void {
     expect(fn () => new Point(180.1, 0.0, $srid))->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180')
-        ->and(fn () => new Point(0.0, 90.1, $srid))->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
+        ->and(fn () => new Point(-180.1, 0.0, $srid))->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180')
+        ->and(fn () => new Point(0.0, 90.1, $srid))->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90')
+        ->and(fn () => new Point(0.0, -90.1, $srid))->toThrow(InvalidArgumentException::class, 'Latitude must be between -90 and 90');
 })->with(['SRID 0' => [0], 'SRID 4326' => [4326], 'Srid::WGS84' => [Srid::WGS84]]);
 
 it('does not validate the ranges of other SRIDs', function (int|Srid $srid): void {

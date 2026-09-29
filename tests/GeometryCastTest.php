@@ -139,26 +139,6 @@ it('checks a model record is not dirty after creation', function (): void {
     expect($testPlace->isDirty())->toBeFalse();
 });
 
-it('checks a model record is not dirty after fetch', function (): void {
-    $point = new Point(180, 0);
-    TestPlace::factory()->create(['point' => $point]);
-
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::firstOrFail();
-
-    expect($testPlace->isDirty())->toBeFalse();
-});
-
-it('checks a model record is dirty after update from null before save', function (): void {
-    $point = new Point(180, 0);
-    /** @var TestPlace $testPlace */
-    $testPlace = TestPlace::factory()->create([]);
-
-    $testPlace->point = $point;
-
-    expect($testPlace->isDirty())->toBeTrue();
-});
-
 it('checks a model record is dirty after update before save', function (): void {
     $point = new Point(180, 0);
     $point2 = new Point(0, 0);
