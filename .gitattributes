@@ -6,5 +6,6 @@
 phpunit.xml        export-ignore
 tests              export-ignore
 .editorconfig      export-ignore
-.php_cs            export-ignore
 phpstan.neon       export-ignore
+.run               export-ignore
+docker-compose.yaml export-ignore
