@@ -54,7 +54,8 @@ class Helper
     }
 
     /**
-     * Parse ST_GeomFromText SQL expression and extract WKT and SRID.
+     * Parse ST_GeomFromText SQL expression and extract WKT and SRID. An expression that only contains ST_GeomFromText,
+     * such as ST_Translate(ST_GeomFromText(...), 1, 1), is another geometry and is not parsed.
      *
      * @return array{wkt: string, srid: int}
      *
@@ -63,7 +64,7 @@ class Helper
     public static function parseStGeomFromText(string $expressionValue): array
     {
         $result = preg_match(
-            "/ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'([^']+)')?\s*\)/",
+            "/^\s*ST_GeomFromText\(\s*'([^']+)'\s*(?:,\s*(\d+))?\s*(?:,\s*'[^']+')?\s*\)(?:::geometry)?\s*$/",
             $expressionValue,
             $matches
         );

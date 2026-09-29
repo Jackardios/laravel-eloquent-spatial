@@ -145,6 +145,15 @@ it('detects geometry changes on models without the HasSpatial trait', function (
     expect($place->isDirty('point'))->toBeTrue();
 });
 
+it('treats an expression that only contains the stored geometry as changed', function (): void {
+    /** @var TestPlace $testPlace */
+    $testPlace = TestPlace::factory()->create(['point' => new Point(1, 2, 4326)])->fresh();
+
+    $testPlace->setAttribute('point', DB::raw("ST_Centroid(ST_GeomFromText('POINT(1 2)', 4326))"));
+
+    expect($testPlace->isDirty('point'))->toBeTrue();
+});
+
 it('saves a geometry set on an empty column', function (): void {
     /** @var TestPlace $testPlace */
     $testPlace = TestPlace::factory()->create(['point' => null])->fresh();

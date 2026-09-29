@@ -24,7 +24,11 @@ it('parses an ST_GeomFromText expression', function (string $expression, string 
     'extra whitespace' => ["ST_GeomFromText( 'POINT(1 2)' , 4326 , 'axis-order=long-lat' )", 'POINT(1 2)', 4326],
 ]);
 
-it('throws when an expression is not ST_GeomFromText', function (): void {
-    expect(fn () => Helper::parseStGeomFromText('ST_MakePoint(1, 2)'))
-        ->toThrow(InvalidArgumentException::class, 'Unable to parse ST_GeomFromText expression: ST_MakePoint(1, 2)');
-});
+it('throws when an expression is not ST_GeomFromText', function (string $expression): void {
+    expect(fn () => Helper::parseStGeomFromText($expression))
+        ->toThrow(InvalidArgumentException::class, 'Unable to parse ST_GeomFromText expression: '.$expression);
+})->with([
+    'another function' => ['ST_MakePoint(1, 2)'],
+    'ST_GeomFromText inside another function' => ["ST_Translate(ST_GeomFromText('POINT(1 2)', 4326), 10, 10)"],
+    'ST_GeomFromText followed by more SQL' => ["ST_GeomFromText('POINT(1 2)', 4326) + 1"],
+]);

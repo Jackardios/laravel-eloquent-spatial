@@ -5,6 +5,12 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
+## v5.0.2 - Unreleased
+
+### Fixed
+
+- A geometry cast attribute set to an expression that only contains `ST_GeomFromText()`, such as `ST_Centroid(ST_GeomFromText(...))`, was read as the inner geometry: the change was not saved if that geometry was already stored.
+
 ## v5.0.1 - 2026-09-25
 
 ### Fixed
