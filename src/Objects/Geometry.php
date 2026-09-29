@@ -70,13 +70,13 @@ abstract class Geometry implements Arrayable, Castable, Jsonable, JsonSerializab
         if (ctype_xdigit($wkb)) {
             $geometry = Factory::parse($wkb);
         } else {
-            $sridBinary = substr($wkb, 0, 4);
-            $unpackedSrid = unpack('L', $sridBinary);
-
-            if ($unpackedSrid === false) {
+            // unpack() would warn first, which Laravel turns into an ErrorException.
+            if (strlen($wkb) < 4) {
                 throw new InvalidArgumentException('Invalid WKB: cannot extract SRID');
             }
 
+            /** @var array{1: int} $unpackedSrid */
+            $unpackedSrid = unpack('L', $wkb);
             $srid = $unpackedSrid[1];
             $wkb = substr($wkb, 4);
 

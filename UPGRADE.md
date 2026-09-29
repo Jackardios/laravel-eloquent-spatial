@@ -168,7 +168,7 @@ Place::whereOverlaps('area', $polygon)->get();
 
 ### Bug Fixes
 
-- **WKB parsing safety**: `Geometry::fromWkb()` throws `InvalidArgumentException` when the input is too short to contain an SRID. PHP emits an `unpack()` warning first, which Laravel converts to an `ErrorException`
+- **WKB parsing safety**: `Geometry::fromWkb()` throws `InvalidArgumentException` when the input is too short to contain an SRID. Before 4.1.1, PHP emitted an `unpack()` warning first, which Laravel converts to an `ErrorException`
 - **Exception handling**: `Factory::parse()` now properly propagates exceptions from the geoPHP library instead of masking them
 - **BoundingBox validation**: Fixed error message typo in latitude constraint validation
 - **SQL escaping**: WKT strings are now escaped when building SQL expressions to prevent issues with special characters

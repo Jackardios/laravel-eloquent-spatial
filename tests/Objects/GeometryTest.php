@@ -209,22 +209,8 @@ it('creates a model record with geometry (geometry collection)', function (): vo
 // Edge case tests for WKB/WKT parsing
 
 it('throws when WKB is too short to contain an SRID', function (string $wkb): void {
-    $warnings = 0;
-    set_error_handler(static function () use (&$warnings): bool {
-        $warnings++;
-
-        return true;
-    });
-
-    try {
-        expect(fn () => Geometry::fromWkb($wkb))
-            ->toThrow(InvalidArgumentException::class, 'Invalid WKB: cannot extract SRID');
-    } finally {
-        restore_error_handler();
-    }
-
-    // unpack() warns before it returns false, so a Laravel app gets an ErrorException instead.
-    expect($warnings)->toBe(1);
+    expect(fn () => Geometry::fromWkb($wkb))
+        ->toThrow(InvalidArgumentException::class, 'Invalid WKB: cannot extract SRID');
 })->with([
     'empty' => [''],
     'two bytes' => ["\x00\x20"],
