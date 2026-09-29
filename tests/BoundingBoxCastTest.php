@@ -81,6 +81,13 @@ it('throws when the json column holds invalid JSON', function (): void {
         ->and($exception?->getPrevious())->toBeInstanceOf(JsonException::class);
 });
 
+it('throws when the json column holds JSON that is not an object', function (string $value): void {
+    $cast = new BoundingBoxCast(BoundingBoxCast::FORMAT_JSON);
+
+    expect(fn () => $cast->get(new TestPlace, 'bounding_box_json', $value, []))
+        ->toThrow(InvalidArgumentException::class, 'Invalid JSON for BoundingBox: expected an object, got '.$value);
+})->with(['null' => ['null'], 'a number' => ['5'], 'a string' => ['"x"']]);
+
 it('throws when the json column holds a non-string value', function (): void {
     $cast = new BoundingBoxCast(BoundingBoxCast::FORMAT_JSON);
 

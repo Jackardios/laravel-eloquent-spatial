@@ -90,13 +90,17 @@ class BoundingBoxCast implements CastsAttributes, ComparesCastableAttributes
     private function fromJson(string $value): BoundingBox
     {
         try {
-            /** @var array<string, mixed> $array */
             $array = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
-
-            return BoundingBox::fromArray($array);
         } catch (JsonException $e) {
             throw new InvalidArgumentException('Invalid JSON for BoundingBox: '.$e->getMessage(), 0, $e);
         }
+
+        if (! is_array($array)) {
+            throw new InvalidArgumentException('Invalid JSON for BoundingBox: expected an object, got '.$value);
+        }
+
+        /** @var array<string, mixed> $array */
+        return BoundingBox::fromArray($array);
     }
 
     /**
