@@ -6,7 +6,6 @@ namespace Jackardios\EloquentSpatial;
 
 use Brick\Geo\Geometry as BrickGeometry;
 use Brick\Geo\GeometryCollection as BrickGeometryCollection;
-use Brick\Geo\Io\EwktReader;
 use Brick\Geo\Io\GeoJson\Feature;
 use Brick\Geo\Io\GeoJsonReader;
 use Brick\Geo\LineString as BrickLineString;
@@ -29,7 +28,7 @@ class Factory
     /**
      * The deepest nesting of geometries that is read, where a geometry that is not in a collection has a depth of 1.
      *
-     * Much deeper nesting crashes PHP while brick/geo reads the geometries or PHP frees them.
+     * Much deeper nesting crashes PHP while the geometries are read or freed.
      */
     private const int MAX_DEPTH = 64;
 
@@ -69,15 +68,7 @@ class Factory
      */
     public static function parseWkt(string $wkt, ?int $srid, int $defaultSrid): Geometry
     {
-        self::validateWktDepth($wkt);
-
-        $geometry = self::read(static fn (): BrickGeometry => (new EwktReader)->read($wkt));
-
-        if ($srid === null) {
-            $srid = preg_match('/^\s*SRID=/i', $wkt) === 1 ? $geometry->srid() : $defaultSrid;
-        }
-
-        return self::create($geometry, $srid);
+        return Wkt::read($wkt, $srid, $defaultSrid, self::MAX_DEPTH);
     }
 
     /**
@@ -234,29 +225,6 @@ class Factory
         } catch (Throwable $exception) {
             // Besides its own GeometryException, brick/geo throws a TypeError, for example for GeoJSON coordinates that are strings.
             throw new InvalidArgumentException('Invalid spatial value: '.$exception->getMessage(), 0, $exception);
-        }
-    }
-
-    /**
-     * Brick/geo reads WKT recursively, so the nesting is limited before it is read.
-     *
-     * A geometry at the maximum depth can still have two more levels of parentheses, as a MultiPolygon has.
-     *
-     * @throws InvalidArgumentException
-     */
-    private static function validateWktDepth(string $wkt): void
-    {
-        $depth = 0;
-        $length = strlen($wkt);
-
-        for ($offset = strcspn($wkt, '()'); $offset < $length; $offset += 1 + strcspn($wkt, '()', $offset + 1)) {
-            $depth += $wkt[$offset] === '(' ? 1 : -1;
-
-            // PHPStan does not widen $depth over the iterations of this loop.
-            // @phpstan-ignore greater.alwaysFalse
-            if ($depth > self::MAX_DEPTH + 2) {
-                throw Wkb::tooDeep(self::MAX_DEPTH);
-            }
         }
     }
 

@@ -9,6 +9,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 ### Changed
 
+- WKT is read by the package instead of brick/geo, which took about 400 bytes of memory for every number, comma and parenthesis. Reading a line of 100,000 points took 175 MB instead of 15 MB, and 300 KB of invalid WKT exceeded a 128 MB memory limit. Reading WKT is also about 3 times faster, as fast as in 4.x. The same WKT is accepted, but the error messages have changed.
 - WKB is read in one pass instead of being checked first, so reading a point from the database is about 30% faster. Invalid WKB can throw with another message, such as the error of the first invalid geometry.
 
 ### Fixed

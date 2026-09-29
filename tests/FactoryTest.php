@@ -165,6 +165,17 @@ it('drops Z and M coordinates from WKT', function (string $wkt): void {
     expect(Point::fromWkt($wkt))->toEqual(new Point(1.5, 2.5));
 })->with(['POINT Z (1.5 2.5 3)', 'POINT M (1.5 2.5 3)', 'POINT ZM (1.5 2.5 3 4)']);
 
+it('reads WKT as brick/geo does', function (string $wkt, Geometry $expected): void {
+    expect(Geometry::fromWkt($wkt))->toEqual($expected);
+})->with([
+    'numbers without whitespace between them' => ['POINT(1-2)', new Point(1, -2)],
+    'numbers with exponents' => ['POINT(1e1 -2.5E-1)', new Point(10, -0.25)],
+    'points of a line in parentheses' => ['LINESTRING((1 2), 3 4)', new LineString([new Point(1, 2), new Point(3, 4)])],
+    'points of a multi point with and without parentheses' => ['MULTIPOINT((1 2), 3 4)', new MultiPoint([new Point(1, 2), new Point(3, 4)])],
+    'Z coordinates in a collection' => ['GEOMETRYCOLLECTION Z(POINT Z(1 2 3))', new GeometryCollection([new Point(1, 2)])],
+    'EWKT with whitespace' => [' SRID=4326 ; POINT(1 2)', new Point(1, 2, 4326)],
+]);
+
 it('rejects values that are not WKT', function (string $wkt): void {
     expect(fn () => Geometry::fromWkt($wkt))->toThrow(InvalidArgumentException::class, 'Invalid spatial value');
 })->with([
@@ -172,10 +183,30 @@ it('rejects values that are not WKT', function (string $wkt): void {
     'hex WKB' => ['0101000000000000000000F03F0000000000000040'],
     'trailing data' => ['POINT(1 2) x'],
     'three coordinates without Z' => ['POINT(1 2 3)'],
+    'a number with a plus sign' => ['POINT(+1 2)'],
+    'a number without a digit before the point' => ['POINT(.5 2)'],
+    'an unknown word' => ['POINT MZ(1 2 3 4)'],
     'an empty point' => ['POINT EMPTY'],
+    'a point in parentheses' => ['POINT((1 2))'],
+    'an empty list' => ['MULTIPOINT()'],
+    'a missing parenthesis' => ['MULTIPOINT((1 2)'],
+    'a collection without Z that contains a Z geometry' => ['GEOMETRYCOLLECTION(POINT Z(1 2 3))'],
+    'a collection with Z that contains a geometry without Z' => ['GEOMETRYCOLLECTION Z(POINT(1 2))'],
+    'an SRID after the start' => ['GEOMETRYCOLLECTION(SRID=4326;POINT(1 2))'],
+    'an SRID with spaces' => ['SRID = 4326;POINT(1 2)'],
     'a Triangle' => ['TRIANGLE((0 0, 1 0, 0 1, 0 0))'],
     'a CircularString' => ['CIRCULARSTRING(0 0, 1 1, 2 0)'],
 ]);
+
+it('reads WKT without much more memory than the value', function (): void {
+    $wkt = 'LINESTRING(1 2'.str_repeat(',', 1_000_000).'3 4)';
+    memory_reset_peak_usage();
+    $before = memory_get_usage();
+
+    expect(fn () => Geometry::fromWkt($wkt))->toThrow(InvalidArgumentException::class, 'Invalid spatial value')
+        // Brick/geo, which 5.0.1 used, took 444 MB.
+        ->and(memory_get_peak_usage() - $before)->toBeLessThan(1_000_000);
+});
 
 // GeoJSON
 
