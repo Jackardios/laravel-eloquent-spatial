@@ -421,6 +421,18 @@ it('creates a bounding box without height from a single point or a horizontal li
     'horizontal line' => [['left' => 10.0, 'bottom' => 20.0, 'right' => 30.0, 'top' => 20.0], new Point(10, 20), new Point(30, 20)],
 ]);
 
+it('keeps longitudes apart that differ only after the 14th digit', function () {
+    $bbox = BoundingBox::fromPoints([new Point(10.000000000000002, 1), new Point(10.0, 2)]);
+
+    expect($bbox->toArray())->toBe(['left' => 10.0, 'bottom' => 1.0, 'right' => 10.000000000000002, 'top' => 2.0]);
+});
+
+it('creates the same bounding box from repeated points', function () {
+    $bbox = BoundingBox::fromPoints([new Point(170, 1), new Point(-170, 2), new Point(170, 3), new Point(-170, 1)]);
+
+    expect($bbox->toArray())->toBe(['left' => 170.0, 'bottom' => 1.0, 'right' => -170.0, 'top' => 3.0]);
+});
+
 it('accepts the same top and bottom', function () {
     $bbox = BoundingBox::fromArray(['left' => 1, 'bottom' => 2, 'right' => 3, 'top' => 2]);
 

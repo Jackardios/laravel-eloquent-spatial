@@ -150,13 +150,9 @@ class BoundingBox implements Arrayable, Castable, Jsonable, JsonSerializable, St
      */
     protected static function findShortestLongitudeArc(array $longitudes): array
     {
-        $longitudes = array_unique($longitudes);
         sort($longitudes);
 
         $count = count($longitudes);
-        if ($count === 1) {
-            return [$longitudes[0], $longitudes[0]];
-        }
 
         $maxGap = 0;
         $maxGapIndex = 0;
