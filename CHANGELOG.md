@@ -9,6 +9,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 ### Changed
 
+- `withCentroid()` selects all columns too, as `withDistance()` does, unless the query selects columns. The models had only the centroid.
 - WKB is read in one pass instead of being checked first, so reading a point from the database is about 30% faster. Invalid WKB can throw with another message, such as the error of the first invalid geometry. WKB whose bytes also look like the MySQL format, such as `POINT(4.778309780138253E-299 0)`, is read instead of throwing.
 
 ### Fixed

@@ -256,10 +256,8 @@ Place::whereEquals('location', $point)->get();
 // Filter by SRID
 Place::whereSrid('location', '=', 4326)->get();
 
-// Get centroid; withCentroid() selects only the centroid, so select the other columns too.
-// MySQL 8 does not compute the centroid of a polygon in SRID 4326.
+// Get centroid; MySQL 8 does not compute the centroid of a polygon in SRID 4326
 Place::query()
-    ->select('*')
     ->withCentroid('area')
     ->withCasts(['centroid' => Point::class])
     ->get();

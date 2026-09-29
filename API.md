@@ -723,7 +723,6 @@ $polygon = Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,0],[2,0],[2,2
 Place::create(['area' => $polygon]);
 
 $placeWithCentroid = Place::query()
-    ->select('*') // withCentroid() selects only the centroid
     ->withCentroid('area')
     ->withCasts(['centroid' => Point::class]) // Important: cast to Point
     ->first();

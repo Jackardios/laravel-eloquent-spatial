@@ -421,6 +421,25 @@ it('calculates geometry centroid with alias', function (): void {
     expect($testPlace->centroid_alias)->toEqual($expectedCentroid);
 });
 
+it('selects all columns with the computed one unless columns are selected', function (string $scope, array $arguments, string $alias): void {
+    TestPlace::factory()->create([
+        'point' => new Point(0, 0),
+        'polygon' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'),
+    ]);
+
+    /** @var TestPlace $all */
+    $all = TestPlace::query()->{$scope}(...$arguments)->firstOrFail();
+    /** @var TestPlace $selected */
+    $selected = TestPlace::query()->select('id')->{$scope}(...$arguments)->firstOrFail();
+
+    expect(array_keys($all->getAttributes()))->toContain('name', 'point', $alias)
+        ->and(array_keys($selected->getAttributes()))->toBe(['id', $alias]);
+})->with([
+    'withDistance' => ['withDistance', ['point', new Point(1, 1)], 'distance'],
+    'withDistanceSphere' => ['withDistanceSphere', ['point', new Point(1, 1)], 'distance'],
+    'withCentroid' => ['withCentroid', ['polygon'], 'centroid'],
+]);
+
 it('uses spatial function with column', function (): void {
     TestPlace::factory()->create(['point' => new Point(0, 0, Srid::WGS84->value)]);
 

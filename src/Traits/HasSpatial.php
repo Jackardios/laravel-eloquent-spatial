@@ -328,6 +328,10 @@ trait HasSpatial
         ExpressionContract|Geometry|string $column,
         string $alias = 'centroid',
     ): void {
+        if (! $query->getQuery()->columns) {
+            $query->select('*');
+        }
+
         $query->selectRaw(
             sprintf(
                 'ST_CENTROID(%s) AS %s',
