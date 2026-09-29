@@ -111,6 +111,13 @@ it('reads WKB whose geometries have different byte orders', function (): void {
         ->toEqual(new GeometryCollection([new Point(1, 2), new MultiPoint([new Point(3, 4)])]));
 });
 
+it('reads WKB whose bytes are also the start of the MySQL format', function (): void {
+    // Read as the MySQL format, the SRID is 257 and a big-endian polygon follows, whose ring has too few points.
+    $wkb = littleEndianPointWkb(4.778309780138253E-299, 0);
+
+    expect(Point::fromWkb($wkb))->toEqual(new Point(4.778309780138253E-299, 0));
+});
+
 it('does not read another format when the values are invalid', function (): void {
     expect(fn () => Point::fromWkb(pack('V', 4326).littleEndianPointWkb(200, 0)))
         ->toThrow(InvalidArgumentException::class, 'Longitude must be between -180 and 180, got: 200');
