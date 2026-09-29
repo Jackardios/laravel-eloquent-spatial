@@ -849,6 +849,19 @@ it('reads, sets and unsets an offset that is an integer string, as an array does
     expect($collection->toWkt())->toBe('GEOMETRYCOLLECTION(POINT(2 2), POINT(3 3))');
 });
 
+it('changes only the clone of a geometry collection', function (): void {
+    $original = new LineString([new Point(1, 2), new Point(3, 4), new Point(5, 6)]);
+
+    $clone = clone $original;
+    // @phpstan-ignore-next-line offsetAssign.dimType
+    $clone[] = new Point(7, 8);
+    $clone[0] = new Point(0, 0);
+    unset($clone[1]);
+
+    expect($original->toWkt())->toBe('LINESTRING(1 2, 3 4, 5 6)')
+        ->and($clone->toWkt())->toBe('LINESTRING(0 0, 5 6, 7 8)');
+});
+
 it('appends a geometry that is set after the last one', function (?int $offset): void {
     $collection = new GeometryCollection([new Point(0, 0)]);
 

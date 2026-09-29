@@ -37,6 +37,14 @@ class GeometryCollection extends Geometry implements ArrayAccess
         $this->validateGeometriesCount();
     }
 
+    /**
+     * A clone has its own list of geometries, as a copied array would. The geometries themselves are shared.
+     */
+    public function __clone()
+    {
+        $this->geometries = new Collection($this->geometries->all());
+    }
+
     public function toWkt(): string
     {
         $wktData = $this->getWktData();

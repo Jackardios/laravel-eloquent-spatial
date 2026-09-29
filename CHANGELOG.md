@@ -12,6 +12,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 - A geometry cast attribute set to an expression that only contains `ST_GeomFromText()`, such as `ST_Centroid(ST_GeomFromText(...))`, was read as the inner geometry: the change was not saved if that geometry was already stored.
 - The spatial scopes no longer run the model's global scopes, once for every geometry or column they write into the SQL, which also made building such a query slower.
 - `BoundingBox::fromPoints()` merged longitudes that differ only after the 14th digit, so the box could miss a point. The result depended on the `precision` setting.
+- A clone of a `GeometryCollection`, `LineString` or another collection shared the list of geometries with the original, so adding, replacing or removing a geometry of the clone changed the original too.
 
 ## v5.0.1 - 2026-09-25
 
