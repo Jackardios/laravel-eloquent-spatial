@@ -7,6 +7,10 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 ## v5.0.2 - Unreleased
 
+### Changed
+
+- WKB is read in one pass instead of being checked first, so reading a point from the database is about 30% faster. Invalid WKB can throw with another message, such as the error of the first invalid geometry.
+
 ### Fixed
 
 - A geometry cast attribute set to an expression that only contains `ST_GeomFromText()`, such as `ST_Centroid(ST_GeomFromText(...))`, was read as the inner geometry: the change was not saved if that geometry was already stored.

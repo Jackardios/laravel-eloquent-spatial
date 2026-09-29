@@ -185,27 +185,23 @@ class Factory
         }
 
         // The format that the value most likely has is tried first: PostGIS returns hex EWKB, MySQL returns binary.
-        // The other format is tried only if the structure of the value does not match, not if its values are invalid.
         try {
-            [$wkb, $srid] = self::validateWkb($wkb, hasSridPrefix: ! $isHex);
+            return self::readWkb($wkb, hasSridPrefix: ! $isHex);
         } catch (InvalidArgumentException $exception) {
             try {
-                [$wkb, $srid] = self::validateWkb($wkb, hasSridPrefix: $isHex);
+                return self::readWkb($wkb, hasSridPrefix: $isHex);
             } catch (InvalidArgumentException) {
                 throw $exception;
             }
         }
-
-        return Wkb::read($wkb, $srid);
     }
 
     /**
      * @param  bool  $hasSridPrefix  Whether the value is in the MySQL format, a 4-byte SRID followed by WKB.
-     * @return array{string, int|null} The WKB or EWKB, and the SRID of the MySQL format.
      *
      * @throws InvalidArgumentException
      */
-    private static function validateWkb(string $value, bool $hasSridPrefix): array
+    private static function readWkb(string $value, bool $hasSridPrefix): Geometry
     {
         $srid = null;
 
@@ -220,9 +216,7 @@ class Factory
             $value = substr($value, 4);
         }
 
-        Wkb::validate($value, self::MAX_DEPTH);
-
-        return [$value, $srid];
+        return Wkb::read($value, $srid, self::MAX_DEPTH);
     }
 
     /**
