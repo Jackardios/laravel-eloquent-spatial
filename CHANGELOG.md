@@ -26,8 +26,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 ### Fixed
 
-- The dirty checks no longer read the WKT of a changed geometry back with brick/geo. Saving a model with a changed 1000-point geometry was 8 times slower than in 4.x.
-- `toWkt()` is about 1.5 times faster, and saving a model with a changed geometry is as fast as in 4.x again.
+- Saving a model with a changed 1000-point geometry was 8 times slower than in 4.x, because the dirty checks read the WKT of the geometry back with brick/geo. It is as fast as in 4.x again. `toWkt()` is also about 1.3 times faster for coordinates with few digits, such as GPS coordinates, but 1.5 times slower for coordinates that need all 17 digits.
 - `Factory::parse()` reads WKB in the MySQL format whatever its SRID. For 1686 of the 8500 SRIDs that PostGIS knows, such as 2154, 3395 and the northern UTM zones 32601, 32602 and 32609 to 32635, it tried to read the value as WKT or GeoJSON because the SRID comes first.
 - `GeometryCollection` and its subclasses accept a string that is an integer, such as `'1'`, as an offset again, as in 4.x and as an array does. In 5.0.0 reading it threw `OutOfBoundsException`.
 
@@ -66,7 +65,7 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 
 ### Removed
 
-- The service provider, the Doctrine DBAL types, `HasSpatial::originalIsEquivalent()`, `Factory::loadGeoPhp()` and the `phayes/geophp` dependency.
+- The service provider, the Doctrine DBAL types, `HasSpatial::originalIsEquivalent()`, `Factory::loadGeoPhp()`, the protected `Factory::createFromGeometry()` and the `phayes/geophp` dependency.
 
 ## v4.1.0 - 2026-09-25
 

@@ -33,12 +33,12 @@ In v4.0 and earlier, the `$operator` of `whereDistance`, `whereDistanceSphere` a
 
 - The operator must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`. Anything else throws `InvalidArgumentException`.
 - The direction must be `asc` or `desc`, in any case. Anything else throws `InvalidArgumentException`.
-- The alias is quoted as a column name. An alias such as `'distance'` works as before. On PostgreSQL, an alias with capital letters keeps them: the alias `'myDistance'` is now the attribute `myDistance`, where v4.0 returned `mydistance`.
+- The alias is quoted as a column name. An alias such as `'distance'` works as before. If you quoted the alias yourself, remove the quotes. On PostgreSQL, an alias with capital letters keeps them: the alias `'myDistance'` is now the attribute `myDistance`, where v4.0 returned `mydistance`.
 
 Other values that v5 rejects to protect the application:
 
 - `Geometry::toSqlExpression()` throws `InvalidArgumentException` if `toWkt()` returns characters that WKT does not use. v4 escaped the WKT with `addslashes()`, which is not correct for PostgreSQL. This affects only subclasses that override `toWkt()`.
-- Geometries nested more than 64 levels deep throw `InvalidArgumentException` when they are read. Reading much deeper nesting could crash PHP.
+- Geometries nested more than 64 levels deep throw `InvalidArgumentException` when they are read. Reading much deeper nesting could crash PHP. Such geometries can still be created and written, but not read back.
 - `BoundingBox::fromPoints()` throws `InvalidArgumentException` for a `$minPadding` of `NAN` or `INF`. In v4, an infinite or very large padding made it loop forever.
 
 ### Parsing
@@ -64,7 +64,7 @@ Other values that v5 rejects to protect the application:
 
 **WKB.**
 
-- `fromWkb()` now also reads WKB without the MySQL SRID prefix, big-endian WKB, and binary EWKB.
+- `fromWkb()` now also reads binary WKB and EWKB without the MySQL SRID prefix, which v4 read only as hex, and big-endian WKB, which v4 read with wrong coordinates or not at all.
 - Hex WKB with the MySQL SRID prefix was read with wrong coordinates in v4 and is now read correctly.
 - WKB with extra bytes after the geometry throws.
 - WKB that is too short throws without a PHP warning.
@@ -85,7 +85,7 @@ Other values that v5 rejects to protect the application:
 
 - Longitude and latitude ranges are checked only for SRID 0 and 4326. A `Point` with another SRID, such as Web Mercator (3857) in metres, is no longer rejected for being out of range.
 - `NAN` and `INF` coordinates always throw `InvalidArgumentException`: *Coordinates must be finite numbers*. v4 accepted `NAN`.
-- `toWkt()` writes the shortest number that reads back as the same float, instead of rounding to the `precision` setting (14 digits by default). For example, `new Point(0.1234567890123456789, 1 / 3)` is now `POINT(0.12345678901234568 0.3333333333333333)`, not `POINT(0.12345678901235 0.33333333333333)`. Values that are saved and read back no longer lose precision. If your tests compare WKT strings, update the expected values.
+- `toWkt()` writes the shortest number that reads back as the same float, instead of rounding to the `precision` setting (14 digits by default). For example, `new Point(0.1234567890123456789, 1 / 3)` is now `POINT(0.12345678901234568 0.3333333333333333)`, not `POINT(0.12345678901235 0.33333333333333)`. Values that are saved and read back no longer lose precision. If your tests compare WKT strings, update the expected values. Like `toJson()`, `toWkt()` writes numbers with the `serialize_precision` setting: with -1, the PHP default, the shortest exact number, and with a positive value, that many digits, which can lose precision.
 
 ### BoundingBox
 
@@ -116,9 +116,9 @@ Other values that v5 rejects to protect the application:
 
 These changes apply to `MultiPoint`, `LineString`, `Polygon` and the other collections too.
 
-- Reading an offset that does not exist, `$collection[5]`, throws `OutOfBoundsException`. v4 emitted a warning and then threw a `TypeError`.
+- Reading an offset that does not exist, `$collection[5]`, throws `OutOfBoundsException`. v4 emitted a warning, which Laravel turns into an `ErrorException`, and then threw a `TypeError`.
 - Setting an offset after the last geometry appends the geometry, so the collection stays a list. In v4 it created a gap, and the GeoJSON had an object instead of an array.
-- A geometry of the wrong type throws `InvalidArgumentException`, and an `unset()` that would leave too few geometries throws `InvalidArgumentException` too. Both now happen before the collection is changed. v4 changed the collection first, and for some wrong types threw a `TypeError`, such as a `LineString` set in a `MultiPoint`.
+- A geometry of the wrong type throws `InvalidArgumentException`, and an `unset()` that would leave too few geometries throws `InvalidArgumentException` too. Both now happen before the collection is changed. v4 threw the exception after it had changed the collection, so a `LineString` set in a `MultiPoint` stayed in it, and a later `toWkt()` threw a `TypeError`.
 - The constructor copies the given array or collection, so later changes to it do not change the geometry.
 - The message for too few geometries says *at least 1 entry* instead of *at least 1 entries*.
 
@@ -152,7 +152,7 @@ composer update jackardios/laravel-eloquent-spatial
 composer require laravel/framework:^13.0 jackardios/laravel-eloquent-spatial:^4.1 --with-all-dependencies
 ```
 
-3. The distance and SRID scopes now reject values that could change the SQL. `whereDistance`, `whereDistanceSphere` and `whereSrid` accept only the operators `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and `orderByDistance` and `orderByDistanceSphere` only the directions `asc` and `desc`, in any case. Other values throw `InvalidArgumentException`. The alias of `withDistance` and `withDistanceSphere` is quoted as a column name, so an alias such as `'distance'` works as before, but an alias that contains SQL no longer does. On PostgreSQL, an alias with capital letters keeps them: the alias `'myDistance'` is now the attribute `myDistance`, where v4.0 returned `mydistance`.
+3. The distance and SRID scopes now reject values that could change the SQL. `whereDistance`, `whereDistanceSphere` and `whereSrid` accept only the operators `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and `orderByDistance` and `orderByDistanceSphere` only the directions `asc` and `desc`, in any case. Other values throw `InvalidArgumentException`. The alias of `withDistance` and `withDistanceSphere` is quoted as a column name, so an alias such as `'distance'` works as before, but an alias that contains SQL no longer does. If you quoted the alias yourself, remove the quotes. On PostgreSQL, an alias with capital letters keeps them: the alias `'myDistance'` is now the attribute `myDistance`, where v4.0 returned `mydistance`.
 
 4. Only if your code treats `EloquentSpatialServiceProvider` as a `DatabaseServiceProvider` (for example `instanceof` checks or `$app->getProviders(DatabaseServiceProvider::class)`): the provider now extends `Illuminate\Support\ServiceProvider`. Laravel's own `DatabaseServiceProvider` still registers the database services.
 
@@ -245,6 +245,18 @@ WHERE ST_X(location) < -180
    OR ST_X(location) > 180
    OR ST_Y(location) < -90
    OR ST_Y(location) > 90;
+```
+
+On MySQL 8, `ST_X()` returns the latitude of a geometry with SRID 4326, and such geometries are always within the ranges, so leave them out:
+
+```sql
+-- MySQL 8
+SELECT * FROM your_table
+WHERE ST_SRID(location) <> 4326
+  AND (ST_X(location) < -180
+    OR ST_X(location) > 180
+    OR ST_Y(location) < -90
+    OR ST_Y(location) > 90);
 ```
 
 ### New Features
