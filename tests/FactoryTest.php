@@ -12,8 +12,11 @@ use Jackardios\EloquentSpatial\Factory;
 use Jackardios\EloquentSpatial\Objects\Geometry;
 use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
+use Jackardios\EloquentSpatial\Objects\MultiLineString;
 use Jackardios\EloquentSpatial\Objects\MultiPoint;
+use Jackardios\EloquentSpatial\Objects\MultiPolygon;
 use Jackardios\EloquentSpatial\Objects\Point;
+use Jackardios\EloquentSpatial\Objects\Polygon;
 
 function littleEndianPointWkb(float $x, float $y): string
 {
@@ -196,11 +199,56 @@ it('reads a GeoJSON Feature and FeatureCollection', function (string $json, Geom
     'FeatureCollection of one' => ['{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[1,2]}}]}', new Point(1, 2)],
     'FeatureCollection of two' => [
         '{"type":"FeatureCollection","features":[{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[1,2]}},{"type":"Feature","properties":[],"geometry":{"type":"Point","coordinates":[3,4]}}]}',
-        new GeometryCollection([new Point(1, 2), new Point(3, 4)]),
+        new MultiPoint([new Point(1, 2), new Point(3, 4)]),
     ],
     'wrong case' => ['{"type":"POINT","coordinates":[1,2]}', new Point(1, 2)],
     'Z coordinate' => ['{"type":"Point","coordinates":[1,2,3]}', new Point(1, 2)],
 ]);
+
+it('merges the geometries of a FeatureCollection into a multi geometry of their type, as version 4 did', function (string $first, string $second, Geometry $expected): void {
+    $features = '{"type":"Feature","properties":{},"geometry":'.$first.'},{"type":"Feature","properties":{},"geometry":'.$second.'}';
+
+    expect(Geometry::fromJson('{"type":"FeatureCollection","features":['.$features.']}'))->toEqual($expected);
+})->with([
+    'points and a multi point' => [
+        '{"type":"Point","coordinates":[1,2]}',
+        '{"type":"MultiPoint","coordinates":[[3,4],[5,6]]}',
+        new MultiPoint([new Point(1, 2), new Point(3, 4), new Point(5, 6)]),
+    ],
+    'lines' => [
+        '{"type":"LineString","coordinates":[[0,0],[1,1]]}',
+        '{"type":"MultiLineString","coordinates":[[[2,2],[3,3]]]}',
+        new MultiLineString([new LineString([new Point(0, 0), new Point(1, 1)]), new LineString([new Point(2, 2), new Point(3, 3)])]),
+    ],
+    'polygons' => [
+        '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
+        '{"type":"MultiPolygon","coordinates":[[[[2,2],[3,2],[3,3],[2,2]]]]}',
+        new MultiPolygon([
+            new Polygon([new LineString([new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 0)])]),
+            new Polygon([new LineString([new Point(2, 2), new Point(3, 2), new Point(3, 3), new Point(2, 2)])]),
+        ]),
+    ],
+    'different types' => [
+        '{"type":"Point","coordinates":[1,2]}',
+        '{"type":"LineString","coordinates":[[0,0],[1,1]]}',
+        new GeometryCollection([new Point(1, 2), new LineString([new Point(0, 0), new Point(1, 1)])]),
+    ],
+    // Unlike version 4, which merged the geometries of the collection into the others.
+    'a point and a collection of points' => [
+        '{"type":"Point","coordinates":[1,2]}',
+        '{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[3,4]}]}',
+        new GeometryCollection([new Point(1, 2), new GeometryCollection([new Point(3, 4)])]),
+    ],
+]);
+
+it('reads a FeatureCollection of polygons as a MultiPolygon', function (): void {
+    $json = (new GeometryCollection([
+        new Polygon([new LineString([new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 0)])]),
+        new Polygon([new LineString([new Point(2, 2), new Point(3, 2), new Point(3, 3), new Point(2, 2)])]),
+    ]))->toFeatureCollectionJson();
+
+    expect(MultiPolygon::fromJson($json)->toWkt())->toBe('MULTIPOLYGON(((0 0, 1 0, 1 1, 0 0)), ((2 2, 3 2, 3 3, 2 2)))');
+});
 
 it('reads the properties literally only where they are properties', function (): void {
     $json = '{"type":"Feature","properties":{"note":"\"properties\":[]"},"geometry":{"type":"Point","coordinates":[1,2]}}';
@@ -289,6 +337,14 @@ it('counts the geometries of a multi geometry as one level deeper', function (st
         .'{"type":"MultiPoint","coordinates":[[1,2]]}'
         .str_repeat(']}', 63),
 ]);
+
+it('counts the geometries of a FeatureCollection as one level deeper', function (): void {
+    $feature = '{"type":"Feature","properties":{},"geometry":'.nestedCollectionJson(63).'}';
+
+    expect(Geometry::fromJson('{"type":"FeatureCollection","features":['.$feature.']}'))->toBeInstanceOf(GeometryCollection::class)
+        ->and(fn () => Geometry::fromJson('{"type":"FeatureCollection","features":['.$feature.','.$feature.']}'))
+        ->toThrow(InvalidArgumentException::class, 'geometries nested deeper than 64 levels are not supported');
+});
 
 it('rejects geometries nested deeper than the maximum depth', function (Closure $read, int $collections): void {
     expect(fn () => $read($collections))->toThrow(InvalidArgumentException::class, 'Invalid spatial value');

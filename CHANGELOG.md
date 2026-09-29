@@ -13,6 +13,8 @@ For the history before the fork, see the [upstream changelog](https://github.com
 - The spatial scopes no longer run the model's global scopes, once for every geometry or column they write into the SQL, which also made building such a query slower.
 - `BoundingBox::fromPoints()` merged longitudes that differ only after the 14th digit, so the box could miss a point. The result depended on the `precision` setting.
 - A clone of a `GeometryCollection`, `LineString` or another collection shared the list of geometries with the original, so adding, replacing or removing a geometry of the clone changed the original too.
+- A GeoJSON FeatureCollection of only points, only lines or only polygons, single or multi, is read as a `MultiPoint`, `MultiLineString` or `MultiPolygon` again, as in 4.x, instead of a `GeometryCollection`. So `MultiPolygon::fromJson()` reads a FeatureCollection of polygons again.
+- A FeatureCollection with several features could have geometries nested 65 levels deep, one more than the limit.
 - The bounding box cast in the json format throws `InvalidArgumentException` instead of a `TypeError` for JSON that is not an object, such as `null`.
 
 ## v5.0.1 - 2026-09-25

@@ -31,7 +31,7 @@ Invalid coordinates throw `InvalidArgumentException`.
 Geometry classes can be created using these static methods. Each accepts only its own format, and throws `InvalidArgumentException` for invalid input or a geometry of another class:
 
 * `fromArray(array $geometry, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) array
-* `fromJson(string $geoJson, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) geometry, Feature, or FeatureCollection (its only geometry, or a `GeometryCollection` of its geometries)
+* `fromJson(string $geoJson, int|Srid|null $srid = null)` - Creates from a [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) geometry, Feature, or FeatureCollection (its only geometry; several points, lines or polygons of one type merged into a `MultiPoint`, `MultiLineString` or `MultiPolygon`; otherwise a `GeometryCollection` of its geometries)
 * `fromWkt(string $wkt, int|Srid|null $srid = null)` - Creates from [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry), or EWKT such as `SRID=4326;POINT(1 2)`. Without `$srid`, the SRID is read from EWKT, and is the default SRID for WKT
 * `fromWkb(string $wkb)` - Creates from [WKB](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry#Well-known_binary) as MySQL stores it (a 4-byte SRID followed by WKB), WKB, or EWKB, binary or hex. The SRID is read from the MySQL format and EWKB, and is 0 for WKB
 

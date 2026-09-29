@@ -18,6 +18,7 @@ use Brick\Geo\Polygon as BrickPolygon;
 use Closure;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\GeometryCollection;
 use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
@@ -80,7 +81,7 @@ class Factory
     }
 
     /**
-     * A Feature is read as its geometry, and a FeatureCollection as its only geometry or as a GeometryCollection.
+     * A Feature is read as its geometry, and a FeatureCollection as its only geometry or as a collection of them.
      *
      * @throws InvalidArgumentException
      *
@@ -98,21 +99,64 @@ class Factory
             return self::create($object, $srid);
         }
 
-        $features = $object instanceof Feature ? [$object] : $object->getFeatures();
+        $features = array_values($object instanceof Feature ? [$object] : $object->getFeatures());
 
-        $geometries = array_map(static function (Feature $feature) use ($srid): Geometry {
+        // Several geometries are put in a collection, so they are one level deeper.
+        $depth = count($features) > 1 ? 2 : 1;
+
+        $geometries = array_map(static function (Feature $feature) use ($srid, $depth): Geometry {
             $geometry = $feature->getGeometry();
 
             if ($geometry === null) {
                 throw new InvalidArgumentException('Invalid spatial value: a GeoJSON Feature has no geometry.');
             }
 
-            return self::create($geometry, $srid);
-        }, array_values($features));
+            return self::create($geometry, $srid, $depth);
+        }, $features);
 
         return match (count($geometries)) {
             0 => throw new InvalidArgumentException('Invalid spatial value: the GeoJSON FeatureCollection has no features.'),
             1 => $geometries[0],
+            default => self::combine($geometries, $srid),
+        };
+    }
+
+    /**
+     * As in version 4, points, lines or polygons, single or multi, are merged into one multi geometry. Other
+     * geometries are kept apart in a GeometryCollection.
+     *
+     * @param  list<Geometry>  $geometries
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function combine(array $geometries, int $srid): Geometry
+    {
+        $points = [];
+        $lineStrings = [];
+        $polygons = [];
+
+        foreach ($geometries as $geometry) {
+            // Polygon extends MultiLineString, so a multi geometry is recognized by its type.
+            $parts = in_array(Helper::geometryType($geometry), ['MultiPoint', 'MultiLineString', 'MultiPolygon'], true)
+                && $geometry instanceof GeometryCollection ? $geometry->getGeometries()->all() : [$geometry];
+
+            foreach ($parts as $part) {
+                if ($part instanceof Point) {
+                    $points[] = $part;
+                } elseif ($part instanceof LineString) {
+                    $lineStrings[] = $part;
+                } elseif ($part instanceof Polygon) {
+                    $polygons[] = $part;
+                } else {
+                    return new EloquentSpatial::$geometryCollection($geometries, $srid);
+                }
+            }
+        }
+
+        return match (true) {
+            $lineStrings === [] && $polygons === [] => new EloquentSpatial::$multiPoint($points, $srid),
+            $points === [] && $polygons === [] => new EloquentSpatial::$multiLineString($lineStrings, $srid),
+            $points === [] && $lineStrings === [] => new EloquentSpatial::$multiPolygon($polygons, $srid),
             default => new EloquentSpatial::$geometryCollection($geometries, $srid),
         };
     }

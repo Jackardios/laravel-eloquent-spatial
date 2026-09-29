@@ -69,6 +69,8 @@ Other values that v5 rejects to protect the application:
 - WKB with extra bytes after the geometry throws.
 - WKB that is too short throws without a PHP warning.
 
+**GeoJSON FeatureCollection.** A FeatureCollection with one feature is read as the geometry of the feature. Features that are all points, all lines or all polygons, single or multi, are merged into a `MultiPoint`, `MultiLineString` or `MultiPolygon`, as in v4; 5.0.0 and 5.0.1 read them as a `GeometryCollection`. Other features are read as a `GeometryCollection` of the geometries of the features. Unlike v4, a `GeometryCollection` in a feature stays a collection instead of being merged with the other geometries. So `toFeatureCollectionJson()` of a `GeometryCollection` of points, as in v4, is read back as a `MultiPoint`.
+
 **Stricter input.** These values were accepted in v4 and throw `InvalidArgumentException` in v5:
 
 - WKT with three coordinates but without `Z`, such as `POINT(1 2 3)`. Write `POINT Z(1 2 3)`; Z and M coordinates are read and dropped, as in v4.
