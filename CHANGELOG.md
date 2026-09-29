@@ -9,11 +9,11 @@ For the history before the fork, see the [upstream changelog](https://github.com
 
 ### Changed
 
-- WKT is read by the package instead of brick/geo, which took about 400 bytes of memory for every number, comma and parenthesis. Reading a line of 100,000 points took 175 MB instead of 15 MB, and 300 KB of invalid WKT exceeded a 128 MB memory limit. Reading WKT is also about 3 times faster, as fast as in 4.x. The same WKT is accepted, but the error messages have changed.
 - WKB is read in one pass instead of being checked first, so reading a point from the database is about 30% faster. Invalid WKB can throw with another message, such as the error of the first invalid geometry.
 
 ### Fixed
 
+- Reading WKT took about 400 bytes of memory for every number, comma and parenthesis, because brick/geo splits the whole value into tokens first: a line of 100,000 points took 175 MB, and 300 KB of invalid WKT exceeded a 128 MB memory limit. WKT is now read by the package, the line takes 15 MB, and reading WKT is about 3 times faster, as fast as in 4.x. The same WKT is accepted, but the error messages have changed.
 - A geometry cast attribute set to an expression that only contains `ST_GeomFromText()`, such as `ST_Centroid(ST_GeomFromText(...))`, was read as the inner geometry: the change was not saved if that geometry was already stored.
 - The spatial scopes no longer run the model's global scopes, once for every geometry or column they write into the SQL, which also made building such a query slower.
 - `BoundingBox::fromPoints()` merged longitudes that differ only after the 14th digit, so the box could miss a point. The result depended on the `precision` setting.
@@ -21,6 +21,11 @@ For the history before the fork, see the [upstream changelog](https://github.com
 - A GeoJSON FeatureCollection of only points, only lines or only polygons, single or multi, is read as a `MultiPoint`, `MultiLineString` or `MultiPolygon` again, as in 4.x, instead of a `GeometryCollection`. So `MultiPolygon::fromJson()` reads a FeatureCollection of polygons again.
 - A FeatureCollection with several features could have geometries nested 65 levels deep, one more than the limit.
 - The bounding box cast in the json format throws `InvalidArgumentException` instead of a `TypeError` for JSON that is not an object, such as `null`.
+
+### Documentation
+
+- The query examples in the README and API.md work on every supported database. They mixed SRID 0 and 4326, which MySQL 8 and PostGIS reject, and showed distances that only MySQL 8 returns.
+- UPGRADE.md: corrected what 4.x did with WKB and with geometries of the wrong type, the range query for MySQL 8, and the effect of `serialize_precision` on `toWkt()`.
 
 ## v5.0.1 - 2026-09-25
 
