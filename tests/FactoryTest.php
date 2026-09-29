@@ -66,7 +66,7 @@ it('reads WKB in every supported encoding', function (string $wkb, Point $expect
     'EWKB as uppercase hex' => [strtoupper(bin2hex(ewkbPoint(4326, 1.5, 2.5))), new Point(1.5, 2.5, 4326)],
 ]);
 
-it('reads WKB like brick/geo', function (string $wkt, WkbByteOrder $byteOrder, string $encoding, bool $hex): void {
+it('reads WKB like brick/geo', function (string $wkt, WkbByteOrder $byteOrder, string $encoding): void {
     $brickGeometry = (new EwktReader)->read($wkt);
 
     $writer = $encoding === 'EWKB' ? new EwkbWriter : new WkbWriter;
@@ -78,7 +78,7 @@ it('reads WKB like brick/geo', function (string $wkt, WkbByteOrder $byteOrder, s
         ? (new WkbReader)->read(substr($wkb, 4), 4326)
         : (new EwkbReader)->read($wkb);
 
-    expect(Geometry::fromWkb($hex ? bin2hex($wkb) : $wkb))->toEqual(Geometry::fromWkt($read->asText(), $read->srid()));
+    expect(Geometry::fromWkb($wkb))->toEqual(Geometry::fromWkt($read->asText(), $read->srid()));
 })->with([
     'Point' => 'SRID=4326;POINT(1.5 -2.25)',
     'Point Z' => 'SRID=4326;POINT Z(1 2 3)',
@@ -102,9 +102,6 @@ it('reads WKB like brick/geo', function (string $wkt, WkbByteOrder $byteOrder, s
     'WKB' => ['WKB'],
     'EWKB' => ['EWKB'],
     'MySQL' => ['MySQL'],
-])->with([
-    'binary' => [false],
-    'hex' => [true],
 ]);
 
 it('reads WKB whose geometries have different byte orders', function (): void {
