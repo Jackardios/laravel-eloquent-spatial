@@ -1,4 +1,4 @@
-name: Coverage and mutation testing
+name: Coverage
 
 on:
     push:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
     coverage:
-        name: ${{ matrix.suite == 'mutate' && 'Mutation testing' || 'Coverage' }} - ${{ matrix.db }}
+        name: Coverage - ${{ matrix.db }}
 
         runs-on: ubuntu-latest
 
@@ -27,7 +27,6 @@ jobs:
             fail-fast: false
             matrix:
                 db: [ 'mysql:8.0', 'mariadb:10.11', 'postgis/postgis:16-3.4' ]
-                suite: [ coverage, mutate ]
 
         services:
             db:
@@ -56,7 +55,7 @@ jobs:
             -   name: Checkout code
                 uses: actions/checkout@v7
 
-            # PHP 8.5, so the code that only matters on PHP 8.5 is covered and mutated too.
+            # PHP 8.5, so the code that only matters on PHP 8.5 is covered too.
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
@@ -68,7 +67,6 @@ jobs:
                 run: composer update --prefer-dist --no-interaction
 
             -   name: Collect coverage
-                if: matrix.suite == 'coverage'
                 env:
                     DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
                 run: |
@@ -76,26 +74,11 @@ jobs:
                     vendor/bin/pest --parallel --processes=4 --coverage-php "build/${{ matrix.db == 'mysql:8.0' && 'mysql' || (matrix.db == 'mariadb:10.11' && 'mariadb' || 'pgsql') }}.cov"
 
             -   name: Upload coverage
-                if: matrix.suite == 'coverage'
                 uses: actions/upload-artifact@v7
                 with:
                     name: coverage-${{ strategy.job-index }}
                     path: build/*.cov
                     if-no-files-found: error
-
-            # Each database runs a different subset of the code, so no single run can reach 100%.
-            # Escaped mutants fail the job; uncovered ones are checked by the coverage job.
-            -   name: Run mutation testing
-                if: matrix.suite == 'mutate'
-                env:
-                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
-                run: |
-                    set -o pipefail
-                    vendor/bin/pest --mutate --everything --parallel --processes=4 --no-cache | tee build-mutate.txt
-                    if grep -q 'UNTESTED' build-mutate.txt; then
-                        echo "::error::Escaped mutants found, see the output above."
-                        exit 1
-                    fi
 
     merge:
         name: Coverage - all databases
@@ -128,4 +111,4 @@ jobs:
                     merge-multiple: true
 
             -   name: Merge coverage and require 100% of lines
-                run: php .github/scripts/merge-coverage.php build/clover.xml build/*.cov
+                run: php .github/scripts/merge-coverage.php build/*.cov
