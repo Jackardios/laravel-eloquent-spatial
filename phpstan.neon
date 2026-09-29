@@ -8,10 +8,10 @@ parameters:
     - tests/database
   ignoreErrors:
     -
-      message: '#(Undefined variable: \$this|toBeInstanceOf\(\) expects class-string)#'
+      message: '#Undefined variable: \$this#'
       path: tests/Expectations.php
     -
-      message: '#Call to an undefined method Pest\\Expectation\<.+\>\:\:toBe(InstanceOf)?On(Postgres|Mysql)\(\)#'
+      message: '#Call to an undefined method Pest\\Expectation\<.+\>\:\:toBeOn(Postgres|Mysql)\(\)#'
       path: tests/*.php
     -
       # Laravel 13 types raw SQL parameters as literal-string; these expressions are built from wrapped identifiers and generated WKT.

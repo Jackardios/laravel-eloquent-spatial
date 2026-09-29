@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\DB;
-use Jackardios\EloquentSpatial\AxisOrder;
 use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Objects\LineString;
@@ -223,4 +222,4 @@ it('handles casting geometry columns with raw expressions with axis order', func
     // Act & Assert
     expect($testPlace->getOriginal('point'))->toEqual($expected);
     expect($testPlace->fresh()?->point)->toEqual($expected);
-})->skip(fn () => DB::connection()->getDriverName() !== 'mysql' || ! AxisOrder::supported(DB::connection()), 'MySQL 8+ only');
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');

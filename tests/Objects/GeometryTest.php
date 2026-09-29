@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use Jackardios\EloquentSpatial\AxisOrder;
 use Jackardios\EloquentSpatial\Enums\Srid;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Objects\Geometry;
@@ -70,7 +69,7 @@ it('creates an SQL expression from a geometry', function (): void {
     $grammar = DB::getQueryGrammar();
     $expressionValue = $expression->getValue($grammar);
     expect($expressionValue)->toEqual("ST_GeomFromText('POINT(180 0)', 4326, 'axis-order=long-lat')");
-})->skip(fn () => ! AxisOrder::supported(DB::connection()));
+})->skip(fn () => ! isMySql8OrAbove(), 'Requires MySQL 8.0+ axis order.');
 
 it('creates an SQL expression from a geometry - without axis-order', function (): void {
     $point = new Point(180, 0, Srid::WGS84->value);
@@ -82,7 +81,7 @@ it('creates an SQL expression from a geometry - without axis-order', function ()
     expect($expressionValue)->toEqual(
         (new GeometryExpression("ST_GeomFromText('POINT(180 0)', 4326)"))->normalize(DB::connection())
     );
-})->skip(fn () => AxisOrder::supported(DB::connection()));
+})->skip(fn () => isMySql8OrAbove(), 'MySQL 8.0+ applies the SRID axis order.');
 
 it('creates a geometry object from a geo json array', function (): void {
     $point = new Point(180, 0);
