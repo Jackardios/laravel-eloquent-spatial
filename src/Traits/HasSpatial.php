@@ -7,7 +7,6 @@ namespace Jackardios\EloquentSpatial\Traits;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\PostgresConnection;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Jackardios\EloquentSpatial\GeometryExpression;
 use Jackardios\EloquentSpatial\Objects\Geometry;
@@ -340,18 +339,17 @@ trait HasSpatial
 
     protected function toExpressionString(ExpressionContract|Geometry|string $geometryOrColumnOrExpression): string
     {
-        $grammar = $this->getGrammar();
+        $connection = $this->getConnection();
+        $grammar = $connection->getQueryGrammar();
 
-        if ($geometryOrColumnOrExpression instanceof ExpressionContract) {
-            $expression = $geometryOrColumnOrExpression;
-        } elseif ($geometryOrColumnOrExpression instanceof Geometry) {
-            $expression = DB::raw($geometryOrColumnOrExpression->toSqlExpression($this->getConnection())->getValue($grammar));
-        } else {
-            $expression = DB::raw(
-                (new GeometryExpression($grammar->wrap($geometryOrColumnOrExpression)))->normalize($this->getConnection())
-            );
+        if ($geometryOrColumnOrExpression instanceof Geometry) {
+            $geometryOrColumnOrExpression = $geometryOrColumnOrExpression->toSqlExpression($connection);
         }
 
-        return (string) $expression->getValue($grammar);
+        if ($geometryOrColumnOrExpression instanceof ExpressionContract) {
+            return (string) $geometryOrColumnOrExpression->getValue($grammar);
+        }
+
+        return (new GeometryExpression($grammar->wrap($geometryOrColumnOrExpression)))->normalize($connection);
     }
 }

@@ -10,6 +10,7 @@ For the history before the fork, see the [upstream changelog](https://github.com
 ### Fixed
 
 - A geometry cast attribute set to an expression that only contains `ST_GeomFromText()`, such as `ST_Centroid(ST_GeomFromText(...))`, was read as the inner geometry: the change was not saved if that geometry was already stored.
+- The spatial scopes no longer run the model's global scopes, once for every geometry or column they write into the SQL, which also made building such a query slower.
 
 ## v5.0.1 - 2026-09-25
 

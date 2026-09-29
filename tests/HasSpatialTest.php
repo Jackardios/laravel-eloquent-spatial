@@ -497,3 +497,18 @@ it('toExpressionString can handle a string input', function (): void {
     expect($result)->toBeOnPostgres('"test_places"."point"::geometry');
     expect($result)->toBeOnMysql('`test_places`.`point`');
 });
+
+it('does not apply the global scopes of the model to build a spatial condition', function (): void {
+    $applied = 0;
+    $model = new class extends TestPlace {};
+    $model::addGlobalScope('counter', function () use (&$applied): void {
+        $applied++;
+    });
+
+    $model->newQuery()
+        ->whereDistance('point', new Point(0, 0), '<', 1)
+        ->orderByDistance('point', new Point(0, 0))
+        ->toSql();
+
+    expect($applied)->toBe(1);
+});
