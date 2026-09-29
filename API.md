@@ -227,6 +227,8 @@ The `$operator` of `whereDistance`, `whereDistanceSphere` and `whereSrid` must b
 
 Retrieves the distance between 2 geometry objects. Uses [ST_Distance](https://dev.mysql.com/doc/refman/8.0/en/spatial-relation-functions-object-shapes.html#function_st-distance).
 
+The distance is in the units of the coordinates, such as degrees for SRID 4326, except on MySQL 8, which returns metres for a geographic SRID such as 4326. For a distance in metres on every database, use [withDistanceSphere](#withdistancesphere).
+
 | Parameter           | Type                              | Default      |
 |---------------------|-----------------------------------|--------------|
 | `$column`           | `Expression\|Geometry\|string`    |              |
@@ -238,20 +240,20 @@ Retrieves the distance between 2 geometry objects. Uses [ST_Distance](https://de
 ```php
 use Jackardios\EloquentSpatial\Objects\Point;
 
-Place::create(['location' => new Point(0, 0, 4326)]);
+Place::create(['location' => new Point(0, 0)]);
 
 $placeWithDistance = Place::query()
-    ->withDistance('location', new Point(1, 1, 4326))
+    ->withDistance('location', new Point(1, 1))
     ->first();
 
-echo $placeWithDistance->distance; // 156897.79947260793
+echo $placeWithDistance->distance; // 1.4142135623730951
 
 // With custom alias:
 $placeWithDistance = Place::query()
-    ->withDistance('location', new Point(1, 1, 4326), 'distance_in_meters')
+    ->withDistance('location', new Point(1, 1), 'distance_in_units')
     ->first();
 
-echo $placeWithDistance->distance_in_meters; // 156897.79947260793
+echo $placeWithDistance->distance_in_units; // 1.4142135623730951
 ```
 </details>
 
@@ -273,11 +275,11 @@ Filters records by distance. Uses [ST_Distance](https://dev.mysql.com/doc/refman
 ```php
 use Jackardios\EloquentSpatial\Objects\Point;
 
-Place::create(['location' => new Point(0, 0, 4326)]);
-Place::create(['location' => new Point(50, 50, 4326)]);
+Place::create(['location' => new Point(0, 0)]);
+Place::create(['location' => new Point(50, 50)]);
 
 $count = Place::query()
-    ->whereDistance('location', new Point(1, 1, 4326), '<', 160000)
+    ->whereDistance('location', new Point(1, 1), '<', 2)
     ->count();
 
 echo $count; // 1
@@ -301,11 +303,11 @@ Orders records by distance. Uses [ST_Distance](https://dev.mysql.com/doc/refman/
 ```php
 use Jackardios\EloquentSpatial\Objects\Point;
 
-Place::create(['name' => 'first', 'location' => new Point(0, 0, 4326)]);
-Place::create(['name' => 'second', 'location' => new Point(50, 50, 4326)]);
+Place::create(['name' => 'first', 'location' => new Point(0, 0)]);
+Place::create(['name' => 'second', 'location' => new Point(50, 50)]);
 
 $places = Place::query()
-    ->orderByDistance('location', new Point(1, 1, 4326), 'desc')
+    ->orderByDistance('location', new Point(1, 1), 'desc')
     ->get();
 
 echo $places[0]->name; // second
@@ -336,14 +338,14 @@ $placeWithDistance = Place::query()
     ->withDistanceSphere('location', new Point(1, 1, 4326))
     ->first();
 
-echo $placeWithDistance->distance; // 157249.59776850493
+echo $placeWithDistance->distance; // 157249.59776850493, or 157249.0357231545 on MariaDB
 
 // With custom alias:
 $placeWithDistance = Place::query()
     ->withDistanceSphere('location', new Point(1, 1, 4326), 'distance_in_meters')
     ->first();
 
-echo $placeWithDistance->distance_in_meters; // 157249.59776850493
+echo $placeWithDistance->distance_in_meters; // 157249.59776850493, or 157249.0357231545 on MariaDB
 ```
 </details>
 
@@ -425,7 +427,7 @@ use Jackardios\EloquentSpatial\Objects\Polygon;
 Place::create(['location' => new Point(0, 0, 4326)]);
 
 $exists = Place::query()
-    ->whereWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
+    ->whereWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -452,7 +454,7 @@ use Jackardios\EloquentSpatial\Objects\Polygon;
 Place::create(['location' => new Point(0, 0, 4326)]);
 
 $exists = Place::query()
-    ->whereNotWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
+    ->whereNotWithin('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // false
@@ -476,7 +478,7 @@ Filters records where geometry contains another geometry. Uses [ST_Contains](htt
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}')]);
+Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326)]);
 
 $exists = Place::query()
     ->whereContains('area', new Point(0, 0, 4326))
@@ -503,7 +505,7 @@ Filters records where geometry does NOT contain another geometry. Uses [ST_Conta
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}')]);
+Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326)]);
 
 $exists = Place::query()
     ->whereNotContains('area', new Point(0, 0, 4326))
@@ -533,7 +535,7 @@ use Jackardios\EloquentSpatial\Objects\Polygon;
 Place::create(['location' => new Point(0, 0, 4326)]);
 
 $exists = Place::query()
-    ->whereTouches('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[0,-1],[0,0],[-1,0],[-1,-1]]]}'))
+    ->whereTouches('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[0,-1],[0,0],[-1,0],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -560,7 +562,7 @@ use Jackardios\EloquentSpatial\Objects\Polygon;
 Place::create(['location' => new Point(0, 0, 4326)]);
 
 $exists = Place::query()
-    ->whereIntersects('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
+    ->whereIntersects('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -584,10 +586,10 @@ Filters records where geometries cross. Uses [ST_Crosses](https://dev.mysql.com/
 use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-Place::create(['line_string' => LineString::fromJson('{"type":"LineString","coordinates":[[0,0],[2,0]]}')]);
+Place::create(['line_string' => LineString::fromJson('{"type":"LineString","coordinates":[[0,0],[2,0]]}', 4326)]);
 
 $exists = Place::query()
-    ->whereCrosses('line_string', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}'))
+    ->whereCrosses('line_string', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -614,7 +616,7 @@ use Jackardios\EloquentSpatial\Objects\Polygon;
 Place::create(['location' => new Point(0, 0, 4326)]);
 
 $exists = Place::query()
-    ->whereDisjoint('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[-0.5,-1],[-0.5,-0.5],[-1,-0.5],[-1,-1]]]}'))
+    ->whereDisjoint('location', Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[-0.5,-1],[-0.5,-0.5],[-1,-0.5],[-1,-1]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -637,10 +639,10 @@ Filters records where geometries overlap. Uses [ST_Overlaps](https://dev.mysql.c
 ```php
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}')]);
+Place::create(['area' => Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}', 4326)]);
 
 $exists = Place::query()
-    ->whereOverlaps('area', Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,0],[2,0],[2,2],[0,2],[0,0]]]}'))
+    ->whereOverlaps('area', Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,0],[2,0],[2,2],[0,2],[0,0]]]}', 4326))
     ->exists();
 
 echo $exists; // true
@@ -704,7 +706,7 @@ echo $exists; // true
 
 ### withCentroid
 
-Retrieves the centroid of a geometry. Uses [ST_Centroid](https://dev.mysql.com/doc/refman/8.0/en/gis-polygon-property-functions.html#function_st-centroid).
+Retrieves the centroid of a geometry. Uses [ST_Centroid](https://dev.mysql.com/doc/refman/8.0/en/gis-polygon-property-functions.html#function_st-centroid). MySQL 8 does not compute the centroid of a polygon with a geographic SRID such as 4326.
 
 | Parameter | Type                              | Default      |
 |-----------|-----------------------------------|--------------|
@@ -717,16 +719,17 @@ Retrieves the centroid of a geometry. Uses [ST_Centroid](https://dev.mysql.com/d
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-$polygon = Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}');
+$polygon = Polygon::fromJson('{"type":"Polygon","coordinates":[[[0,0],[2,0],[2,2],[0,2],[0,0]]]}');
 Place::create(['area' => $polygon]);
 
 $placeWithCentroid = Place::query()
+    ->select('*') // withCentroid() selects only the centroid
     ->withCentroid('area')
     ->withCasts(['centroid' => Point::class]) // Important: cast to Point
     ->first();
 
-echo $placeWithCentroid->centroid->longitude; // 0
-echo $placeWithCentroid->centroid->latitude;  // 0
+echo $placeWithCentroid->centroid->longitude; // 1
+echo $placeWithCentroid->centroid->latitude;  // 1
 
 // With custom alias:
 $placeWithCentroid = Place::query()
@@ -734,6 +737,6 @@ $placeWithCentroid = Place::query()
     ->withCasts(['center_point' => Point::class])
     ->first();
 
-echo $placeWithCentroid->center_point->longitude; // 0
+echo $placeWithCentroid->center_point->longitude; // 1
 ```
 </details>

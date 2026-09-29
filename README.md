@@ -18,7 +18,7 @@ These are the versions that the tests run on.
 - PHP 8.3+
 - Laravel 12.18+ / 13.x
 
-For PHP 8.1 or 8.2 and Laravel 10 or 11, use version 4.x.
+For PHP 8.1 or 8.2, or Laravel 10, 11 or 12 before 12.18, use version 4.x.
 
 ## Installation
 
@@ -99,19 +99,13 @@ use Jackardios\EloquentSpatial\Enums\Srid;
 
 // Create a place with a point location
 // Note: Point constructor uses (longitude, latitude) order
-$place = Place::create([
+$eiffelTower = Place::create([
     'name' => 'Eiffel Tower',
-    'location' => new Point(2.2945, 48.8584),
-]);
-
-// Create with SRID
-$place = Place::create([
-    'name' => 'Big Ben',
-    'location' => new Point(-0.1246, 51.5007, Srid::WGS84),
+    'location' => new Point(2.2945, 48.8584, Srid::WGS84),
 ]);
 
 // Create with polygon area
-$place = Place::create([
+$centralPark = Place::create([
     'name' => 'Central Park',
     'area' => new Polygon([
         new LineString([
@@ -121,19 +115,21 @@ $place = Place::create([
             new Point(-73.9737, 40.7644),
             new Point(-73.9819, 40.7681), // Close the ring
         ]),
-    ]),
+    ], Srid::WGS84),
 ]);
 
 // Access coordinates
-echo $place->location->longitude; // 2.2945
-echo $place->location->latitude;  // 48.8584
-echo $place->location->srid;      // 4326 (if using WGS84)
+echo $eiffelTower->location->longitude; // 2.2945
+echo $eiffelTower->location->latitude;  // 48.8584
+echo $eiffelTower->location->srid;      // 4326
 
 // Convert to different formats
-$place->location->toWkt();     // POINT(2.2945 48.8584)
-$place->location->toJson();    // {"type":"Point","coordinates":[2.2945,48.8584]}
-$place->location->toArray();   // ['type' => 'Point', 'coordinates' => [2.2945, 48.8584]]
+$eiffelTower->location->toWkt();     // POINT(2.2945 48.8584)
+$eiffelTower->location->toJson();    // {"type":"Point","coordinates":[2.2945,48.8584]}
+$eiffelTower->location->toArray();   // ['type' => 'Point', 'coordinates' => [2.2945, 48.8584]]
 ```
+
+The geometries that a query compares must have the same SRID, so the examples use SRID 4326 throughout. Without an SRID, a geometry has the default SRID, 0 unless you [change it](#srid-support).
 
 ## Geometry Classes
 
@@ -235,31 +231,35 @@ The operator must be one of `=`, `<`, `>`, `<=`, `>=`, `<>` and `!=`, and the di
 ### Spatial Relationship Queries
 
 ```php
+use Jackardios\EloquentSpatial\Enums\Srid;
+use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 
-$searchArea = Polygon::fromJson('{"type":"Polygon","coordinates":[[[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]]}');
+$searchArea = Polygon::fromJson('{"type":"Polygon","coordinates":[[[2.2,48.8],[2.4,48.8],[2.4,48.9],[2.2,48.9],[2.2,48.8]]]}', Srid::WGS84);
+$point = new Point(2.2945, 48.8584, Srid::WGS84);
 
 // Find places within an area
 Place::whereWithin('location', $searchArea)->get();
 Place::whereNotWithin('location', $searchArea)->get();
 
-// Find places containing a point
+// Find places whose area contains a point
 Place::whereContains('area', $point)->get();
 Place::whereNotContains('area', $point)->get();
 
 // Other spatial relationships
-Place::whereTouches('area', $geometry)->get();
-Place::whereIntersects('location', $geometry)->get();
-Place::whereCrosses('route', $geometry)->get();
-Place::whereDisjoint('location', $geometry)->get();
-Place::whereOverlaps('area', $geometry)->get();
+Place::whereTouches('area', $searchArea)->get();
+Place::whereIntersects('location', $searchArea)->get();
+Place::whereDisjoint('location', $searchArea)->get();
+Place::whereOverlaps('area', $searchArea)->get();
 Place::whereEquals('location', $point)->get();
 
 // Filter by SRID
 Place::whereSrid('location', '=', 4326)->get();
 
-// Get centroid
+// Get centroid; withCentroid() selects only the centroid, so select the other columns too.
+// MySQL 8 does not compute the centroid of a polygon in SRID 4326.
 Place::query()
+    ->select('*')
     ->withCentroid('area')
     ->withCasts(['centroid' => Point::class])
     ->get();
@@ -348,6 +348,7 @@ EloquentSpatial::setDefaultSrid(Srid::WGS84);
 
 ```php
 use Jackardios\EloquentSpatial\Objects\Geometry;
+use Jackardios\EloquentSpatial\Objects\Point;
 
 // Register in a service provider
 Geometry::macro('distanceToKm', function (Point $other): float {
