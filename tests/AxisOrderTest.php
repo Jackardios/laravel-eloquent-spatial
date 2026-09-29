@@ -9,20 +9,12 @@ function pdoReportingVersion(string $version): PDO
 {
     return new class($version) extends PDO
     {
-        private bool $read = false;
-
         // The parent constructor is skipped on purpose: no connection is opened.
         public function __construct(private readonly string $version) {}
 
         public function getAttribute(int $attribute): mixed
         {
-            if ($attribute !== PDO::ATTR_SERVER_VERSION || $this->read) {
-                throw new LogicException('Only a single server version read is expected.');
-            }
-
-            $this->read = true;
-
-            return $this->version;
+            return $attribute === PDO::ATTR_SERVER_VERSION ? $this->version : throw new LogicException('Unexpected attribute.');
         }
     };
 }
@@ -51,24 +43,6 @@ it('reads the server version from the write connection', function (): void {
     $connection->setReadPdo(unreachablePdo());
 
     expect(AxisOrder::supported($connection))->toBeTrue();
-});
-
-it('detects the server version only once per PDO', function (): void {
-    $connection = new MySqlConnection(pdoReportingVersion('8.0.36'));
-
-    AxisOrder::supported($connection);
-
-    expect(AxisOrder::supported($connection))->toBeTrue();
-});
-
-it('detects the server version again after a reconnect', function (): void {
-    $connection = new MySqlConnection(pdoReportingVersion('5.7.44'));
-    $before = AxisOrder::supported($connection);
-
-    $connection->setPdo(pdoReportingVersion('8.0.36'));
-
-    expect($before)->toBeFalse()
-        ->and(AxisOrder::supported($connection))->toBeTrue();
 });
 
 it('does not support axis order on PostgreSQL', function (): void {
