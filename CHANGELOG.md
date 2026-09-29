@@ -5,6 +5,16 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
+## v4.1.1 - Unreleased
+
+### Changed
+
+- MySQL axis-order support is detected for every geometry again, as in 4.0. The cache from 4.1.0 saved nothing: PDO keeps the server version, so reading it sends no query.
+
+### Fixed
+
+- `Geometry::fromWkb()` throws `InvalidArgumentException` for binary WKB shorter than 4 bytes without a PHP warning first. Laravel turned the `unpack()` warning into an `ErrorException`, so the `InvalidArgumentException` never arrived.
+
 ## v4.1.0 - 2026-09-25
 
 ### Security
