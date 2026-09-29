@@ -3,22 +3,20 @@
 /*
  * Merges the PHP coverage files of the database-specific test runs and fails below 100% line coverage.
  *
- * Usage: php .github/scripts/merge-coverage.php <clover.xml> <coverage.cov>...
+ * Usage: php .github/scripts/merge-coverage.php <coverage.cov>...
  */
 
 declare(strict_types=1);
 
 use SebastianBergmann\CodeCoverage\CodeCoverage;
-use SebastianBergmann\CodeCoverage\Report\Clover;
 use SebastianBergmann\CodeCoverage\Report\Text;
 use SebastianBergmann\CodeCoverage\Report\Thresholds;
 
 require __DIR__.'/../../vendor/autoload.php';
 
-[, $cloverPath] = $argv;
 $merged = null;
 
-foreach (array_slice($argv, 2) as $path) {
+foreach (array_slice($argv, 1) as $path) {
     $coverage = include $path;
 
     if (! $coverage instanceof CodeCoverage) {
@@ -34,7 +32,6 @@ if ($merged === null) {
     exit(1);
 }
 
-(new Clover)->process($merged, $cloverPath);
 echo (new Text(Thresholds::default(), true, false))->process($merged);
 
 $report = $merged->getReport();

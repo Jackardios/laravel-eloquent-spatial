@@ -133,7 +133,7 @@ jobs:
                 run: vendor/bin/pest
 
     isolation:
-        name: Parallel, random order - ${{ matrix.db }}
+        name: Random order - ${{ matrix.db }}
 
         runs-on: ubuntu-latest
 
@@ -179,12 +179,6 @@ jobs:
 
             -   name: Install dependencies
                 run: composer update --prefer-dist --no-interaction
-
-            -   name: Execute tests in parallel
-                env:
-                    DB_PORT: ${{ job.services.db.ports[startsWith(matrix.db, 'postgis') && '5432' || '3306'] }}
-                    LARAVEL_PARALLEL_TESTING: 1
-                run: vendor/bin/pest --parallel --processes=4
 
             -   name: Execute tests in random order
                 env:
