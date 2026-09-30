@@ -79,6 +79,16 @@ See [UPGRADE.md](UPGRADE.md#upgrading-from-v4x-to-v50) for the details of every 
 
 - The service provider, the Doctrine DBAL types, `HasSpatial::originalIsEquivalent()`, `Factory::loadGeoPhp()`, the protected `Factory::createFromGeometry()` and the `phayes/geophp` dependency.
 
+## v4.1.1 - 2026-09-30
+
+### Changed
+
+- MySQL axis-order support is detected for every geometry again, as in 4.0. The cache from 4.1.0 saved nothing: PDO keeps the server version, so reading it sends no query.
+
+### Fixed
+
+- `Geometry::fromWkb()` throws `InvalidArgumentException` for binary WKB shorter than 4 bytes without a PHP warning first. Laravel turned the `unpack()` warning into an `ErrorException`, so the `InvalidArgumentException` never arrived.
+
 ## v4.1.0 - 2026-09-25
 
 ### Security
