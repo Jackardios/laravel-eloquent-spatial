@@ -5,7 +5,7 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
-## v4.1.1 - Unreleased
+## v4.1.1 - 2026-09-30
 
 ### Changed
 
