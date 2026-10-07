@@ -5,6 +5,18 @@ All notable changes to `jackardios/laravel-eloquent-spatial` are documented in t
 This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial).
 For the history before the fork, see the [upstream changelog](https://github.com/MatanYadaev/laravel-eloquent-spatial/blob/master/CHANGELOG.md).
 
+## v5.0.4 - unreleased
+
+### Changed
+
+- The error for GeoJSON with a value of the wrong type, such as coordinates that are strings, no longer contains the message of the brick/geo `TypeError`, which named a file path on the server. The message is now *Invalid spatial value: the GeoJSON has a value of the wrong type, such as coordinates that are not numbers*, and the `TypeError` is the previous exception.
+- `Factory::parse()` throws *Invalid spatial value: it is not WKT, GeoJSON or WKB* for text in no known format, such as an empty string, XML, or WKT in quotes or after a byte order mark. It reported such text as WKB with an invalid byte order or as WKB that is too short.
+
+### Documentation
+
+- README: the package is a fork of matanyadaev/laravel-eloquent-spatial; `Factory::parse()` does not apply the default SRID; empty geometries other than `GEOMETRYCOLLECTION EMPTY` are not read; the rings of a polygon are not checked to be closed.
+- UPGRADE.md: `ST_AsEWKT()` of PostGIS writes 3D geometries without `Z`, as `POINT(1 2 3)`, and geometries with M as `POINTM(1 2 3)`, which are not read. `ST_AsText()` writes `POINT Z (1 2 3)`, which is read. An empty point from PostGIS, which v4 read as `new Point(NAN, NAN)`, throws in v5.
+
 ## v5.0.3 - 2026-09-30
 
 ### Changed

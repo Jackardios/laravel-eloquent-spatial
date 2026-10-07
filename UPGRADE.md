@@ -73,9 +73,10 @@ Other values that v5 rejects to protect the application:
 
 **Stricter input.** These values were accepted in v4 and throw `InvalidArgumentException` in v5:
 
-- WKT with three coordinates but without `Z`, such as `POINT(1 2 3)`. Write `POINT Z(1 2 3)`; Z and M coordinates are read and dropped, as in v4.
+- WKT with three coordinates but without `Z`, such as `POINT(1 2 3)`. Write `POINT Z(1 2 3)`; Z and M coordinates are read and dropped, as in v4. PostGIS writes 3D geometries this way in `ST_AsEWKT()`: `SRID=4326;POINT(1 2 3)`, and geometries with M as `POINTM(1 2 3)`. The type and `Z` or `M` written together, such as `POINTZ(1 2 3)`, are not read either. Select `ST_AsText()`, which writes `POINT Z (1 2 3)`, or the geometry itself.
 - WKT numbers written as `+1` or `.5`.
 - GeoJSON coordinates that are strings, such as `["1", "2"]`.
+- An empty point. PostGIS stores `POINT EMPTY` as a point with `NaN` coordinates, which v4 read from the database as `new Point(NAN, NAN)`; v5 throws when the attribute is read. Other empty geometries, such as `POLYGON EMPTY`, threw in v4 too. Store `NULL` instead: `UPDATE places SET location = NULL WHERE ST_IsEmpty(location)`.
 
 **More lenient input.** Lowercase WKT and extra spaces, such as `point ( 1 2 )`, are now accepted.
 

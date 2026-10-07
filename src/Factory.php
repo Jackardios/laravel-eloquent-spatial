@@ -22,6 +22,7 @@ use Jackardios\EloquentSpatial\Objects\LineString;
 use Jackardios\EloquentSpatial\Objects\Point;
 use Jackardios\EloquentSpatial\Objects\Polygon;
 use Throwable;
+use TypeError;
 
 class Factory
 {
@@ -53,6 +54,12 @@ class Factory
 
         if (preg_match('/^\s*[A-Za-z]/', $value) === 1 && ! ctype_xdigit($value)) {
             return self::parseWkt($value, null, 0);
+        }
+
+        // Binary WKB was read above, so only hex is left. Other text, such as a value after a byte order mark or
+        // in quotes, would be reported as WKB with an invalid byte order.
+        if (! ctype_xdigit($value)) {
+            throw new InvalidArgumentException('Invalid spatial value: it is not WKT, GeoJSON or WKB.');
         }
 
         return self::parseWkb($value);
@@ -222,8 +229,11 @@ class Factory
     {
         try {
             return $read();
+        } catch (TypeError $error) {
+            // brick/geo throws a TypeError, for example for GeoJSON coordinates that are strings. Its message names
+            // a brick/geo method and the path of the file that called it, so it is only kept as the previous exception.
+            throw new InvalidArgumentException('Invalid spatial value: the GeoJSON has a value of the wrong type, such as coordinates that are not numbers.', 0, $error);
         } catch (Throwable $exception) {
-            // Besides its own GeometryException, brick/geo throws a TypeError, for example for GeoJSON coordinates that are strings.
             throw new InvalidArgumentException('Invalid spatial value: '.$exception->getMessage(), 0, $exception);
         }
     }

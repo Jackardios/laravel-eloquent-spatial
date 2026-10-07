@@ -5,6 +5,8 @@
 
 Laravel package for working with spatial data types and functions in Eloquent.
 
+This package is a fork of [matanyadaev/laravel-eloquent-spatial](https://github.com/MatanYadaev/laravel-eloquent-spatial), maintained by [Jackardios](https://github.com/Jackardios).
+
 ## Supported Databases
 
 - MySQL 5.7 / 8.0 / 8.4
@@ -155,7 +157,7 @@ $point = Point::fromArray(['type' => 'Point', 'coordinates' => [2.2945, 48.8584]
 $point = Point::fromWkb($binaryData);
 ```
 
-Each method reads only its own format: `fromWkt()` does not accept GeoJSON, and `fromJson()` does not accept WKT. Z and M coordinates are read and dropped. `Factory::parse()` detects which of these formats a string is in.
+Each method reads only its own format: `fromWkt()` does not accept GeoJSON, and `fromJson()` does not accept WKT. Z and M coordinates are read and dropped. `Factory::parse()` detects which of these formats a string is in. It does not apply the default SRID: the SRID is the one in EWKT, EWKB or the MySQL format, and 0 for WKT and GeoJSON, while `fromWkt()`, `fromJson()` and `fromArray()` use the default SRID.
 
 ### Available Geometry Types
 
@@ -396,6 +398,8 @@ $place->location = DB::raw("ST_GeomFromText('POINT(2.2945 48.8584)', 4326, 'axis
 ```
 
 - **Geometries nested more than 64 levels deep** are not read. Such values throw `InvalidArgumentException`, because reading them could crash PHP.
+- **Empty geometries** other than `GEOMETRYCOLLECTION EMPTY`, such as `POLYGON EMPTY`, `MULTIPOLYGON EMPTY`, `LINESTRING EMPTY` and `POINT EMPTY`, are not read and throw `InvalidArgumentException`. PostGIS returns them from functions such as `ST_Intersection()` and `ST_Difference()`. A model whose geometry column holds such a value throws when the attribute is read, so store `NULL` instead.
+- **The rings of a polygon are not checked to be closed.** `POLYGON((0 0, 1 0, 1 1))` is read from WKT and GeoJSON and can be created from points; the database rejects it when it is saved.
 
 ## API Reference
 
