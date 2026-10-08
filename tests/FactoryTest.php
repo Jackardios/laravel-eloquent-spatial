@@ -303,12 +303,18 @@ it('rejects invalid GeoJSON', function (string $json, string $message): void {
 ]);
 
 it('does not put the brick/geo error for a value of the wrong type in the message', function (string $json): void {
-    expect(fn () => Geometry::fromJson($json))->toThrow(function (Throwable $exception): void {
-        expect($exception)->toBeInstanceOf(InvalidArgumentException::class)
-            ->and($exception->getMessage())
-            ->toBe('Invalid spatial value: the GeoJSON has a value of the wrong type, such as coordinates that are not numbers.')
-            ->and($exception->getPrevious())->toBeInstanceOf(TypeError::class);
-    });
+    $exception = null;
+
+    try {
+        Geometry::fromJson($json);
+    } catch (Throwable $thrown) {
+        $exception = $thrown;
+    }
+
+    expect($exception)->toBeInstanceOf(InvalidArgumentException::class)
+        ->and($exception?->getMessage())
+        ->toBe('Invalid spatial value: the GeoJSON has a value of the wrong type, such as coordinates that are not numbers.')
+        ->and($exception?->getPrevious())->toBeInstanceOf(TypeError::class);
 })->with([
     'coordinates as strings' => ['{"type":"Point","coordinates":["37.6","55.7"]}'],
     'a coordinate that is null' => ['{"type":"Point","coordinates":[null,55.7]}'],
