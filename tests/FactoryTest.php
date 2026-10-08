@@ -302,24 +302,18 @@ it('rejects invalid GeoJSON', function (string $json, string $message): void {
     'an empty point' => ['{"type":"Point","coordinates":[]}', 'Invalid spatial value'],
 ]);
 
-it('does not put the brick/geo error for a value of the wrong type in the message', function (array $geometry): void {
-    try {
-        Geometry::fromArray($geometry);
-    } catch (InvalidArgumentException $exception) {
+it('does not put the brick/geo error for a value of the wrong type in the message', function (string $json): void {
+    expect(fn () => Geometry::fromJson($json))->toThrow(function (InvalidArgumentException $exception): void {
         expect($exception->getMessage())
             ->toBe('Invalid spatial value: the GeoJSON has a value of the wrong type, such as coordinates that are not numbers.')
             ->and($exception->getPrevious())->toBeInstanceOf(TypeError::class);
-
-        return;
-    }
-
-    $this->fail('The GeoJSON was read.');
+    });
 })->with([
-    'coordinates as strings' => [['type' => 'Point', 'coordinates' => ['37.6', '55.7']]],
-    'a coordinate that is null' => [['type' => 'Point', 'coordinates' => [null, 55.7]]],
-    'coordinates of a line as strings' => [['type' => 'LineString', 'coordinates' => [['1', '2'], [3, 4]]]],
-    'a number instead of a point' => [['type' => 'LineString', 'coordinates' => [1.5, 2.5]]],
-    'a Feature with coordinates as strings' => [['type' => 'Feature', 'properties' => null, 'geometry' => ['type' => 'Point', 'coordinates' => ['1', 2]]]],
+    'coordinates as strings' => ['{"type":"Point","coordinates":["37.6","55.7"]}'],
+    'a coordinate that is null' => ['{"type":"Point","coordinates":[null,55.7]}'],
+    'coordinates of a line as strings' => ['{"type":"LineString","coordinates":[["1","2"],[3,4]]}'],
+    'a number instead of a point' => ['{"type":"LineString","coordinates":[1.5,2.5]}'],
+    'a Feature with coordinates as strings' => ['{"type":"Feature","properties":null,"geometry":{"type":"Point","coordinates":["1",2]}}'],
 ]);
 
 // Factory::parse
